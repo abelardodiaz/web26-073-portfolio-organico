@@ -38,8 +38,14 @@ Thumbs.db
 # Vercel
 .vercel/
 
-# Claude internal
-.claude/settings.local.json
+# Claude internal (contiene IPs, API keys, hostnames internos)
+.claude/
+
+# Docs privados (codigos de proyecto, infra interna, security patterns)
+docs/
+
+# Metadatos internos (project codes, paths privados)
+PROJECT.yaml
 
 # Logs
 *.log
