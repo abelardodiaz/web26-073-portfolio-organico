@@ -15,3 +15,6 @@ All notable changes to this project will be documented in this file.
 - Python tools: sanitize_check.py, extract_pattern.py, repo_scaffold.py, til_entry.py, social_post.py
 - Templates: micro-repo (README, LICENSE, .gitignore), TIL entry, social posts (X, LinkedIn)
 - .gitignore, .env.example, README.md
+- Deploy inicial a Vercel (production)
+- GitHub Profile README (abelardodiaz/abelardodiaz)
+- Security: excluidos .claude/, docs/, PROJECT.yaml del repo publico
