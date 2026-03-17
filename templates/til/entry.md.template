@@ -1,0 +1,25 @@
+---
+title: "{{TITLE}}"
+slug: {{SLUG}}
+category: {{CATEGORY}}
+stack: [{{STACK}}]
+date: {{DATE}}
+---
+
+## Contexto
+
+<!-- En que situacion te encontraste con esto -->
+
+## Lo que aprendi
+
+<!-- La leccion principal -->
+
+## Ejemplo
+
+```{{LANG}}
+# Codigo de ejemplo
+```
+
+## Referencias
+
+- [Link relevante](url)

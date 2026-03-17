@@ -1,0 +1,39 @@
+# {{NAME}}
+
+{{DESCRIPTION}}
+
+## El Problema
+
+<!-- Describe el problema que este pattern/template resuelve -->
+
+## La Solucion
+
+<!-- Describe el approach y por que funciona -->
+
+## Uso Rapido
+
+```bash
+# Instrucciones minimas para empezar
+```
+
+## Estructura
+
+```
+{{NAME}}/
+  src/          # Codigo fuente
+  examples/     # Ejemplos de uso
+  README.md
+  LICENSE
+```
+
+## Stack
+
+{{STACK}}
+
+## Contexto
+
+Este pattern fue extraido de un proyecto de produccion real. Los datos sensibles han sido removidos y el codigo ha sido generalizado para uso standalone.
+
+## Licencia
+
+MIT - Ver [LICENSE](./LICENSE)
