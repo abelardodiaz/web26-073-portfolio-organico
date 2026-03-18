@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.0] - 2026-03-18
+
+### Added
+- Micro-repo `multi-ai-provider-patterns` creado y publicado en GitHub
+  - 6 patterns de produccion para gateways multi-IA
+  - 2 ejemplos integrados (minimal-gateway, ai-debate)
+  - Tabla de context windows reales vs marketing
+  - Todos los ejemplos ejecutables standalone (solo stdlib)
+  - Anonimizado y verificado (grep scan, sanitize check, gitleaks)
+  - Topics: ai, multi-ai, gateway, circuit-breaker, python, design-patterns, llm
+- Project entry en site/content/projects/multi-ai-provider-patterns.mdx
+
 ## [0.3.1] - 2026-03-18
 
 ### Added

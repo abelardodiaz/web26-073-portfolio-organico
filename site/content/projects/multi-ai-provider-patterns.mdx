@@ -1,0 +1,36 @@
+---
+title: "Multi-AI Provider Patterns"
+slug: "multi-ai-provider-patterns"
+description: "6 patterns de produccion para gateways multi-IA con multiples providers. Documentacion en espanol con diagramas ASCII, tabla de context windows reales vs marketing, y ejemplos ejecutables."
+stack: ["python", "multi-ai", "gateway", "circuit-breaker"]
+github: "https://github.com/abelardodiaz/multi-ai-provider-patterns"
+category: "ai"
+featured: true
+date: "2026-03-18"
+---
+
+## Que es
+
+Una coleccion de 6 patterns extraidos de un gateway multi-AI en produccion que maneja 7+ providers (OpenAI, Gemini, DeepSeek, Groq, Grok). Cada pattern incluye documentacion detallada, diagramas ASCII y ejemplos funcionales standalone.
+
+## Patterns incluidos
+
+| # | Pattern | Descripcion |
+|---|---------|-------------|
+| 01 | Multi-Provider Router | Registry de providers con formato `provider:modelo` |
+| 02 | Circuit Breaker + Auto-Degradation | 3 fallos = 5 min offline + fallback automatico |
+| 03 | Response Normalization | Formato uniforme sin importar el provider |
+| 04 | Context Window-Aware Routing | Routing por tamano real (marketing vs realidad) |
+| 05 | Iterative Self-Improvement | Ciclo ping-pong: LLM A responde, LLM B busca, LLM A mejora |
+| 06 | Multi-AI Consensus Debate | N IAs debaten con threshold dinamico |
+
+## Por que existe
+
+La mayoria de la documentacion sobre IA se enfoca en un solo provider. Estos patterns resuelven los problemas reales de operar un gateway multi-provider: circuit breaking, normalizacion, context window routing, y coordinacion entre multiples IAs.
+
+## Decisiones tecnicas
+
+- **Solo stdlib de Python**: los ejemplos no requieren dependencias externas ni API keys
+- **Context windows reales**: tabla verificada en produccion (DeepSeek dice 128K, real es 64K)
+- **Mock providers**: todos los ejemplos son ejecutables sin configuracion
+- **Documentacion en espanol**: dirigido a la comunidad dev LATAM
