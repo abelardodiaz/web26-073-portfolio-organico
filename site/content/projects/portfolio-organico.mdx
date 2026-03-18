@@ -1,0 +1,38 @@
+---
+title: "Portfolio Organico"
+slug: "portfolio-organico"
+description: "Portfolio site + micro-repos + content pipeline para construir presencia publica tecnica de forma organica."
+stack: ["next.js", "typescript", "tailwind", "python", "vercel"]
+github: "https://github.com/abelardodiaz"
+category: "portfolio"
+featured: true
+date: "2026-03-17"
+---
+
+## Que es
+
+Un sistema completo para construir presencia publica tecnica de forma organica:
+
+- **Portfolio site** con Next.js 16, Tailwind v4 y shadcn/ui
+- **Python tools** para extraccion y sanitizacion de contenido
+- **Templates** reutilizables para micro-repos, TILs y posts sociales
+- **Content pipeline** basado en archivos (MDX/YAML, sin CMS ni base de datos)
+
+## Decisiones tecnicas
+
+- **Next.js 16 App Router** con Server Components por defecto para maximo performance
+- **Tailwind CSS v4** con tokens OKLCH para dark mode nativo
+- **Contenido como codigo**: MDX y YAML en git, versionado junto al sitio
+- **Seguridad**: Pre-commit hooks con gitleaks + sanitize_check.py customizado (30+ regex patterns)
+- **Hybrid deploy**: sitio en Vercel, tools locales en Python
+
+## Stack completo
+
+| Capa | Tecnologia |
+|------|-----------|
+| Framework | Next.js 16 + Turbopack |
+| UI | React 19 + shadcn/ui + Tailwind v4 |
+| Content | MDX + gray-matter |
+| Deploy | Vercel |
+| Tools | Python 3.12 + httpx + rich |
+| Security | gitleaks + sanitize_check.py |

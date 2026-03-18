@@ -1,0 +1,45 @@
+---
+title: "Por que pnpm es mejor para monorepos"
+slug: "2026-03-17-pnpm-vs-npm-monorepos"
+category: "tooling"
+stack: ["pnpm", "node.js"]
+date: "2026-03-17"
+---
+
+## Contexto
+
+Al configurar este mismo portfolio como proyecto hibrido (Next.js + Python tools + templates), necesitaba un package manager que manejara bien la estructura sin inflarse en disco.
+
+## Lo que aprendi
+
+pnpm usa un **content-addressable store** global que evita duplicar paquetes entre proyectos. Cada dependencia se instala una sola vez en disco y se linkea via hard links.
+
+Ventajas concretas sobre npm para monorepos:
+
+1. **Disco**: pnpm usa ~50% menos espacio. Instala una vez, linkea muchas
+2. **Velocidad**: Instala 2-3x mas rapido que npm en monorepos
+3. **Strictness**: No permite acceso a dependencias no declaradas (phantom dependencies). Si no esta en tu `package.json`, no puedes importarlo
+4. **Workspaces**: `pnpm-workspace.yaml` es mas simple que la config de npm workspaces
+5. **Compatibilidad**: Funciona con cualquier registro npm
+
+```bash
+# Instalar pnpm
+corepack enable
+corepack prepare pnpm@latest --activate
+
+# Agregar dependencia
+pnpm add gray-matter
+
+# Ejecutar script
+pnpm run build
+
+# Instalar tool global
+pnpm add -g turbo
+```
+
+El punto 3 es clave: npm permite importar cualquier paquete que este en `node_modules`, aunque no lo hayas declarado. Esto causa bugs silenciosos cuando un paquete transitivo cambia de version o desaparece.
+
+## Referencia
+
+- [pnpm documentation](https://pnpm.io)
+- [Why pnpm - benchmarks](https://pnpm.io/benchmarks)

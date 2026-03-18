@@ -1,0 +1,13 @@
+repos:
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.18.0
+    hooks:
+      - id: gitleaks
+  - repo: local
+    hooks:
+      - id: sanitize-check
+        name: Sanitize Check (site/ only)
+        entry: python tools/sanitize_check.py --dir site
+        language: python
+        pass_filenames: false
+        always_run: true

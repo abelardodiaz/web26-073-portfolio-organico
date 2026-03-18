@@ -1,0 +1,41 @@
+---
+title: "Next.js 16: proxy.ts reemplaza a middleware.ts"
+slug: "2026-03-17-nextjs-16-proxy-vs-middleware"
+category: "nextjs"
+stack: ["next.js", "typescript"]
+date: "2026-03-17"
+---
+
+## Contexto
+
+Al migrar un proyecto a Next.js 16, el archivo `middleware.ts` dejo de funcionar como antes. El framework ahora usa `proxy.ts` como reemplazo directo.
+
+## Lo que aprendi
+
+En Next.js 16, `middleware.ts` se renombro a `proxy.ts`. La diferencia principal es que **proxy.ts corre exclusivamente en el runtime de Node.js**, lo que significa que tienes acceso completo a modulos `node:*`, ORMs y cualquier dependencia que necesite Node.js.
+
+Cambios clave:
+
+- **Ubicacion**: `proxy.ts` va al mismo nivel que `app/` (en la raiz o dentro de `src/` si usas `--src-dir`)
+- **Runtime**: Solo Node.js (antes middleware podia correr en Edge)
+- **APIs async**: `await cookies()`, `await headers()` - todas las APIs de request son async ahora
+
+```typescript
+// proxy.ts (antes middleware.ts)
+import { NextRequest, NextResponse } from "next/server";
+
+export async function middleware(request: NextRequest) {
+  const cookieStore = await cookies();
+  // Logica de auth, redirects, etc.
+  return NextResponse.next();
+}
+
+export const config = {
+  matcher: ["/dashboard/:path*"],
+};
+```
+
+## Referencia
+
+- [Next.js 16 Release Notes](https://nextjs.org/blog)
+- [Proxy documentation](https://nextjs.org/docs/app/building-your-application/routing/middleware)
