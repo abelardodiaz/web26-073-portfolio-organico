@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.3.1] - 2026-03-18
+
+### Added
+- TIL entry: "OpenClaw vs DIY: mismos problemas, diferentes soluciones"
+  - Comparativa de 5 problemas fundamentales de agentes autonomos
+  - Anti-recursion de 4 capas vs heartbeat suppression basica
+  - Links al repo claude-agent-patterns y docs de OpenClaw
+
 ## [0.3.0] - 2026-03-17
 
 ### Added
