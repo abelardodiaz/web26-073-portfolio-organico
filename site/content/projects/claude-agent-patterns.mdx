@@ -1,0 +1,38 @@
+---
+title: "Claude Agent Patterns"
+slug: "claude-agent-patterns"
+description: "8 patterns de produccion para agentes IA autonomos, extraidos de sistemas reales. Documentacion en espanol con diagramas ASCII y ejemplos ejecutables."
+stack: ["python", "asyncio", "sqlite", "claude-code"]
+github: "https://github.com/abelardodiaz/claude-agent-patterns"
+category: "ai"
+featured: true
+date: "2026-03-17"
+---
+
+## Que es
+
+Una coleccion de 8 patterns extraidos de agentes IA reales corriendo en produccion. Cada pattern incluye documentacion detallada, diagramas ASCII y ejemplos funcionales standalone.
+
+## Patterns incluidos
+
+| # | Pattern | Descripcion |
+|---|---------|-------------|
+| 01 | Always-On Event Loop | Daemon asyncio con multiples fuentes de eventos |
+| 02 | Anti-Recursion Guard | 4 capas de proteccion contra loops infinitos |
+| 03 | Deterministic Policy Engine | Control de acceso CBAC sin LLM |
+| 04 | Human-in-the-Loop | Aprobacion interactiva con timeout |
+| 05 | Job Queue State Machine | Cola SQLite con retry y dead letter queue |
+| 06 | Agent Specialization | Agentes con dominio definido y limitaciones explicitas |
+| 07 | Hybrid Workflow | Fases paralelas y secuenciales coordinadas |
+| 08 | File-Based State | Estado persistente en Markdown que sobrevive interrupciones |
+
+## Por que existe
+
+La mayoria de la documentacion sobre agentes IA se enfoca en prompting. Estos patterns resuelven los problemas reales de produccion: anti-recursion, policy enforcement, error recovery y coordinacion multi-agente.
+
+## Decisiones tecnicas
+
+- **Solo stdlib de Python**: los ejemplos no requieren dependencias externas
+- **SQLite para persistencia**: ligero, portable, suficiente para agentes single-node
+- **Markdown como estado**: git-friendly, human-readable, LLM-native
+- **Documentacion en espanol**: dirigido a la comunidad dev LATAM

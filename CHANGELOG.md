@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.3.0] - 2026-03-17
+
+### Added
+- Micro-repo `claude-agent-patterns` creado y publicado en GitHub
+  - 8 patterns de produccion para agentes IA autonomos
+  - 2 ejemplos integrados (minimal-daemon, multi-agent-project)
+  - Todos los ejemplos ejecutables standalone (solo stdlib)
+  - Anonimizado y verificado (grep scan, sanitize check)
+  - Topics: spanish, claude-code, ai-agents, patterns, python, asyncio
+- Project entry en site/content/projects/claude-agent-patterns.mdx
+
 ## [0.2.0] - 2026-03-17
 
 ### Added
