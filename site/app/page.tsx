@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ButtonLink } from "@/components/shared/ButtonLink";
+import { RotatingLabel } from "@/components/shared/RotatingLabel";
 import { getAllTils, getAllProjects } from "@/lib/content";
 
 export default function Home() {
@@ -7,93 +8,269 @@ export default function Home() {
   const projects = getAllProjects().filter((p) => p.featured);
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-16">
-      <section className="flex flex-col gap-6 py-12">
-        <h1 className="text-4xl font-bold tracking-tight">
-          Abelardo Diaz
+    <div className="mx-auto max-w-5xl px-4">
+      {/* ── Hero (unificado) ── */}
+      <section className="editorial:py-20 terminal:py-16 py-16">
+        <RotatingLabel />
+
+        <h1 className="mt-5 editorial:text-4xl editorial:sm:text-5xl editorial:tracking-tight editorial:leading-[1.15] terminal:text-3xl terminal:sm:text-[2.75rem] terminal:tracking-tighter terminal:leading-[1.2] font-bold">
+          Multi-IA gateways,
+          <br />
+          construyo agentes que no duermen,
+          <br />
+          <span className="hidden editorial:inline text-primary">
+            y zero downtime.
+          </span>
+          <span className="hidden terminal:inline">y zero downtime.</span>
         </h1>
-        <p className="max-w-2xl text-lg text-muted-foreground">
-          Full-Stack Developer &amp; AI Agent Architect. Patterns de produccion
-          real en espanol para la comunidad dev LATAM.
+
+        <p className="mt-4 max-w-xl editorial:text-lg terminal:text-base leading-relaxed text-muted-foreground">
+          Escribo software que toma decisiones por si solo. Ayudo a que los
+          agentes autonomos de IA hagan que tu trabajo sea facil.
         </p>
-        <div className="flex gap-3">
-          <ButtonLink href="/projects">Ver proyectos</ButtonLink>
-          <ButtonLink href="/contact" variant="outline">
-            Contacto
-          </ButtonLink>
+
+        {/* Stats (terminal only) */}
+        <div className="hidden terminal:flex mt-6 gap-8">
+          <div>
+            <span className="block font-mono text-2xl font-bold text-primary leading-none">
+              14
+            </span>
+            <span className="mt-1 block text-xs uppercase tracking-widest text-[var(--fg-subtle)]">
+              Patterns
+            </span>
+          </div>
+          <div>
+            <span className="block font-mono text-2xl font-bold text-primary leading-none">
+              7+
+            </span>
+            <span className="mt-1 block text-xs uppercase tracking-widest text-[var(--fg-subtle)]">
+              AI Providers
+            </span>
+          </div>
+          <div>
+            <span className="block font-mono text-2xl font-bold text-primary leading-none">
+              24/7
+            </span>
+            <span className="mt-1 block text-xs uppercase tracking-widest text-[var(--fg-subtle)]">
+              Uptime
+            </span>
+          </div>
+        </div>
+
+        {/* CTAs */}
+        <div className="mt-8 flex gap-3">
+          <div className="hidden editorial:flex gap-3">
+            <ButtonLink href="/projects">Ver proyectos</ButtonLink>
+            <ButtonLink
+              href="https://github.com/abelardodiaz"
+              variant="outline"
+            >
+              GitHub
+            </ButtonLink>
+          </div>
+          <div className="hidden terminal:flex gap-3">
+            <ButtonLink href="/projects">git clone proyectos</ButtonLink>
+            <ButtonLink href="/about" variant="outline">
+              cat README.md
+            </ButtonLink>
+          </div>
         </div>
       </section>
 
-      <section className="py-12">
-        <h2 className="mb-6 text-2xl font-semibold">Repos Destacados</h2>
-        {projects.length === 0 ? (
-          <p className="text-muted-foreground">
-            Proximamente: micro-repos con patterns extraidos de produccion real.
-          </p>
-        ) : (
-          <div className="grid gap-4 sm:grid-cols-2">
-            {projects.map((project) => (
-              <Link
-                key={project.slug}
-                href={`/projects/${project.slug}`}
-                className="group rounded-lg border border-border p-5 transition-colors hover:bg-accent"
-              >
-                <h3 className="mb-1 font-semibold group-hover:underline">
-                  {project.title}
-                </h3>
-                <p className="mb-3 text-sm text-muted-foreground">
-                  {project.description}
-                </p>
-                <div className="flex flex-wrap gap-1.5">
-                  {project.stack.slice(0, 4).map((tech) => (
-                    <span
-                      key={tech}
-                      className="rounded bg-secondary px-2 py-0.5 text-xs font-mono text-secondary-foreground"
-                    >
-                      {tech}
-                    </span>
-                  ))}
-                </div>
-              </Link>
-            ))}
-          </div>
-        )}
-      </section>
+      {/* ── Divider (editorial only) ── */}
+      <hr className="hidden editorial:block border-border" />
 
+      {/* ── Projects ── */}
       <section className="py-12">
-        <div className="mb-6 flex items-baseline justify-between">
-          <h2 className="text-2xl font-semibold">TILs Recientes</h2>
-          {tils.length > 0 && (
+        {/* Section header - editorial */}
+        <div className="hidden editorial:flex items-baseline justify-between mb-6">
+          <h2 className="text-sm font-semibold uppercase tracking-widest text-[var(--fg-subtle)]">
+            Repos Destacados
+          </h2>
+          {projects.length > 0 && (
             <Link
-              href="/til"
-              className="text-sm text-muted-foreground hover:text-foreground"
+              href="/projects"
+              className="text-sm text-muted-foreground transition-colors hover:text-primary"
             >
               Ver todos &rarr;
             </Link>
           )}
         </div>
+        {/* Section header - terminal */}
+        <div className="hidden terminal:flex items-center gap-3 mb-5">
+          <h2 className="font-mono text-xs font-semibold uppercase tracking-widest text-[var(--fg-subtle)]">
+            // repos
+          </h2>
+          <span className="flex-1 h-px bg-border" />
+          {projects.length > 0 && (
+            <Link
+              href="/projects"
+              className="font-mono text-xs text-[var(--fg-subtle)] transition-colors hover:text-primary"
+            >
+              ls -la &rarr;
+            </Link>
+          )}
+        </div>
+
+        {projects.length === 0 ? (
+          <p className="text-muted-foreground">
+            Proximamente: micro-repos con patterns extraidos de produccion real.
+          </p>
+        ) : (
+          <>
+            {/* Editorial cards */}
+            <div className="hidden editorial:grid gap-4 sm:grid-cols-2">
+              {projects.map((project) => (
+                <Link
+                  key={project.slug}
+                  href={`/projects/${project.slug}`}
+                  className="group block rounded-lg border border-border bg-card p-6 transition-all hover:border-primary hover:shadow-[0_0_0_1px_var(--primary)]"
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <h3 className="font-semibold tracking-tight">
+                      {project.title}
+                    </h3>
+                    <span className="text-[var(--fg-subtle)] transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-primary">
+                      &#8599;
+                    </span>
+                  </div>
+                  <p className="mb-4 text-sm leading-relaxed text-muted-foreground">
+                    {project.description}
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {project.stack.slice(0, 4).map((tech) => (
+                      <span
+                        key={tech}
+                        className="rounded bg-secondary px-2 py-0.5 text-xs font-mono text-secondary-foreground"
+                      >
+                        {tech}
+                      </span>
+                    ))}
+                  </div>
+                </Link>
+              ))}
+            </div>
+
+            {/* Terminal cards */}
+            <div className="hidden terminal:grid gap-3 sm:grid-cols-2">
+              {projects.map((project) => (
+                <Link
+                  key={project.slug}
+                  href={`/projects/${project.slug}`}
+                  className="group grid grid-cols-[4px_1fr] overflow-hidden rounded-md border border-border bg-card transition-all hover:border-primary hover:shadow-[0_0_0_3px_var(--accent-glow)]"
+                >
+                  <div className="bg-transparent transition-colors group-hover:bg-primary" />
+                  <div className="p-5 pl-4">
+                    <h3 className="text-[15px] font-semibold tracking-tight mb-1.5">
+                      {project.title}
+                    </h3>
+                    <p className="mb-3 text-[13px] leading-relaxed text-muted-foreground">
+                      {project.description}
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {project.stack.slice(0, 4).map((tech) => (
+                        <span
+                          key={tech}
+                          className="rounded bg-secondary px-2 py-0.5 font-mono text-[10px] font-medium text-secondary-foreground tracking-wide"
+                        >
+                          {tech}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </>
+        )}
+      </section>
+
+      {/* ── Divider (editorial only) ── */}
+      <hr className="hidden editorial:block border-border" />
+
+      {/* ── TILs ── */}
+      <section className="py-12">
+        {/* Section header - editorial */}
+        <div className="hidden editorial:flex items-baseline justify-between mb-6">
+          <h2 className="text-sm font-semibold uppercase tracking-widest text-[var(--fg-subtle)]">
+            TILs Recientes
+          </h2>
+          {tils.length > 0 && (
+            <Link
+              href="/til"
+              className="text-sm text-muted-foreground transition-colors hover:text-primary"
+            >
+              Ver todos &rarr;
+            </Link>
+          )}
+        </div>
+        {/* Section header - terminal */}
+        <div className="hidden terminal:flex items-center gap-3 mb-5">
+          <h2 className="font-mono text-xs font-semibold uppercase tracking-widest text-[var(--fg-subtle)]">
+            // til
+          </h2>
+          <span className="flex-1 h-px bg-border" />
+          {tils.length > 0 && (
+            <Link
+              href="/til"
+              className="font-mono text-xs text-[var(--fg-subtle)] transition-colors hover:text-primary"
+            >
+              ver todos &rarr;
+            </Link>
+          )}
+        </div>
+
         {tils.length === 0 ? (
           <p className="text-muted-foreground">
             Proximamente: micro-lecciones aprendidas en produccion.
           </p>
         ) : (
-          <ul className="space-y-2">
-            {tils.map((til) => (
-              <li key={til.slug}>
-                <Link
-                  href={`/til/${til.slug}`}
-                  className="group flex items-baseline justify-between gap-4 rounded-md px-3 py-2 transition-colors hover:bg-accent"
+          <>
+            {/* Editorial TIL list */}
+            <ul className="hidden editorial:block">
+              {tils.map((til) => (
+                <li
+                  key={til.slug}
+                  className="border-b border-border last:border-b-0"
                 >
-                  <span className="font-medium group-hover:underline">
-                    {til.title}
-                  </span>
-                  <span className="shrink-0 text-sm text-muted-foreground font-mono">
-                    {til.date}
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
+                  <Link
+                    href={`/til/${til.slug}`}
+                    className="group flex items-baseline justify-between gap-4 py-3"
+                  >
+                    <span className="text-[15px] font-medium transition-colors group-hover:text-primary">
+                      {til.title}
+                    </span>
+                    <span className="shrink-0 font-mono text-xs text-[var(--fg-subtle)]">
+                      {til.date}
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+
+            {/* Terminal TIL list */}
+            <ul className="hidden terminal:block">
+              {tils.map((til) => (
+                <li
+                  key={til.slug}
+                  className="group border-t border-border first:border-t-0"
+                >
+                  <Link
+                    href={`/til/${til.slug}`}
+                    className="flex items-center gap-3 py-2.5"
+                  >
+                    <span className="size-1.5 shrink-0 rounded-full bg-border transition-colors group-hover:bg-primary" />
+                    <span className="flex-1 text-sm font-medium transition-colors group-hover:text-primary">
+                      {til.title}
+                    </span>
+                    <span className="shrink-0 font-mono text-[11px] text-[var(--fg-subtle)]">
+                      {til.date}
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </>
         )}
       </section>
     </div>

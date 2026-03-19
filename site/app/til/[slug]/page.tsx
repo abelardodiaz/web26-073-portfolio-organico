@@ -33,23 +33,25 @@ export default async function TilEntryPage({ params }: Props) {
     <div className="mx-auto max-w-3xl px-4 py-16">
       <Link
         href="/til"
-        className="mb-6 inline-block text-sm text-muted-foreground hover:text-foreground"
+        className="mb-6 inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-primary"
       >
-        &larr; Volver a TILs
+        &larr;{" "}
+        <span className="hidden editorial:inline">Volver a TILs</span>
+        <span className="hidden terminal:inline">cd ..</span>
       </Link>
       <header className="mb-8">
         <h1 className="mb-2 text-3xl font-bold tracking-tight">{til.title}</h1>
         <div className="flex items-center gap-3 text-sm text-muted-foreground">
-          <span className="rounded bg-accent px-2 py-0.5 font-mono text-xs uppercase">
+          <span className="rounded bg-primary/10 px-2 py-0.5 font-mono text-xs uppercase text-primary">
             {til.category}
           </span>
-          <span className="font-mono">{til.date}</span>
+          <span className="font-mono text-xs">{til.date}</span>
           {til.stack.length > 0 && (
-            <span>{til.stack.join(", ")}</span>
+            <span className="text-xs">{til.stack.join(", ")}</span>
           )}
         </div>
       </header>
-      <article className="prose prose-invert max-w-none">
+      <article className="prose max-w-none">
         <MdxContent source={til.body} />
       </article>
     </div>

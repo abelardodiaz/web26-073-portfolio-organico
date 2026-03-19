@@ -4,12 +4,18 @@ import matter from "gray-matter";
 
 const contentDir = path.join(process.cwd(), "content");
 
+export type ProjectLink = {
+  label: string;
+  url: string;
+};
+
 export type Project = {
   title: string;
   slug: string;
   description: string;
   stack: string[];
   github: string;
+  links: ProjectLink[];
   category: string;
   featured: boolean;
   date: string;
@@ -77,6 +83,7 @@ export function getAllProjects(): Project[] {
       description: data.description ?? "",
       stack: data.stack ?? [],
       github: data.github ?? "",
+      links: data.links ?? [],
       category: data.category ?? "general",
       featured: data.featured ?? false,
       date: data.date ?? "",

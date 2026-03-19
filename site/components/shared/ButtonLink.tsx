@@ -12,7 +12,7 @@ type ButtonLinkProps = {
 
 export function ButtonLink({ href, children, variant, size }: ButtonLinkProps) {
   return (
-    <Button variant={variant} size={size} render={<Link href={href} />}>
+    <Button variant={variant} size={size} nativeButton={false} render={<Link href={href} />}>
       {children}
     </Button>
   );
