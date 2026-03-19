@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.6.1] - 2026-03-19
+
+### Added
+- Vercel Analytics (`@vercel/analytics`) - first-party, privacy-friendly web analytics
+- Vercel Speed Insights (`@vercel/speed-insights`) - real user Core Web Vitals monitoring
+- Connected GitHub repo to Vercel project for auto-deploy on push
+- Project entry `portfolio-organico-template.mdx` added to site content
+
 ## [0.6.0] - 2026-03-19
 
 ### Added
