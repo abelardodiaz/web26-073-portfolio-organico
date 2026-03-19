@@ -1,0 +1,59 @@
+---
+title: "Portfolio Organico Template"
+slug: "portfolio-organico-template"
+description: "Template open-source para crear un portfolio tecnico con Next.js 16, sistema dual de temas, herramientas Python y workflow Claude Code."
+stack: ["next.js", "typescript", "tailwind", "python", "claude-code"]
+github: "https://github.com/abelardodiaz/portfolio-organico-template"
+category: "template"
+featured: true
+date: "2026-03-19"
+---
+
+## Que es
+
+Un template open-source listo para forkear y personalizar. Incluye todo lo necesario para lanzar un portfolio tecnico profesional:
+
+- **Next.js 16** con App Router, React 19, TypeScript strict, Tailwind v4, shadcn/ui
+- **Sistema dual de temas**: Editorial (serif, warm orange) + Terminal (monospace, green)
+- **Contenido MDX** para proyectos y TILs (sin CMS, sin base de datos)
+- **Python CLI tools** para crear TILs, scaffolding de repos, posts sociales, security scanning
+- **Claude Code workflow** con CLAUDE.md, commands, y security checks integrados
+
+## Personalizacion en 1 archivo
+
+Todo el contenido personal esta centralizado en `site/lib/config.ts`:
+
+```typescript
+export const siteConfig = {
+  name: "Tu Nombre",
+  title: "Tu Nombre - Developer Portfolio",
+  url: "https://tu-dominio.dev",
+  github: "https://github.com/tu-usuario",
+  email: "tu@email.com",
+  domain: "tu-dominio.dev",
+  // hero, stats, OG text...
+};
+```
+
+Header, footer, OG images, sitemap, contacto -- todo importa de siteConfig.
+
+## Features
+
+| Feature | Detalle |
+|---------|---------|
+| Temas | Editorial + Terminal, cada uno con light/dark |
+| SEO | OG images dinamicas, sitemap, robots.txt |
+| Performance | Lighthouse 98-100 across all pages |
+| Security | sanitize_check.py pre-publication scanner |
+| Content | MDX con gray-matter, SSG automatico |
+| Deploy | Zero-config en Vercel |
+| Claude Code | CLAUDE.md + 2 slash commands |
+
+## Quick Start
+
+```bash
+git clone https://github.com/abelardodiaz/portfolio-organico-template.git
+cd portfolio-organico-template/site
+# Editar lib/config.ts con tus datos
+pnpm install && pnpm dev
+```
