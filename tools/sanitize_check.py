@@ -84,6 +84,11 @@ EXCLUDED_FILES = {
     "02-security-publication-checklist.md",
 }
 
+# Lines matching these patterns are safe and should not trigger findings
+ALLOWLIST_PATTERNS = [
+    r"github\.com/abelardodiaz/",  # Public GitHub repo URLs are safe
+]
+
 BINARY_EXTENSIONS = {
     ".png", ".jpg", ".jpeg", ".gif", ".ico", ".svg",
     ".woff", ".woff2", ".ttf", ".eot",
@@ -113,6 +118,8 @@ def scan_file(filepath, patterns):
     try:
         with open(filepath, "r", encoding="utf-8", errors="ignore") as f:
             for line_num, line in enumerate(f, 1):
+                if any(re.search(ap, line) for ap in ALLOWLIST_PATTERNS):
+                    continue
                 for pattern, description in patterns:
                     if re.search(pattern, line):
                         findings.append({
