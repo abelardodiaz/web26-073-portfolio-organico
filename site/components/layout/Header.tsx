@@ -26,7 +26,7 @@ export function Header() {
   const navItems = theme === "editorial" ? editorialNav : terminalNav;
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border bg-background/85 backdrop-blur-md">
+    <header className="sticky top-0 z-50 border-b border-border bg-background">
       <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
         <Link href="/" className="shrink-0">
           {theme === "editorial" ? (
