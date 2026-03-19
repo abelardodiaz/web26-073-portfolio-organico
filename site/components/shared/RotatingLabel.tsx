@@ -27,7 +27,7 @@ export function RotatingLabel() {
   if (theme === "editorial") {
     return (
       <span
-        className={`inline-block rounded-full bg-primary/10 px-3 py-1 font-mono text-xs font-medium uppercase tracking-wider text-primary transition-all duration-350 ${
+        className={`inline-block rounded-full bg-[var(--accent)] px-3 py-1 font-mono text-xs font-medium uppercase tracking-wider text-primary transition-all duration-350 ${
           visible
             ? "opacity-100 translate-y-0"
             : "opacity-0 -translate-y-1"

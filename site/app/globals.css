@@ -96,8 +96,8 @@
   --card-foreground: #fafaf9;
   --popover: #1c1917;
   --popover-foreground: #fafaf9;
-  --primary: #c2410c;
-  --primary-foreground: #ffffff;
+  --primary: #ea580c;
+  --primary-foreground: #0c0a09;
   --secondary: #292524;
   --secondary-foreground: #d6d3d1;
   --muted: #292524;
@@ -107,21 +107,21 @@
   --destructive: #ef4444;
   --border: #292524;
   --input: #292524;
-  --ring: #c2410c;
+  --ring: #ea580c;
   --fg-subtle: #9b9490;
-  --chart-1: #c2410c;
+  --chart-1: #ea580c;
   --chart-2: #f97316;
   --chart-3: #fb923c;
   --chart-4: #fdba74;
   --chart-5: #fed7aa;
   --sidebar: #0c0a09;
   --sidebar-foreground: #fafaf9;
-  --sidebar-primary: #c2410c;
-  --sidebar-primary-foreground: #ffffff;
+  --sidebar-primary: #ea580c;
+  --sidebar-primary-foreground: #0c0a09;
   --sidebar-accent: #431407;
   --sidebar-accent-foreground: #fafaf9;
   --sidebar-border: #292524;
-  --sidebar-ring: #c2410c;
+  --sidebar-ring: #ea580c;
 }
 
 /* ── Terminal Light ── */
