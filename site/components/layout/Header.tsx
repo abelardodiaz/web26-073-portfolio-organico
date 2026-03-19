@@ -42,7 +42,7 @@ export function Header() {
         </Link>
 
         {/* Desktop nav */}
-        <nav className="hidden items-center gap-1 sm:flex">
+        <nav aria-label="Navegacion principal" className="hidden items-center gap-1 sm:flex">
           {navItems.map((item) => (
             <Link
               key={item.href}
@@ -69,7 +69,8 @@ export function Header() {
           <button
             onClick={() => setMenuOpen(!menuOpen)}
             className="ml-1 rounded-md p-2 text-muted-foreground hover:text-foreground"
-            aria-label="Menu"
+            aria-label={menuOpen ? "Cerrar menu" : "Abrir menu"}
+            aria-expanded={menuOpen}
           >
             <svg
               className="size-5"
@@ -79,6 +80,7 @@ export function Header() {
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
+              aria-hidden="true"
             >
               {menuOpen ? (
                 <>
@@ -98,7 +100,7 @@ export function Header() {
 
       {/* Mobile menu */}
       {menuOpen && (
-        <div className="border-t border-border px-4 pb-4 sm:hidden">
+        <nav aria-label="Menu movil" className="border-t border-border px-4 pb-4 sm:hidden">
           {navItems.map((item) => (
             <Link
               key={item.href}
@@ -109,7 +111,7 @@ export function Header() {
               {item.label}
             </Link>
           ))}
-        </div>
+        </nav>
       )}
     </header>
   );
