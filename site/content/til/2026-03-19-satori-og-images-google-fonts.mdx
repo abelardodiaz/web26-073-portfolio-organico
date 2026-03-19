@@ -1,0 +1,67 @@
+---
+title: "OG images dinamicas con Satori: cargar fonts desde Google Fonts API"
+slug: "satori-og-images-google-fonts"
+category: "nextjs"
+stack: ["next.js", "satori", "typescript"]
+date: "2026-03-19"
+---
+
+## Contexto
+
+Necesitaba generar imagenes Open Graph dinamicas para el portfolio. Next.js usa Satori internamente via `next/og`, pero Satori requiere que le pases las fonts como `ArrayBuffer` -- no acepta nombres de font ni URLs.
+
+## Lo que aprendi
+
+El truco es hacer dos fetches: primero al CSS de Google Fonts para obtener la URL del binario, y luego al binario mismo.
+
+```typescript
+// app/opengraph-image.tsx
+import { ImageResponse } from "next/og";
+
+export const size = { width: 1200, height: 630 };
+export const contentType = "image/png";
+
+async function loadFont(): Promise<ArrayBuffer> {
+  // Paso 1: fetch del CSS (contiene la URL del .woff2)
+  const css = await fetch(
+    "https://fonts.googleapis.com/css2?family=Inter:wght@600"
+  ).then((r) => r.text());
+
+  // Paso 2: extraer URL del binario con regex
+  const url = css.match(/url\(([^)]+)\)/)?.[1];
+  if (!url) throw new Error("Font URL not found");
+
+  // Paso 3: fetch del binario como ArrayBuffer
+  return fetch(url).then((r) => r.arrayBuffer());
+}
+
+export default async function Image() {
+  const fontData = await loadFont();
+
+  return new ImageResponse(
+    (
+      <div style={{ /* JSX con estilos inline */ }}>
+        <div style={{ fontSize: 56, fontWeight: 600 }}>
+          abelardodiaz.dev
+        </div>
+      </div>
+    ),
+    {
+      ...size,
+      fonts: [{ name: "Inter", data: fontData, style: "normal", weight: 600 }],
+    }
+  );
+}
+```
+
+### Gotchas
+
+1. **Google Fonts CSS cambia segun User-Agent**: la URL del binario en el CSS puede ser `.woff2` o `.ttf` dependiendo del UA del fetch. En Node.js, normalmente retorna `.woff2` que es lo que queremos
+2. **Solo estilos inline**: Satori no soporta Tailwind ni CSS externo, solo un subset de CSS via `style={{}}`
+3. **Layout con flexbox**: Satori soporta flexbox pero NO CSS grid
+4. **El archivo se llama `opengraph-image.tsx`**: Next.js lo detecta automaticamente como OG image handler para esa ruta
+
+## Referencia
+
+- [Next.js OG Image Generation](https://nextjs.org/docs/app/api-reference/file-conventions/metadata/opengraph-image)
+- [Satori GitHub](https://github.com/vercel/satori)

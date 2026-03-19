@@ -1,0 +1,62 @@
+---
+title: "next-mdx-remote/rsc vs next-mdx-remote: server-side MDX sin JS de cliente"
+slug: "next-mdx-remote-rsc"
+category: "nextjs"
+stack: ["next.js", "mdx", "react"]
+date: "2026-03-19"
+---
+
+## Contexto
+
+Al renderizar contenido MDX en un portfolio Next.js con App Router, tenia que elegir entre `next-mdx-remote` (clasico) y `next-mdx-remote/rsc` (server components).
+
+## Lo que aprendi
+
+La version `/rsc` es la correcta para App Router. La diferencia clave: **no envia el parser de MDX al browser**. El MDX se compila enteramente en el servidor y llega al cliente como HTML puro.
+
+```tsx
+// components/shared/MdxContent.tsx
+import { MDXRemote } from "next-mdx-remote/rsc";
+import remarkGfm from "remark-gfm";
+
+type Props = {
+  source: string;
+};
+
+export function MdxContent({ source }: Props) {
+  return (
+    <MDXRemote
+      source={source}
+      options={{ mdxOptions: { remarkPlugins: [remarkGfm] } }}
+    />
+  );
+}
+```
+
+### Diferencias clave
+
+| | `next-mdx-remote` | `next-mdx-remote/rsc` |
+|---|---|---|
+| Runtime | Necesita `'use client'` + `serialize()` | Server Component puro |
+| Bundle | Envia parser MDX al browser (~30kb) | Zero JS de MDX al cliente |
+| Uso | `serialize()` + `<MDXRemote compiledSource={...} />` | `<MDXRemote source={rawString} />` directamente |
+| Plugins | Se pasan en `serialize()` | Se pasan en `options.mdxOptions` |
+
+### Por que `remarkGfm`
+
+Sin `remarkGfm`, el MDX no soporta:
+- Tablas (`| col1 | col2 |`)
+- Listas de tareas (`- [x] done`)
+- Strikethrough (`~~texto~~`)
+- URLs autolink
+
+Es un plugin de ~3kb que se ejecuta solo en el servidor, asi que no afecta el bundle del cliente.
+
+### Gotcha
+
+El componente `MdxContent` es un Server Component (no tiene `'use client'`). Esto significa que no puedes pasarle components interactivos como custom MDX components que usen hooks. Si necesitas interactividad dentro del MDX, envuelve solo esos componentes en `'use client'`.
+
+## Referencia
+
+- [next-mdx-remote](https://github.com/hashicorp/next-mdx-remote)
+- [remark-gfm](https://github.com/remarkjs/remark-gfm)

@@ -1,0 +1,88 @@
+---
+title: "python-slugify para generar nombres de archivo desde titulos en espanol"
+slug: "python-slugify-filenames"
+category: "python"
+stack: ["python", "python-slugify"]
+date: "2026-03-19"
+---
+
+## Contexto
+
+El portfolio necesita generar archivos `.mdx` con nombres URL-safe desde titulos en espanol. Por ejemplo, "Meta API retorna 200 con firma invalida" debe convertirse en `meta-api-retorna-200-con-firma-invalida.mdx`.
+
+## Lo que aprendi
+
+`python-slugify` resuelve esto en una linea, manejando acentos, caracteres especiales y espacios.
+
+```python
+from slugify import slugify
+from datetime import date
+
+title = "Meta API retorna 200 con firma invalida"
+slug = slugify(title)
+# "meta-api-retorna-200-con-firma-invalida"
+
+filename = f"{date.today().isoformat()}-{slug}.mdx"
+# "2026-03-19-meta-api-retorna-200-con-firma-invalida.mdx"
+```
+
+### Uso en el tool de TIL
+
+```python
+#!/usr/bin/env python3
+"""til_entry.py - Create a new TIL entry with frontmatter."""
+
+import argparse
+import os
+from datetime import date
+from slugify import slugify
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--title", required=True)
+    parser.add_argument("--category", required=True)
+    parser.add_argument("--stack", default="")
+    args = parser.parse_args()
+
+    today = date.today().isoformat()
+    slug = slugify(args.title)
+    filename = f"{today}-{slug}.mdx"
+
+    content = f"""---
+title: "{args.title}"
+slug: {slug}
+category: {args.category}
+stack: [{args.stack}]
+date: {today}
+---
+
+"""
+    output_dir = os.path.join(os.path.dirname(__file__), "..", "site", "content", "til")
+    os.makedirs(output_dir, exist_ok=True)
+
+    with open(os.path.join(output_dir, filename), "w", encoding="utf-8") as f:
+        f.write(content)
+    print(f"TIL created: {filename}")
+```
+
+### Casos que maneja
+
+| Input | Output |
+|-------|--------|
+| `"Meta API retorna 200"` | `meta-api-retorna-200` |
+| `"por que tuve que ajustar"` | `por-que-tuve-que-ajustar` |
+| `"next-mdx-remote/rsc"` | `next-mdx-remote-rsc` |
+| `"@custom-variant en Tailwind"` | `custom-variant-en-tailwind` |
+| `"WCAG AA: 4.5:1 ratio"` | `wcag-aa-4-5-1-ratio` |
+
+### Instalacion
+
+```bash
+pip install python-slugify
+```
+
+No confundir con `slugify` (otro package). El correcto es `python-slugify` que importa como `from slugify import slugify`.
+
+## Referencia
+
+- [python-slugify](https://github.com/un33k/python-slugify)

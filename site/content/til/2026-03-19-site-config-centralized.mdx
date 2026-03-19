@@ -1,0 +1,86 @@
+---
+title: "siteConfig centralizado: editar 1 archivo para personalizar todo el portfolio"
+slug: "site-config-centralized"
+category: "architecture"
+stack: ["next.js", "typescript"]
+date: "2026-03-19"
+---
+
+## Contexto
+
+Al crear un template open-source del portfolio, cada usuario necesita cambiar su nombre, links sociales, descripcion, GA ID, etc. Si estos valores estan dispersos en 15 archivos, la experiencia es terrible.
+
+## Lo que aprendi
+
+Un solo archivo `config.ts` que exporta todo lo personalizable. Cada componente importa de ahi en vez de hardcodear valores.
+
+```typescript
+// lib/config.ts
+export const siteConfig = {
+  name: "Tu Nombre",
+  title: "Full-Stack Developer",
+  description: "Patterns de produccion real",
+  url: "https://tudominio.dev",
+
+  // Social links
+  social: {
+    github: "https://github.com/tuusuario",
+    x: "https://x.com/tuusuario",
+    linkedin: "https://linkedin.com/in/tuusuario",
+  },
+
+  // Metadata
+  locale: "es_MX",
+  language: "es",
+
+  // Theme defaults
+  defaultTheme: "editorial" as const,
+  defaultMode: "dark" as const,
+};
+```
+
+### Quien lo consume
+
+```typescript
+// app/layout.tsx - Metadata
+export const metadata: Metadata = {
+  title: { default: siteConfig.title, template: `%s | ${siteConfig.name}` },
+  description: siteConfig.description,
+  openGraph: { siteName: siteConfig.name, url: siteConfig.url },
+};
+
+// components/layout/Footer.tsx
+<p>{siteConfig.name}</p>
+
+// components/layout/Header.tsx
+<a href={siteConfig.social.github}>GitHub</a>
+
+// app/sitemap.ts
+return [{ url: siteConfig.url, lastModified: new Date() }];
+
+// app/robots.ts
+return { sitemap: `${siteConfig.url}/sitemap.xml` };
+```
+
+### Para el usuario del template
+
+```diff
+// Solo editar lib/config.ts
+- name: "Tu Nombre",
++ name: "Maria Garcia",
+- url: "https://tudominio.dev",
++ url: "https://mariagarcia.dev",
+```
+
+Un archivo, 10 campos, y todo el sitio se personaliza: header, footer, OG images, sitemap, robots.txt, metadata.
+
+### Pattern general para templates open-source
+
+1. Centralizar TODO lo personalizable en un config
+2. Usar TypeScript para que el editor autocomplete los campos
+3. Poner defaults sensatos (no strings vacios)
+4. Documentar cada campo con comments si no es obvio
+
+## Referencia
+
+- [Next.js Metadata](https://nextjs.org/docs/app/building-your-application/optimizing/metadata)

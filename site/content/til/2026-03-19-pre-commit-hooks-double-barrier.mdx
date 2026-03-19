@@ -1,0 +1,94 @@
+---
+title: "Pre-commit hooks: gitleaks + sanitize_check.py como doble barrera de seguridad"
+slug: "pre-commit-hooks-double-barrier"
+category: "devx"
+stack: ["git", "python", "security"]
+date: "2026-03-19"
+---
+
+## Contexto
+
+Un solo mecanismo de seguridad no es suficiente. gitleaks es excelente para patterns genericos (API keys, tokens), pero no conoce tu infraestructura. `sanitize_check.py` conoce tu infra pero podria tener gaps en patterns genericos.
+
+## Lo que aprendi
+
+Dos herramientas complementarias como pre-commit hooks crean una doble barrera donde cada una cubre las debilidades de la otra.
+
+### Configuracion (`.pre-commit-config.yaml`)
+
+```yaml
+repos:
+  # Barrera 1: patterns genericos
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.18.0
+    hooks:
+      - id: gitleaks
+
+  # Barrera 2: patterns especificos del proyecto
+  - repo: local
+    hooks:
+      - id: sanitize-check
+        name: Sanitize Check
+        entry: python tools/sanitize_check.py --dir . --strict
+        language: python
+        pass_filenames: false
+        always_run: true
+```
+
+### Que detecta cada uno
+
+| Pattern | gitleaks | sanitize_check.py |
+|---------|----------|-------------------|
+| AWS keys (`AKIA...`) | Si | No |
+| GitHub tokens (`ghp_...`) | Si | No |
+| Generic API keys (`sk-...`) | Si | Si |
+| Tu IP interna (`10.X.Y.Z`) | No | Si |
+| Tu hostname (`myserver01`) | No | Si |
+| Tu deploy path (`/home/deploy/apps`) | No | Si |
+| WireGuard keys (base64) | Parcial | Si (exactos) |
+| Project codes (`proj-001`) | No | Si |
+| Database URLs | Si | Si |
+
+### El flujo
+
+```
+git commit -m "feat: new feature"
+  |
+  v
+[gitleaks]  -- busca patterns genericos
+  |  PASS?
+  v
+[sanitize_check.py]  -- busca patterns del proyecto
+  |  PASS?
+  v
+Commit creado exitosamente
+
+Si cualquiera FALLA -> commit rechazado
+```
+
+### Instalacion
+
+```bash
+# Instalar pre-commit
+pip install pre-commit
+
+# Instalar los hooks
+pre-commit install
+
+# Test manual
+pre-commit run --all-files
+```
+
+### Leccion
+
+La seguridad funciona en capas. Ninguna herramienta individual es perfecta:
+- gitleaks no conoce tu infra
+- sanitize_check.py podria no cubrir un formato nuevo de API key
+- Ambos juntos cubren ~95% de los casos
+
+El 5% restante es la revision humana antes de publicar open-source.
+
+## Referencia
+
+- [gitleaks](https://github.com/gitleaks/gitleaks)
+- [pre-commit framework](https://pre-commit.com/)

@@ -1,0 +1,76 @@
+---
+title: "Git como CMS: MDX + frontmatter + generateStaticParams = zero-maintenance content"
+slug: "git-as-cms-mdx-ssg"
+category: "architecture"
+stack: ["next.js", "mdx", "git"]
+date: "2026-03-19"
+---
+
+## Contexto
+
+Para el portfolio necesitaba un sistema de contenido. Las opciones eran: headless CMS (Sanity, Contentful), base de datos (Postgres), o archivos en el repo. Elegi archivos MDX en Git.
+
+## Lo que aprendi
+
+Git + MDX + SSG es un CMS completo para sitios de contenido personal. Zero runtime costs, zero admin panel, zero API calls.
+
+### El flujo
+
+```
+1. Crear archivo .mdx con frontmatter YAML
+2. git add + git commit + git push
+3. Vercel detecta el push y auto-deploya
+4. Next.js lee los archivos en build time con generateStaticParams
+5. HTML estatico servido desde CDN
+```
+
+### La arquitectura
+
+```
+content/
+  projects/
+    claude-agent-patterns.mdx    # frontmatter + markdown
+    multi-ai-provider.mdx
+  til/
+    2026-03-17-proxy-vs-middleware.mdx
+    2026-03-18-openclaw-vs-diy.mdx
+
+lib/content.ts                    # Lee archivos, parsea con gray-matter
+app/projects/[slug]/page.tsx      # generateStaticParams -> SSG
+app/til/[slug]/page.tsx           # generateStaticParams -> SSG
+```
+
+### Que obtienes gratis con Git
+
+| Feature CMS | Equivalente Git |
+|-------------|----------------|
+| Historial de versiones | `git log` |
+| Audit trail (quien cambio que) | `git blame` |
+| Rollback | `git revert` |
+| Draft/publish | branch + merge |
+| Preview | Vercel preview deploys |
+| Backup | remote en GitHub + GitLab |
+| Colaboracion | Pull requests |
+| Busqueda | `grep` |
+
+### Cuando NO usar Git como CMS
+
+- Multiples editores no-tecnicos (necesitan UI)
+- Contenido que cambia cada minuto (necesita ISR o SSR)
+- Relaciones complejas entre contenido (necesita DB)
+- Busqueda full-text en tiempo real (necesita search engine)
+
+### Cuando SI funciona perfecto
+
+- Portfolio personal
+- Blog tecnico
+- Documentacion
+- TILs (Today I Learned)
+- Cualquier sitio donde el autor sabe usar Git
+
+El portfolio tiene 5 proyectos y 30+ TILs. Nunca necesito un admin panel. Push al repo, Vercel deploya en ~30 segundos.
+
+## Referencia
+
+- [Jamstack architecture](https://jamstack.org/)
+- [Next.js Static Generation](https://nextjs.org/docs/app/building-your-application/rendering/server-components#static-rendering-default)

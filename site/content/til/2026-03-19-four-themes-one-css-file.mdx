@@ -1,0 +1,87 @@
+---
+title: "4 temas en 1 archivo CSS: editorial light/dark + terminal light/dark"
+slug: "four-themes-one-css-file"
+category: "tailwind"
+stack: ["tailwind-css", "css", "design-system"]
+date: "2026-03-19"
+---
+
+## Contexto
+
+El portfolio necesita 4 combinaciones de tema: editorial light, editorial dark, terminal light, terminal dark. Cada una con ~25 CSS custom properties. La pregunta era: como organizar esto sin que se vuelva inmanejable.
+
+## Lo que aprendi
+
+El patron es: clases en `<html>` controlan que bloque de variables aplica, y Tailwind las consume via `@theme inline`.
+
+### Estructura del CSS
+
+```css
+/* 1. Tailwind consume las variables */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  /* ... 25+ mappings */
+}
+
+/* 2. Cada combo define sus variables */
+.theme-editorial {
+  --background: #fafaf9;
+  --foreground: #1c1917;
+  --primary: #c2410c;        /* orange-700 */
+  --radius: 0.5rem;
+}
+
+.theme-editorial.dark {
+  --background: #0c0a09;
+  --foreground: #fafaf9;
+  --primary: #ea580c;        /* orange-600 */
+}
+
+.theme-terminal {
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --primary: #059669;        /* emerald-600 */
+  --radius: 0.25rem;
+}
+
+.theme-terminal.dark {
+  --background: #020617;
+  --foreground: #f1f5f9;
+  --primary: #10b981;        /* emerald-500 */
+}
+```
+
+### Como se aplican las clases
+
+```html
+<!-- Editorial dark (default) -->
+<html class="theme-editorial dark">
+
+<!-- Terminal light -->
+<html class="theme-terminal">
+```
+
+### Por que este patron y no Tailwind themes
+
+1. **Composicion**: `.theme-editorial` + `.dark` son clases independientes que se combinan
+2. **Un solo archivo**: todo en `globals.css`, facil de auditar
+3. **Tailwind compatible**: `bg-background`, `text-primary` funcionan automaticamente via `@theme inline`
+4. **Extensible**: agregar un tercer tema es copiar un bloque y cambiar valores
+
+### Personalidad por tema
+
+No son solo colores diferentes -- son identidades visuales completas:
+
+| Propiedad | Editorial | Terminal |
+|-----------|-----------|----------|
+| Font familia | Serif (Lora) | Mono (JetBrains Mono) |
+| Acento | Orange/warm | Emerald/cool |
+| Radius | 0.5rem (rounded) | 0.25rem (sharp) |
+| Voz | Profesional | Hacker |
+
+## Referencia
+
+- [Tailwind v4 @theme](https://tailwindcss.com/docs/theme)
+- [CSS Custom Properties](https://developer.mozilla.org/en-US/docs/Web/CSS/Using_CSS_custom_properties)

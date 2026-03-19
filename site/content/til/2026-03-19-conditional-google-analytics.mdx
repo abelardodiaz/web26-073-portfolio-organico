@@ -1,0 +1,72 @@
+---
+title: "Google Analytics condicional: cargar solo si existe NEXT_PUBLIC_GA_ID"
+slug: "conditional-google-analytics"
+category: "nextjs"
+stack: ["next.js", "analytics", "typescript"]
+date: "2026-03-19"
+---
+
+## Contexto
+
+Al crear un template open-source del portfolio, no podia hardcodear el ID de Google Analytics -- cada usuario tiene el suyo. Pero en produccion si queria tracking.
+
+## Lo que aprendi
+
+El patron es simple: leer el GA ID de una variable de entorno y renderizar condicionalmente los scripts.
+
+```tsx
+// En el template (version open-source)
+const gaId = process.env.NEXT_PUBLIC_GA_ID;
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="es">
+      <body>
+        {children}
+        {gaId && (
+          <>
+            <Script
+              src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
+              strategy="afterInteractive"
+            />
+            <Script id="gtag-init" strategy="afterInteractive">
+              {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','${gaId}')`}
+            </Script>
+          </>
+        )}
+      </body>
+    </html>
+  );
+}
+```
+
+```tsx
+// En produccion (hardcodeado, sin variable)
+<Script
+  src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXX"
+  strategy="afterInteractive"
+/>
+```
+
+### Por que este patron funciona
+
+1. **`NEXT_PUBLIC_`** prefix: Next.js lo inyecta en el bundle del cliente, asi que `process.env.NEXT_PUBLIC_GA_ID` esta disponible en el JSX
+2. **`{gaId && <>...</>}`**: si la variable no existe, no renderiza nada -- zero scripts de tracking en dev
+3. **Template-friendly**: el usuario solo necesita agregar `NEXT_PUBLIC_GA_ID=G-XXXXX` en `.env.local` y listo
+4. **`afterInteractive`**: carga GA despues de la hidratacion, no bloquea el render inicial
+
+### Alternativa moderna
+
+Si estas en Vercel, `@vercel/analytics` es mas simple y no requiere cookie banner:
+
+```tsx
+import { Analytics } from "@vercel/analytics/next";
+
+// En el body, sin condicional -- Vercel lo maneja
+<Analytics />
+```
+
+## Referencia
+
+- [Next.js Environment Variables](https://nextjs.org/docs/app/building-your-application/configuring/environment-variables)
+- [next/script](https://nextjs.org/docs/app/api-reference/components/script)

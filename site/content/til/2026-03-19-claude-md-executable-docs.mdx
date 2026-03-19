@@ -1,0 +1,73 @@
+---
+title: "CLAUDE.md como documentacion ejecutable: reglas que Claude Code sigue automaticamente"
+slug: "claude-md-executable-docs"
+category: "devx"
+stack: ["claude-code", "markdown"]
+date: "2026-03-19"
+---
+
+## Contexto
+
+Al trabajar con Claude Code en el portfolio, me cansaba de repetir las mismas instrucciones: "usa pnpm no npm", "no pongas emojis en scripts", "actualiza el CHANGELOG". Necesitaba que las reglas se aplicaran automaticamente.
+
+## Lo que aprendi
+
+`CLAUDE.md` en la raiz del proyecto actua como instrucciones persistentes que Claude Code lee al iniciar cada sesion. Es documentacion que se ejecuta.
+
+### Estructura que funciona
+
+```markdown
+# CLAUDE.md - Portfolio Organico
+
+## Stack
+- Next.js 16 + App Router + Turbopack
+- Package manager: pnpm (NUNCA npm)
+- TypeScript strict
+
+## Reglas
+
+### Generales
+- Commits: `tipo(scope): descripcion`
+- Actualizar CHANGELOG.md en cada commit significativo
+- Variables sensibles SOLO en .env (NUNCA en codigo)
+
+### Node.js
+- SIEMPRE usar pnpm: pnpm install, pnpm add, pnpm dlx
+- Server Components por defecto, 'use client' solo cuando necesario
+
+### Python
+- SIN emojis en scripts (compatibilidad PowerShell)
+- Forward slashes en paths
+
+### SEGURIDAD (CRITICO)
+- ANTES de push: ejecutar sanitize_check.py + gitleaks
+- NUNCA incluir: IPs internas, hostnames, API keys
+```
+
+### Que logras
+
+| Sin CLAUDE.md | Con CLAUDE.md |
+|--------------|---------------|
+| "Usa pnpm por favor" (cada vez) | Se aplica automaticamente |
+| Claude instala con npm | Siempre usa pnpm |
+| Olvida actualizar CHANGELOG | Lo incluye en cada commit |
+| Pone emojis en scripts Python | Los evita por regla |
+| Hay que recordar el formato de commits | Sigue `tipo(scope): desc` |
+
+### Tips para un CLAUDE.md efectivo
+
+1. **Se especifico**: "pnpm (NUNCA npm)" es mejor que "usa el package manager del proyecto"
+2. **Explica el por que**: "SIN emojis (compatibilidad PowerShell)" da contexto
+3. **Prioriza con labels**: "CRITICO", "SIEMPRE", "NUNCA" le dan peso a las reglas
+4. **Incluye la estructura del proyecto**: ayuda a Claude a navegar
+5. **Linkea documentacion**: "Referencia completa: docs/02-security-checklist.md"
+
+### Niveles de CLAUDE.md
+
+- `~/.claude/CLAUDE.md` -- global, aplica a todos los proyectos (ej: "usa WSL para Python")
+- `proyecto/CLAUDE.md` -- especifico al repo (ej: "pnpm, no npm")
+- `proyecto/subdir/CLAUDE.md` -- especifico a un subdirectorio
+
+## Referencia
+
+- [Claude Code Documentation](https://docs.anthropic.com/en/docs/claude-code)

@@ -1,0 +1,78 @@
+---
+title: "Slash commands en .claude/commands/: automatizar workflows repetitivos"
+slug: "slash-commands-claude-code"
+category: "devx"
+stack: ["claude-code", "markdown"]
+date: "2026-03-19"
+---
+
+## Contexto
+
+En el portfolio, hay tareas que repito frecuentemente: verificar seguridad antes de push, crear una nueva entrada TIL con frontmatter correcto, consultar APIs internas. Escribir la instruccion completa cada vez era tedioso.
+
+## Lo que aprendi
+
+Claude Code permite crear slash commands como archivos `.md` en `.claude/commands/`. Cada archivo define un workflow reutilizable que se invoca con `/nombre`.
+
+### Estructura
+
+```
+.claude/
+  commands/
+    check-security.md     # /check-security
+    new-til.md            # /new-til
+    consultar-900.md      # /consultar-900
+```
+
+### Ejemplo: check-security
+
+```markdown
+<!-- .claude/commands/check-security.md -->
+Ejecuta el workflow de verificacion de seguridad:
+
+1. Corre `python tools/sanitize_check.py --dir .`
+2. Si hay findings, muestra cada uno con archivo y linea
+3. Si PASS, confirma que es seguro para push
+```
+
+### Ejemplo: new-til
+
+```markdown
+<!-- .claude/commands/new-til.md -->
+Crea una nueva entrada TIL:
+
+1. Pregunta titulo, categoria y stack
+2. Ejecuta: python tools/til_entry.py --title "$TITLE" --category "$CAT" --stack "$STACK"
+3. Abre el archivo creado para edicion
+```
+
+### Uso
+
+```
+> /check-security
+> /new-til
+> /consultar-900
+```
+
+Claude Code lee el archivo `.md` y ejecuta las instrucciones como si las hubieras escrito manualmente.
+
+### Tips
+
+1. **Un comando por tarea**: no mezclar "verificar seguridad" con "hacer commit"
+2. **Instrucciones claras**: numerar pasos, ser explicito sobre que ejecutar
+3. **Parametros via preguntas**: "Pregunta el titulo al usuario" en vez de hardcodear
+4. **Idempotentes**: el comando deberia poder ejecutarse multiples veces sin problemas
+
+### Ventaja sobre aliases/scripts
+
+| Metodo | Fortaleza |
+|--------|-----------|
+| Bash alias | Rapido pero rigido, sin logica condicional |
+| Script Python | Flexible pero requiere mantenimiento |
+| Slash command | Lenguaje natural, Claude adapta la ejecucion al contexto |
+
+El slash command es mas flexible porque Claude interpreta las instrucciones. Si el TIL tool no existe, puede crearlo. Si `sanitize_check.py` falla, puede diagnosticar por que.
+
+## Referencia
+
+- [Claude Code Custom Commands](https://docs.anthropic.com/en/docs/claude-code)

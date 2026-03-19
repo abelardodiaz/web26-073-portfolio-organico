@@ -1,0 +1,76 @@
+---
+title: "Server Components por defecto: Footer y ButtonLink sin 'use client'"
+slug: "server-components-by-default"
+category: "react"
+stack: ["react", "next.js", "typescript"]
+date: "2026-03-19"
+---
+
+## Contexto
+
+Al revisar los componentes del portfolio, varios tenian `'use client'` innecesario. El Footer mostraba contenido diferente por tema usando JavaScript condicional, pero podia hacerlo con CSS.
+
+## Lo que aprendi
+
+El principio es simple: **si un componente no usa hooks, event handlers, ni browser APIs, no necesita `'use client'`**. Muchas veces el rendering condicional por tema se puede mover a CSS con las custom variants.
+
+### Antes: Footer con `'use client'`
+
+```tsx
+"use client";
+import { useTheme } from "@/components/shared/ThemeProvider";
+
+export function Footer() {
+  const { theme } = useTheme();
+  return (
+    <footer>
+      <p>{theme === "editorial" ? "Un portfolio de" : "$ whoami"}</p>
+    </footer>
+  );
+}
+```
+
+### Despues: Footer como Server Component
+
+```tsx
+// Sin 'use client' -- es Server Component por defecto
+export function Footer() {
+  return (
+    <footer>
+      <p>
+        <span className="hidden editorial:inline">Un portfolio de</span>
+        <span className="hidden terminal:inline">$ whoami</span>
+      </p>
+    </footer>
+  );
+}
+```
+
+### El impacto
+
+- **Menos JS al cliente**: el Footer no envia JavaScript al browser -- es HTML puro
+- **No depende del ThemeProvider**: no consume context, no causa re-renders
+- **CSS hace el trabajo**: `hidden editorial:inline` renderiza ambos spans pero solo muestra uno segun la clase en `<html>`
+
+### Pattern general
+
+| Necesidad | Solucion sin `'use client'` |
+|-----------|---------------------------|
+| Mostrar/ocultar por tema | `hidden editorial:inline` / `hidden terminal:inline` |
+| Cambiar texto por modo | `hidden dark:inline` |
+| Estilos condicionales | `editorial:bg-stone-100 terminal:bg-slate-100` |
+| Cambiar layout por tema | `editorial:flex-row terminal:flex-col` |
+
+### Cuando SI necesitas `'use client'`
+
+- Componentes con `useState`, `useEffect`, `useContext`
+- Event handlers (`onClick`, `onChange`)
+- Browser APIs (`localStorage`, `window`, `navigator`)
+- Hooks de terceros (`useTheme`, `useRouter` client-side)
+
+La regla: empezar como Server Component y solo agregar `'use client'` cuando el compilador se queje o necesites interactividad.
+
+## Referencia
+
+- [Server Components](https://react.dev/reference/rsc/server-components)
+- [When to use Client Components](https://nextjs.org/docs/app/building-your-application/rendering/client-components)

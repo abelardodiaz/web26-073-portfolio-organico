@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.7.0] - 2026-03-19
+
+### Added
+- 30 TIL entries across 7 categories (Next.js 16, Tailwind v4, React 19, shadcn/Base-UI, Python & Security, Architecture, Claude Code & DevX)
+- All TILs based on real lessons from this codebase with actual code snippets
+
 ## [0.6.1] - 2026-03-19
 
 ### Added

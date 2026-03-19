@@ -1,0 +1,87 @@
+---
+title: "Publicar template open-source: workflow de verificacion con 7 greps criticos"
+slug: "open-source-verification-workflow"
+category: "security"
+stack: ["bash", "grep", "security"]
+date: "2026-03-19"
+---
+
+## Contexto
+
+Al publicar el template del portfolio como open-source, tenia que asegurar que NINGUNA referencia personal (nombre de dominio, Google Analytics ID, hostnames, IPs, codigos de proyecto) se filtrara al repo publico.
+
+## Lo que aprendi
+
+Un workflow de verificacion con dos capas: 7 greps especificos + sanitize_check.py contra el template.
+
+### Los 7 greps criticos
+
+```bash
+# Ejecutar contra el directorio del template
+cd public/portfolio-organico-template
+
+# 1. Dominio personal
+grep -r "abelardodiaz" . --include="*.{ts,tsx,css,md,json}" | wc -l
+# Esperado: 0
+
+# 2. Hostnames internos
+grep -r "myserver" . --include="*.{ts,tsx,py,md}" | wc -l
+# Esperado: 0
+
+# 3. Google Analytics ID personal
+grep -r "G-B1XR6RGWG3" . --include="*.{ts,tsx}" | wc -l
+# Esperado: 0
+
+# 4. IPs privadas
+grep -rE "10\.X\.Y\." . --include="*.{ts,tsx,py,md,json}" | wc -l
+# Esperado: 0
+
+# 5. Codigos de proyecto internos
+grep -rE "proj-\d{3}" . --include="*.{ts,tsx,py,md}" | wc -l
+# Esperado: 0
+
+# 6. Paths de usuario
+grep -r "/Users/myuser" . --include="*.{ts,tsx,py,md,json}" | wc -l
+# Esperado: 0
+
+# 7. API keys hardcodeadas
+grep -rE "(sk-|shpss_|shpat_)" . --include="*.{ts,tsx,py,env}" | wc -l
+# Esperado: 0
+```
+
+### Luego el scanner automatizado
+
+```bash
+# sanitize_check con los 20+ patterns
+python tools/sanitize_check.py --dir public/portfolio-organico-template
+# Esperado: SANITIZE CHECK - PASS
+```
+
+### Por que ambos
+
+| Metodo | Fortaleza | Debilidad |
+|--------|-----------|-----------|
+| 7 greps manuales | Rapido, visible, facil de auditar | Solo busca lo que sabes |
+| sanitize_check.py | 20+ patterns automaticos | Puede tener falsos negativos |
+| Ambos juntos | Cubre conocido + desconocido | Toma 30 segundos extra |
+
+### Template vs produccion
+
+El template tiene placeholders donde produccion tiene valores reales:
+
+```typescript
+// Template (public)
+const gaId = process.env.NEXT_PUBLIC_GA_ID;
+{gaId && <Script src={`...${gaId}`} />}
+
+// Produccion (privado)
+<Script src="https://www.googletagmanager.com/gtag/js?id=G-B1XR6RGWG3" />
+```
+
+### Leccion
+
+Cada vez que publicas open-source, corre este workflow. Es facil olvidar un `console.log` con un hostname, un comment con una IP, o un placeholder que olvidaste reemplazar. 30 segundos de verificacion pueden ahorrarte horas de rotacion de credenciales.
+
+## Referencia
+
+- [docs/02-security-publication-checklist.md](/docs/02-security-publication-checklist.md) - Checklist completo del proyecto

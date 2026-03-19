@@ -1,0 +1,60 @@
+---
+title: "@custom-variant en Tailwind v4: crear variantes editorial: y terminal:"
+slug: "custom-variant-tailwind-v4"
+category: "tailwind"
+stack: ["tailwind-css", "css"]
+date: "2026-03-19"
+---
+
+## Contexto
+
+El portfolio tiene dos temas visuales completos (editorial y terminal) ademas de light/dark. Necesitaba poder escribir clases como `editorial:text-4xl terminal:text-3xl` para que cada tema renderice diferente.
+
+## Lo que aprendi
+
+Tailwind v4 introduce `@custom-variant` que permite crear variantes propias basadas en selectores CSS. Tres lineas en `globals.css` y tienes variantes de primera clase.
+
+```css
+/* app/globals.css */
+@custom-variant dark (&:is(.dark *));
+@custom-variant editorial (&:is(.theme-editorial *));
+@custom-variant terminal (&:is(.theme-terminal *));
+```
+
+### Como funciona
+
+El selector `&:is(.theme-editorial *)` significa: "aplica este estilo cuando el elemento es descendiente de un nodo con clase `.theme-editorial`". Como la clase va en `<html>`, aplica a todo el documento.
+
+Uso en componentes:
+
+```tsx
+{/* Texto diferente por tema */}
+<h1 className="editorial:text-4xl editorial:font-serif terminal:text-3xl terminal:font-mono">
+  Titulo
+</h1>
+
+{/* Mostrar/ocultar secciones por tema */}
+<span className="hidden editorial:inline">Volver a Proyectos</span>
+<span className="hidden terminal:inline">cd ..</span>
+
+{/* Combinar con dark: */}
+<div className="editorial:bg-stone-100 dark:editorial:bg-stone-900">
+```
+
+### Por que `@custom-variant` y no `@variant`
+
+En Tailwind v4, `@custom-variant` es la directiva correcta. `@variant` es para otra cosa (applicar estilos condicionales dentro de un bloque CSS, no para crear nuevas variantes reutilizables en clases utility).
+
+### Alternativa: clases condicionales en JS
+
+Antes hacia esto:
+
+```tsx
+<h1 className={theme === "editorial" ? "text-4xl font-serif" : "text-3xl font-mono"}>
+```
+
+Con `@custom-variant` la logica vive en CSS, el componente no necesita conocer el tema actual, y funciona sin `'use client'`.
+
+## Referencia
+
+- [Tailwind v4 Custom Variants](https://tailwindcss.com/docs/adding-custom-styles#adding-custom-variants)

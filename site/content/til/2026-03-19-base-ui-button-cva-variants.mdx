@@ -1,0 +1,94 @@
+---
+title: "base-ui Button + CVA: headless component con Tailwind variants"
+slug: "base-ui-button-cva-variants"
+category: "shadcn"
+stack: ["base-ui", "cva", "tailwind-css", "typescript"]
+date: "2026-03-19"
+---
+
+## Contexto
+
+shadcn/ui usa Radix primitives, pero para el portfolio opte por Base UI de MUI (headless, zero styles) combinado con CVA (class-variance-authority) para maxima flexibilidad con el sistema de temas.
+
+## Lo que aprendi
+
+El patron es: Base UI provee comportamiento accessible (focus management, keyboard nav), CVA provee las variantes de estilo, y Tailwind CSS aplica los estilos.
+
+```tsx
+import { Button as ButtonPrimitive } from "@base-ui-components/react/button";
+import { cva, type VariantProps } from "class-variance-authority";
+import { cn } from "@/lib/utils";
+
+const buttonVariants = cva(
+  // Base styles (todos los botones)
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg:not([class*='size-'])]:size-4",
+  {
+    variants: {
+      variant: {
+        default: "bg-primary text-primary-foreground shadow-xs hover:bg-primary/90",
+        outline: "border border-input bg-background shadow-xs hover:bg-accent",
+        secondary: "bg-secondary text-secondary-foreground shadow-xs hover:bg-secondary/80",
+        ghost: "hover:bg-accent hover:text-accent-foreground",
+        destructive: "bg-destructive text-white shadow-xs hover:bg-destructive/90",
+        link: "text-primary underline-offset-4 hover:underline",
+      },
+      size: {
+        default: "h-9 px-4 py-2",
+        xs: "h-6 rounded-md px-2 text-xs",
+        sm: "h-8 rounded-md px-3 text-xs",
+        lg: "h-10 rounded-md px-6",
+        icon: "size-9",
+        "icon-xs": "size-6",
+        "icon-sm": "size-8",
+        "icon-lg": "size-10",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+      size: "default",
+    },
+  }
+);
+
+type ButtonProps = React.ComponentProps<typeof ButtonPrimitive> &
+  VariantProps<typeof buttonVariants>;
+
+function Button({ className, variant, size, ...props }: ButtonProps) {
+  return (
+    <ButtonPrimitive
+      className={cn(buttonVariants({ variant, size, className }))}
+      {...props}
+    />
+  );
+}
+
+export { Button, buttonVariants };
+```
+
+### El selector interesante
+
+```css
+[&_svg:not([class*='size-'])]:size-4
+```
+
+Esto significa: "cualquier SVG hijo que NO tenga una clase `size-*` explicita, dale `size-4` (16px)". Asi los iconos tienen tamano consistente por defecto pero puedes overridearlo.
+
+### Por que Base UI y no Radix
+
+| | Base UI | Radix |
+|---|---|---|
+| Estilos | Zero (headless puro) | Zero (headless) |
+| `data-slot` | Si (util para CSS global por tema) | No |
+| Mantenedor | MUI (Google-backed) | WorkOS |
+| Bundle | Similar | Similar |
+
+La ventaja clave de Base UI para este proyecto: emite `data-slot="button"` en el DOM, lo que permite styling global por tema (ver TIL sobre `data-slot`).
+
+### Type safety con `VariantProps`
+
+CVA exporta `VariantProps<typeof buttonVariants>` que genera automaticamente el tipo union para `variant` y `size`. TypeScript te avisa si pasas `variant="primary"` (no existe) vs `variant="default"`.
+
+## Referencia
+
+- [Base UI Button](https://base-ui.com/react/components/button)
+- [CVA](https://cva.style/docs)
