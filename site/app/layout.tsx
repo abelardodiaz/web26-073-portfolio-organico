@@ -6,6 +6,7 @@ import { Footer } from "@/components/layout/Footer";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://abelardodiaz.dev"),
   title: {
     default: "Abelardo Diaz - Full-Stack Developer & AI Agent Architect",
     template: "%s | Abelardo Diaz",
@@ -15,6 +16,12 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "es_MX",
+    siteName: "Abelardo Diaz",
+    url: "https://abelardodiaz.dev",
+  },
+  twitter: {
+    card: "summary_large_image",
+    creator: "@abelardodiaz",
   },
 };
 
