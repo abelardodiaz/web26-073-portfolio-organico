@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { fontVariables } from "./fonts";
 import { ThemeProvider } from "@/components/shared/ThemeProvider";
 import { Header } from "@/components/layout/Header";
@@ -39,6 +40,13 @@ export default function RootLayout({
           }}
         />
       </head>
+      <Script
+        src="https://www.googletagmanager.com/gtag/js?id=G-B1XR6RGWG3"
+        strategy="afterInteractive"
+      />
+      <Script id="gtag-init" strategy="afterInteractive">
+        {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-B1XR6RGWG3')`}
+      </Script>
       <body className="antialiased min-h-screen flex flex-col">
         <ThemeProvider>
           <Header />
