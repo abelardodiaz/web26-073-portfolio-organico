@@ -2,6 +2,33 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.0] - 2026-03-19
+
+### Added
+- Google Analytics (G-B1XR6RGWG3) via next/script afterInteractive
+
+### Changed
+- Footer and ButtonLink converted to Server Components (reduced JS bundle)
+- Header: solid bg-background replacing bg-background/85 backdrop-blur
+- RotatingLabel: solid accent bg replacing bg-primary/10 (a11y fix)
+- Editorial dark --primary-foreground: #ffffff -> #0c0a09 (dark text on orange buttons, 5.36:1 contrast)
+- Editorial dark --accent: #431407 -> #3a1207 (text-primary on accent passes 4.65:1)
+- Editorial dark --fg-subtle: #78716c -> #9b9490 (contrast 4.12 -> ~6.5:1)
+- Editorial light --fg-subtle: #a8a29e -> #6e6863 (contrast 2.39 -> 4.81:1)
+- Terminal light --fg-subtle: #94a3b8 -> #586879 (contrast 2.42 -> 5.00:1)
+
+### Fixed
+- aria-label on all nav landmarks (desktop, mobile, footer social)
+- aria-expanded on mobile menu toggle button
+- aria-hidden="true" on all decorative SVGs (Header, Footer, ThemeSelector, ThemeToggle, Contact)
+
+### Lighthouse Scores (post-deploy)
+- /: 99 / 100 / 100 / 100
+- /projects: 99 / 100 / 100 / 100
+- /about: 98 / 100 / 100 / 100
+- /contact: 98 / 100 / 100 / 100
+- /til: 100 / 100 / 100 / 100
+
 ## [0.4.0] - 2026-03-18
 
 ### Added
