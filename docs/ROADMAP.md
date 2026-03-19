@@ -82,6 +82,20 @@
 - [x] Accessibility: Lighthouse 100 (WCAG AA contrast, aria-labels, semantic HTML)
 - [x] Google Analytics (G-B1XR6RGWG3)
 
+### Template Publico -- COMPLETADA 2026-03-19
+- [x] Crear repo `portfolio-organico-template` publico
+- [x] Centralizar config en `site/lib/config.ts` (siteConfig)
+- [x] Sanitizar todos los archivos (0 refs personales)
+- [x] Sanitizar tools/sanitize_check.py (remover IPs/keys reales)
+- [x] Sanitizar docs (remover server003, project codes, client names)
+- [x] Crear comandos Claude Code genericos (check-security, new-til)
+- [x] Crear contenido de ejemplo (1 project MDX, 1 TIL MDX)
+- [x] Crear docs/GETTING-STARTED.md
+- [x] Crear README.md completo
+- [x] Verificar security (grep scan + sanitize_check.py original)
+- [x] Build exitoso (12/12 paginas)
+- [x] Publicar en GitHub: abelardodiaz/portfolio-organico-template
+
 ### Content Pipeline
 - [ ] Mantener ritmo 3x/semana de posts
 - [ ] Agregar 2-3 TILs por semana

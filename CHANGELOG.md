@@ -2,6 +2,31 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.6.0] - 2026-03-19
+
+### Added
+- Public template repo `portfolio-organico-template` created and published
+  - GitHub: https://github.com/abelardodiaz/portfolio-organico-template
+  - Centralized `siteConfig` in `site/lib/config.ts` (edit 1 file, everything changes)
+  - All personal data replaced with generic placeholders
+  - Sanitized sanitize_check.py (removed real IPs, hostnames, WireGuard keys)
+  - Sanitized docs (removed server003, abelardodiaz, project codes, client names)
+  - Generic Claude Code commands (check-security, new-til)
+  - Example MDX content (1 project, 1 TIL)
+  - docs/GETTING-STARTED.md with step-by-step setup guide
+  - Full README with Quick Start, personalization, deploy instructions
+  - MIT License
+- Security verification passed:
+  - grep "abelardodiaz" -> 0 results
+  - grep "server003" -> 0 results
+  - grep "G-B1XR6RGWG3" -> 0 results
+  - grep "redv6" -> 0 results
+  - grep "10.254." -> 0 results
+  - pnpm build -> 12/12 pages OK
+
+### Fixed
+- content.ts: added toDateString() helper for gray-matter Date object conversion
+
 ## [0.5.0] - 2026-03-19
 
 ### Added
