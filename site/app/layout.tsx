@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Script from "next/script";
+
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { fontVariables } from "./fonts";
@@ -41,14 +41,8 @@ export default function RootLayout({
             __html: `(function(){var t=localStorage.getItem("site-theme")||"editorial";var m=localStorage.getItem("site-mode")||"dark";document.documentElement.classList.add("theme-"+t);if(m==="dark")document.documentElement.classList.add("dark")})()`,
           }}
         />
+        <link rel="preconnect" href="https://va.vercel-scripts.com" />
       </head>
-      <Script
-        src="https://www.googletagmanager.com/gtag/js?id=G-B1XR6RGWG3"
-        strategy="afterInteractive"
-      />
-      <Script id="gtag-init" strategy="afterInteractive">
-        {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-B1XR6RGWG3')`}
-      </Script>
       <body className="antialiased min-h-screen flex flex-col">
         <ThemeProvider>
           <Header />

@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.7.1] - 2026-03-19
+
+### Changed
+- Remove Google Analytics (redundant with Vercel Analytics + Speed Insights, saves ~89 KiB JS)
+- Convert Inter, JetBrains Mono, Space Grotesk to variable fonts (fewer font files)
+- Add preconnect hint for Vercel Analytics domain
+
+### Performance
+- Target: mobile PageSpeed 80 -> 90+ (LCP 4.5s -> reduced, FCP 2.5s -> reduced)
+
 ## [0.7.0] - 2026-03-19
 
 ### Added
