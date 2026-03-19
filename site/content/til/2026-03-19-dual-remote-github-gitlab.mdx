@@ -1,0 +1,88 @@
+---
+title: "Dual remote Git: GitHub para deploy, GitLab como backup"
+slug: "dual-remote-github-gitlab"
+category: "tooling"
+stack: ["git", "github", "gitlab", "vercel"]
+date: "2026-03-19"
+---
+
+## Contexto
+
+El portfolio necesita estar en GitHub (porque Vercel auto-deploya desde ahi) pero el historial de trabajo esta en GitLab (donde viven todos los proyectos del server). Queria mantener ambos sin duplicar esfuerzo.
+
+## Lo que aprendi
+
+### Configurar dos remotes
+
+```bash
+# origin = GitLab (repo principal/historico)
+git remote add origin https://gitlab.com/user/proyecto.git
+
+# github = GitHub (para Vercel auto-deploy)
+git remote add github https://github.com/user/proyecto.git
+```
+
+Verificar:
+
+```bash
+git remote -v
+# github  https://github.com/user/proyecto.git (fetch)
+# github  https://github.com/user/proyecto.git (push)
+# origin  https://gitlab.com/user/proyecto.git (fetch)
+# origin  https://gitlab.com/user/proyecto.git (push)
+```
+
+### Push a ambos en cada commit
+
+```bash
+git push github main && git push origin main
+```
+
+El orden importa: GitHub primero porque dispara el deploy de Vercel. Si GitLab falla por alguna razon, al menos el deploy ya se disparo.
+
+### Por que no usar un solo remote con multiples push URLs
+
+Existe la opcion de agregar multiples push URLs a un solo remote:
+
+```bash
+git remote set-url --add --push origin https://github.com/user/proyecto.git
+git remote set-url --add --push origin https://gitlab.com/user/proyecto.git
+```
+
+No la uso porque:
+1. **Visibilidad**: con remotes separados ves claramente a donde pusheas
+2. **Control**: si uno falla, el otro ya paso. Con multi-push, un fallo puede ser confuso
+3. **Fetch**: necesitas elegir de cual remote haces fetch, y con remotes separados es explicito
+
+### Automatizar en CLAUDE.md
+
+En las reglas del proyecto:
+
+```
+Push a AMBOS remotes: git push github main && git push origin main
+```
+
+Asi cualquier agente o developer que lea las instrucciones sabe que hay que pushear a ambos.
+
+### gh CLI para GitHub, glab CLI para GitLab
+
+Para operaciones especificas de cada plataforma:
+
+```bash
+# GitHub: crear PR, ver issues, ver checks
+gh pr create --title "feat: nueva pagina"
+gh pr list
+gh run list
+
+# GitLab: ver pipelines, merge requests
+glab mr list
+glab pipeline list
+```
+
+Ambos CLIs coexisten sin problemas. Cada uno solo opera en su plataforma respectiva.
+
+## Referencia
+
+- [git remote docs](https://git-scm.com/docs/git-remote)
+- [GitHub CLI](https://cli.github.com/)
+- [GitLab CLI](https://gitlab.com/gitlab-org/cli)
