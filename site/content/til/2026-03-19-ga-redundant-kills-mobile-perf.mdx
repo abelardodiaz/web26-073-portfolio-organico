@@ -1,0 +1,72 @@
+---
+title: "Google Analytics redundante: el mayor culpable de mobile perf"
+slug: "ga-redundant-kills-mobile-perf"
+category: "performance"
+stack: ["next.js", "vercel", "analytics", "performance"]
+date: "2026-03-19"
+---
+
+## Contexto
+
+El portfolio tenia PageSpeed mobile score de 80 con LCP de 4.5s (rojo) y FCP de 2.5s (naranja). Desktop era 99. La diferencia era dramatica.
+
+## Lo que aprendi
+
+El diagnostico revelo que **Google Analytics era el principal culpable**:
+
+- Google Tag Manager: **150.3 KiB transferidos**, 61.6 KiB de JS sin usar
+- Chunk propio: 69.4 KiB, 27.5 KiB sin usar (polyfills)
+- Total ahorro potencial: **~89 KiB de JS**
+
+El sitio ya tenia `@vercel/analytics` + `@vercel/speed-insights` que cubren:
+- Page views, visitantes, referrers, top pages
+- Core Web Vitals reales (LCP, CLS, INP, TTFB)
+- Sin cookies, sin consent banner, sin peso extra significativo
+
+GA era **100% redundante**.
+
+### El fix
+
+```tsx
+// ANTES: 2 scripts de GA + Vercel Analytics
+<Script src="https://www.googletagmanager.com/gtag/js?id=G-XXXXX" strategy="afterInteractive" />
+<Script id="gtag-init" strategy="afterInteractive">
+  {`window.dataLayer=...`}
+</Script>
+<Analytics />
+<SpeedInsights />
+
+// DESPUES: solo Vercel (misma observabilidad, ~89 KiB menos)
+<Analytics />
+<SpeedInsights />
+```
+
+### Resultado
+
+| Metrica | Antes | Despues |
+|---------|-------|---------|
+| Mobile Performance | 80 | **100** |
+| Desktop Performance | 99 | **100** |
+| LCP | 4.5s (rojo) | verde |
+| FCP | 2.5s (naranja) | verde |
+
+### Leccion
+
+Antes de optimizar CSS, fonts, o code splitting -- revisa si tienes **scripts de terceros redundantes**. Un solo `<Script>` de GA puede ser la diferencia entre 80 y 100 en mobile. `strategy="afterInteractive"` no lo hace gratis: sigue bloqueando el main thread despues de la hidratacion.
+
+### Preconnect como complemento
+
+Al eliminar GA, el unico dominio externo es Vercel Analytics:
+
+```tsx
+<head>
+  <link rel="preconnect" href="https://va.vercel-scripts.com" />
+</head>
+```
+
+Esto inicia el TCP handshake + TLS antes de que el browser necesite el script.
+
+## Referencia
+
+- [PageSpeed Insights](https://pagespeed.web.dev/)
+- [Vercel Analytics](https://vercel.com/docs/analytics)
