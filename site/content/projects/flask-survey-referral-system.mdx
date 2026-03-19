@@ -1,0 +1,38 @@
+---
+title: "Flask Multi-Step Survey & Referral System"
+slug: "flask-survey-referral-system"
+description: "Sistema de encuestas multi-paso con verificacion WhatsApp OTP y tracking de referidos, construido con Flask + SQLite + n8n webhooks."
+stack: ["python", "flask", "sqlite", "tailwind-css", "n8n"]
+github: "https://github.com/abelardodiaz/flask-multi-step-survey-and-referral-system"
+category: "fullstack"
+featured: false
+date: "2026-03-19"
+---
+
+## Que es
+
+Un sistema de encuestas multi-paso diseñado para ISPs rurales que necesitan evaluar demanda en fraccionamientos residenciales. Incluye verificacion de WhatsApp via OTP, sistema de referidos con codigos QR, y automatizacion via webhooks n8n.
+
+## Flujo del usuario
+
+1. **Encuesta 6 pasos** -- datos personales, tipo de conexion actual, problemas, prioridades, velocidad deseada, comentarios
+2. **Verificacion OTP** -- se envia codigo de 6 digitos via WhatsApp, el usuario lo confirma en el browser
+3. **Pagina de gracias** -- se activa el sistema de referidos con link unico (UUID) y botones de compartir
+4. **Sugerencias** -- plantillas de mensajes y codigos QR personalizados para viralizar la encuesta
+
+## Decisiones tecnicas
+
+- **Flask sobre Django**: proyecto single-purpose, no necesita ORM ni admin panel
+- **SQLite sobre Postgres**: datos no relacionales, volumen bajo, deploy simple
+- **Tailwind CDN**: mobile-first sin build step, dark mode con class strategy
+- **n8n webhooks**: desacopla el survey del CRM, permite agregar WhatsApp/Telegram/Sheets sin tocar Flask
+- **OTP en vez de magic links**: el usuario no sale del browser, mejor UX en movil
+- **UUID como referral code**: no expone datos del usuario, compatible con el flujo de n8n
+
+## Stack completo
+
+- **Backend**: Flask 2.3, Flask-WTF (CSRF), python-dotenv, pytz
+- **Database**: SQLite3 con tablas para tokens, consentimiento y datos de encuesta
+- **Frontend**: Tailwind CSS (CDN), vanilla JS, QR code generation (qrcode + Pillow)
+- **Integraciones**: n8n webhooks para WhatsApp API, Google Sheets, Telegram
+- **Deploy**: gunicorn + reverse proxy, compatible con cualquier VPS

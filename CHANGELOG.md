@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.7.2] - 2026-03-19
+
+### Added
+- New micro-repo: `flask-multi-step-survey-and-referral-system` (open source, sanitized from production)
+- Project entry `flask-survey-referral-system.mdx` in portfolio site
+
 ## [0.7.1] - 2026-03-19
 
 ### Changed
