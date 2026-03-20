@@ -47,6 +47,9 @@ docs/
 # Metadatos internos (project codes, paths privados)
 PROJECT.yaml
 
+# Private tools (repo separado, solo GitLab)
+web26-073-tools-private/
+
 # Logs
 *.log
 npm-debug.log*
