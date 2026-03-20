@@ -1,5 +1,10 @@
 import type { MetadataRoute } from "next";
-import { getAllProjects, getAllTils } from "@/lib/content";
+import {
+  getAllProjects,
+  getAllTils,
+  getAllTilCategories,
+  getAllTilProjects,
+} from "@/lib/content";
 
 const BASE_URL = "https://abelardodiaz.dev";
 
@@ -26,5 +31,19 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.6,
   }));
 
-  return [...staticRoutes, ...projects, ...tils];
+  const tilCategories = getAllTilCategories().map((cat) => ({
+    url: `${BASE_URL}/til/categoria/${cat}`,
+    lastModified: new Date(),
+    changeFrequency: "weekly" as const,
+    priority: 0.7,
+  }));
+
+  const tilProjects = getAllTilProjects().map((proj) => ({
+    url: `${BASE_URL}/til/proyecto/${proj}`,
+    lastModified: new Date(),
+    changeFrequency: "weekly" as const,
+    priority: 0.7,
+  }));
+
+  return [...staticRoutes, ...projects, ...tils, ...tilCategories, ...tilProjects];
 }

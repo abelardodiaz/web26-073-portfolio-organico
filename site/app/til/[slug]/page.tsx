@@ -47,9 +47,12 @@ export default async function TilEntryPage({ params }: Props) {
       <header className="mb-8">
         <h1 className="mb-2 text-3xl font-bold tracking-tight">{til.title}</h1>
         <div className="flex items-center gap-3 text-sm text-muted-foreground">
-          <span className="rounded bg-primary/10 px-2 py-0.5 font-mono text-xs uppercase text-primary">
+          <Link
+            href={`/til/categoria/${til.category}`}
+            className="rounded bg-primary/10 px-2 py-0.5 font-mono text-xs uppercase text-primary transition-colors hover:bg-primary/20"
+          >
             {til.category}
-          </span>
+          </Link>
           <span className="font-mono text-xs">{til.date}</span>
           {til.stack.length > 0 && (
             <span className="text-xs">{til.stack.join(", ")}</span>

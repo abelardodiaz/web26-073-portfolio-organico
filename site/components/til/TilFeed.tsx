@@ -4,12 +4,15 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import type { TilEntry, TilTagSets } from "@/lib/content";
 
+type ActiveFilter = { type: "category" | "project"; value: string };
+
 type Props = {
   tils: TilEntry[];
   tagSets: TilTagSets;
+  activeFilter?: ActiveFilter;
 };
 
-export function TilFeed({ tils, tagSets }: Props) {
+export function TilFeed({ tils, tagSets, activeFilter }: Props) {
   const [activeCategories, setActiveCategories] = useState<Set<string>>(
     new Set()
   );
@@ -53,6 +56,95 @@ export function TilFeed({ tils, tagSets }: Props) {
     setActiveProjects(new Set());
   }
 
+  /* Renders a category tag — either a <Link> (in filter pages) or a <button> (in /til) */
+  function renderCategoryTag(cat: string, isTerminal: boolean) {
+    const isActive =
+      activeFilter?.type === "category" && activeFilter.value === cat;
+    const isLinkMode = activeFilter?.type === "category";
+
+    const baseClass = isTerminal
+      ? "rounded px-2 py-0.5 font-mono text-[11px] transition-colors"
+      : "rounded-full px-3 py-1 text-xs font-medium transition-colors";
+
+    const activeClass =
+      "bg-primary/15 text-primary border border-primary/30";
+    const inactiveClass =
+      "bg-secondary text-secondary-foreground border border-transparent";
+
+    if (isLinkMode) {
+      if (isActive) {
+        return (
+          <span key={cat} className={`${baseClass} ${activeClass}`}>
+            {cat}
+          </span>
+        );
+      }
+      return (
+        <Link
+          key={cat}
+          href={`/til/categoria/${cat}`}
+          className={`${baseClass} ${inactiveClass} hover:bg-primary/10 hover:text-primary`}
+        >
+          {cat}
+        </Link>
+      );
+    }
+
+    return (
+      <button
+        key={cat}
+        onClick={() => toggleCategory(cat)}
+        className={`${baseClass} ${activeCategories.has(cat) ? activeClass : inactiveClass}`}
+      >
+        {cat}
+      </button>
+    );
+  }
+
+  /* Renders a project tag — either a <Link> (in filter pages) or a <button> (in /til) */
+  function renderProjectTag(proj: string, isTerminal: boolean) {
+    const isActive =
+      activeFilter?.type === "project" && activeFilter.value === proj;
+    const isLinkMode = activeFilter?.type === "project";
+
+    const baseClass = isTerminal
+      ? "rounded px-2 py-0.5 font-mono text-[11px] transition-colors border"
+      : "rounded-full px-3 py-1 text-xs font-medium transition-colors border";
+
+    const activeClass =
+      "border-border text-foreground ring-1 ring-primary/30";
+    const inactiveClass = "border-border text-muted-foreground";
+
+    if (isLinkMode) {
+      if (isActive) {
+        return (
+          <span key={proj} className={`${baseClass} ${activeClass}`}>
+            {proj}
+          </span>
+        );
+      }
+      return (
+        <Link
+          key={proj}
+          href={`/til/proyecto/${proj}`}
+          className={`${baseClass} ${inactiveClass} hover:text-foreground`}
+        >
+          {proj}
+        </Link>
+      );
+    }
+
+    return (
+      <button
+        key={proj}
+        onClick={() => toggleProject(proj)}
+        className={`${baseClass} ${activeProjects.has(proj) ? activeClass : inactiveClass}`}
+      >
+        {proj}
+      </button>
+    );
+  }
+
   return (
     <>
       {/* ── Editorial tag bar ── */}
@@ -61,38 +153,30 @@ export function TilFeed({ tils, tagSets }: Props) {
           <span className="text-xs font-semibold uppercase tracking-widest text-[var(--fg-subtle)] mr-1">
             Categoria
           </span>
-          {tagSets.categories.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => toggleCategory(cat)}
-              className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-                activeCategories.has(cat)
-                  ? "bg-primary/15 text-primary border border-primary/30"
-                  : "bg-secondary text-secondary-foreground border border-transparent"
-              }`}
+          {activeFilter && (
+            <Link
+              href="/til"
+              className="rounded-full px-3 py-1 text-xs font-medium transition-colors bg-secondary text-secondary-foreground border border-transparent hover:bg-primary/10 hover:text-primary"
             >
-              {cat}
-            </button>
-          ))}
+              Todos
+            </Link>
+          )}
+          {tagSets.categories.map((cat) => renderCategoryTag(cat, false))}
         </div>
         {tagSets.projects.length > 0 && (
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-xs font-semibold uppercase tracking-widest text-[var(--fg-subtle)] mr-1">
               Proyecto
             </span>
-            {tagSets.projects.map((proj) => (
-              <button
-                key={proj}
-                onClick={() => toggleProject(proj)}
-                className={`rounded-full px-3 py-1 text-xs font-medium transition-colors border ${
-                  activeProjects.has(proj)
-                    ? "border-border text-foreground ring-1 ring-primary/30"
-                    : "border-border text-muted-foreground"
-                }`}
+            {activeFilter && (
+              <Link
+                href="/til"
+                className="rounded-full px-3 py-1 text-xs font-medium transition-colors border border-border text-muted-foreground hover:text-foreground"
               >
-                {proj}
-              </button>
-            ))}
+                Todos
+              </Link>
+            )}
+            {tagSets.projects.map((proj) => renderProjectTag(proj, false))}
           </div>
         )}
         {hasFilters && (
@@ -116,38 +200,30 @@ export function TilFeed({ tils, tagSets }: Props) {
           <span className="font-mono text-[11px] uppercase tracking-widest text-[var(--fg-subtle)] mr-1">
             cat:
           </span>
-          {tagSets.categories.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => toggleCategory(cat)}
-              className={`rounded px-2 py-0.5 font-mono text-[11px] transition-colors ${
-                activeCategories.has(cat)
-                  ? "bg-primary/15 text-primary border border-primary/30"
-                  : "bg-secondary text-secondary-foreground border border-transparent"
-              }`}
+          {activeFilter && (
+            <Link
+              href="/til"
+              className="rounded px-2 py-0.5 font-mono text-[11px] transition-colors bg-secondary text-secondary-foreground border border-transparent hover:bg-primary/10 hover:text-primary"
             >
-              {cat}
-            </button>
-          ))}
+              *
+            </Link>
+          )}
+          {tagSets.categories.map((cat) => renderCategoryTag(cat, true))}
         </div>
         {tagSets.projects.length > 0 && (
           <div className="flex flex-wrap items-center gap-2">
             <span className="font-mono text-[11px] uppercase tracking-widest text-[var(--fg-subtle)] mr-1">
               proj:
             </span>
-            {tagSets.projects.map((proj) => (
-              <button
-                key={proj}
-                onClick={() => toggleProject(proj)}
-                className={`rounded px-2 py-0.5 font-mono text-[11px] transition-colors border ${
-                  activeProjects.has(proj)
-                    ? "border-border text-foreground ring-1 ring-primary/30"
-                    : "border-border text-muted-foreground"
-                }`}
+            {activeFilter && (
+              <Link
+                href="/til"
+                className="rounded px-2 py-0.5 font-mono text-[11px] transition-colors border border-border text-muted-foreground hover:text-foreground"
               >
-                {proj}
-              </button>
-            ))}
+                *
+              </Link>
+            )}
+            {tagSets.projects.map((proj) => renderProjectTag(proj, true))}
           </div>
         )}
         {hasFilters && (

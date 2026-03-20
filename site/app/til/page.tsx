@@ -5,6 +5,7 @@ import { TilFeed } from "@/components/til/TilFeed";
 export const metadata: Metadata = {
   title: "TIL - Today I Learned",
   description: "Micro-lecciones aprendidas en produccion.",
+  alternates: { canonical: "https://abelardodiaz.dev/til" },
 };
 
 export default function TilPage() {

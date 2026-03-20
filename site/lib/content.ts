@@ -74,6 +74,20 @@ export function getTilTagSets(tils: TilEntry[]): TilTagSets {
   return { categories, projects };
 }
 
+export function getAllTilCategories(): string[] {
+  return [...new Set(getAllTils().map((t) => t.category))].sort();
+}
+
+export function getAllTilProjects(): string[] {
+  return [
+    ...new Set(
+      getAllTils()
+        .map((t) => t.project)
+        .filter(Boolean) as string[]
+    ),
+  ].sort();
+}
+
 export function getTilBySlug(slug: string): TilEntry | null {
   const tils = getAllTils();
   return tils.find((t) => t.slug === slug) ?? null;
