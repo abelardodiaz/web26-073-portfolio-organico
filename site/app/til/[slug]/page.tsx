@@ -53,6 +53,14 @@ export default async function TilEntryPage({ params }: Props) {
           >
             {til.category}
           </Link>
+          {til.project && (
+            <Link
+              href={`/til/proyecto/${til.project}`}
+              className="rounded border border-border px-2 py-0.5 font-mono text-xs text-muted-foreground transition-colors hover:text-foreground hover:border-foreground/30"
+            >
+              {til.project}
+            </Link>
+          )}
           <span className="font-mono text-xs">{til.date}</span>
           {til.stack.length > 0 && (
             <span className="text-xs">{til.stack.join(", ")}</span>
