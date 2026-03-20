@@ -125,6 +125,10 @@ export function getAllProjects(): Project[] {
   );
 }
 
+export function getAllProjectCategories(): string[] {
+  return [...new Set(getAllProjects().map((p) => p.category))].sort();
+}
+
 export function getProjectBySlug(slug: string): Project | null {
   const projects = getAllProjects();
   return projects.find((p) => p.slug === slug) ?? null;

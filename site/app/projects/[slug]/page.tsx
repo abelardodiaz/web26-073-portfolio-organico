@@ -102,6 +102,16 @@ export default async function ProjectPage({ params }: Props) {
           {project.description}
         </p>
 
+        {/* Category badge */}
+        <div className="mb-5">
+          <Link
+            href={`/projects/categoria/${project.category}`}
+            className="inline-block rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary transition-colors hover:bg-primary/20"
+          >
+            {project.category}
+          </Link>
+        </div>
+
         {/* Stack tags */}
         <div className="flex flex-wrap gap-2 mb-5">
           {project.stack.map((tech) => (

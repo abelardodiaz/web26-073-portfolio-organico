@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import {
   getAllProjects,
+  getAllProjectCategories,
   getAllTils,
   getAllTilCategories,
   getAllTilProjects,
@@ -31,6 +32,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.6,
   }));
 
+  const projectCategories = getAllProjectCategories().map((cat) => ({
+    url: `${BASE_URL}/projects/categoria/${cat}`,
+    lastModified: new Date(),
+    changeFrequency: "weekly" as const,
+    priority: 0.7,
+  }));
+
   const tilCategories = getAllTilCategories().map((cat) => ({
     url: `${BASE_URL}/til/categoria/${cat}`,
     lastModified: new Date(),
@@ -45,5 +53,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.7,
   }));
 
-  return [...staticRoutes, ...projects, ...tils, ...tilCategories, ...tilProjects];
+  return [...staticRoutes, ...projects, ...projectCategories, ...tils, ...tilCategories, ...tilProjects];
 }

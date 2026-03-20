@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.7.3] - 2026-03-20
+
+### Added
+- Category filter for /projects with SEO-friendly URLs (`/projects/categoria/[tag]`)
+- `ProjectGrid` shared component with tag bar (editorial + terminal variants)
+- OG images for project category pages
+- Category badge link in project detail pages
+- Project category URLs in sitemap
+
 ## [0.7.2] - 2026-03-19
 
 ### Added
