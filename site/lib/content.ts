@@ -28,6 +28,7 @@ export type TilEntry = {
   category: string;
   stack: string[];
   date: string;
+  project?: string;
   body: string;
 };
 
@@ -50,6 +51,7 @@ export function getAllTils(): TilEntry[] {
       category: data.category ?? "general",
       stack: data.stack ?? [],
       date: data.date ?? "",
+      project: data.project ?? undefined,
       body: content,
     } satisfies TilEntry;
   });
@@ -57,6 +59,19 @@ export function getAllTils(): TilEntry[] {
   return tils.sort(
     (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
   );
+}
+
+export type TilTagSets = {
+  categories: string[];
+  projects: string[];
+};
+
+export function getTilTagSets(tils: TilEntry[]): TilTagSets {
+  const categories = [...new Set(tils.map((t) => t.category))].sort();
+  const projects = [
+    ...new Set(tils.map((t) => t.project).filter(Boolean) as string[]),
+  ].sort();
+  return { categories, projects };
 }
 
 export function getTilBySlug(slug: string): TilEntry | null {

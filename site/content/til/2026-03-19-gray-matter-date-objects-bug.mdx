@@ -4,6 +4,7 @@ slug: "gray-matter-date-objects-bug"
 category: "architecture"
 stack: ["gray-matter", "next.js", "typescript"]
 date: "2026-03-19"
+project: "portfolio-organico"
 ---
 
 ## Contexto
@@ -54,6 +55,7 @@ export function getAllProjects(): Project[] {
 ```yaml
 # Esto se parsea como string (nota las comillas)
 date: "2026-01-15"
+project: "portfolio-organico"
 
 # Esto se parsea como Date object (sin comillas)
 date: 2026-01-15
