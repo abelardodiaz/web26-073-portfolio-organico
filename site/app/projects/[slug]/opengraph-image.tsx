@@ -1,18 +1,10 @@
 import { ImageResponse } from "next/og";
-import { getAllProjects, getProjectBySlug } from "@/lib/content";
+import { getProjectBySlug } from "@/lib/content";
+import { loadInterSemiBold } from "@/lib/og-fonts";
 
 export const alt = "Project";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
-
-async function loadFont(): Promise<ArrayBuffer> {
-  const css = await fetch(
-    "https://fonts.googleapis.com/css2?family=Inter:wght@400;600"
-  ).then((r) => r.text());
-  const url = css.match(/url\(([^)]+)\)/)?.[1];
-  if (!url) throw new Error("Font URL not found");
-  return fetch(url).then((r) => r.arrayBuffer());
-}
 
 export default async function Image({ params }: { params: { slug: string } }) {
   const project = getProjectBySlug(params.slug);
@@ -20,7 +12,7 @@ export default async function Image({ params }: { params: { slug: string } }) {
     return new ImageResponse(<div>Not found</div>, { ...size });
   }
 
-  const fontData = await loadFont();
+  const fontData = await loadInterSemiBold();
   const stackDisplay = project.stack.slice(0, 6);
 
   return new ImageResponse(

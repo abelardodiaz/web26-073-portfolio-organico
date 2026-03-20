@@ -1,20 +1,12 @@
 import { ImageResponse } from "next/og";
+import { loadInterSemiBold } from "@/lib/og-fonts";
 
 export const alt = "Abelardo Diaz - Full-Stack Developer & AI Agent Architect";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-async function loadFont(): Promise<ArrayBuffer> {
-  const css = await fetch(
-    "https://fonts.googleapis.com/css2?family=Inter:wght@600"
-  ).then((r) => r.text());
-  const url = css.match(/url\(([^)]+)\)/)?.[1];
-  if (!url) throw new Error("Font URL not found");
-  return fetch(url).then((r) => r.arrayBuffer());
-}
-
 export default async function Image() {
-  const fontData = await loadFont();
+  const fontData = await loadInterSemiBold();
 
   return new ImageResponse(
     (
