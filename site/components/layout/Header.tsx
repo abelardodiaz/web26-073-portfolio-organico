@@ -9,6 +9,7 @@ import { ThemeToggle } from "@/components/shared/ThemeToggle";
 const editorialNav = [
   { href: "/projects", label: "Proyectos" },
   { href: "/til", label: "TIL" },
+  { href: "/search", label: "Buscar" },
   { href: "/about", label: "About" },
   { href: "/contact", label: "Contacto" },
 ];
@@ -16,6 +17,7 @@ const editorialNav = [
 const terminalNav = [
   { href: "/projects", label: "/proyectos" },
   { href: "/til", label: "/til" },
+  { href: "/search", label: "/buscar" },
   { href: "/about", label: "/about" },
   { href: "/contact", label: "/contacto" },
 ];
