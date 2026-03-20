@@ -13,12 +13,18 @@ export default function AboutPage() {
         <h1 className="mb-6 text-3xl font-bold tracking-tight">About</h1>
         <div className="max-w-2xl space-y-4 text-muted-foreground leading-relaxed">
           <p>
-            Soy Abelardo Diaz. Construyo gateways multi-IA, agentes autonomos y
-            sistemas que corren sin supervision.
+            Soy Abelardo Diaz. Construyo y opero +40 proyectos en mi propia
+            infraestructura — CRMs, gateways multi-IA, e-commerce bridges,
+            chatbots automatizados para doctores, y las herramientas para
+            monitorearlos todos.
           </p>
           <p>
-            Trabajo con Python, Next.js y 7+ providers de IA en produccion.
-            Documento todo en espanol porque la comunidad dev LATAM merece
+            Construyo sistemas full-stack que toman decisiones por si solos.
+            Todo con Python, Next.js, PostgreSQL y Docker en servidores que
+            administro directamente. 7+ providers de IA en produccion.
+          </p>
+          <p>
+            Documento en espanol porque la comunidad dev LATAM merece
             contenido real, no tutoriales reciclados.
           </p>
         </div>
@@ -34,12 +40,18 @@ export default function AboutPage() {
         </div>
         <div className="max-w-2xl space-y-4 text-sm text-muted-foreground leading-relaxed">
           <p>
-            Soy Abelardo Diaz. Construyo gateways multi-IA, agentes autonomos y
-            sistemas que corren sin supervision.
+            Soy Abelardo Diaz. Construyo y opero +40 proyectos en mi propia
+            infraestructura — CRMs, gateways multi-IA, e-commerce bridges,
+            chatbots automatizados para doctores, y las herramientas para
+            monitorearlos todos.
           </p>
           <p>
-            Trabajo con Python, Next.js y 7+ providers de IA en produccion.
-            Documento todo en espanol porque la comunidad dev LATAM merece
+            Construyo sistemas full-stack que toman decisiones por si solos.
+            Todo con Python, Next.js, PostgreSQL y Docker en servidores que
+            administro directamente. 7+ providers de IA en produccion.
+          </p>
+          <p>
+            Documento en espanol porque la comunidad dev LATAM merece
             contenido real, no tutoriales reciclados.
           </p>
         </div>
