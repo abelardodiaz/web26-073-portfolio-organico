@@ -1,43 +1,79 @@
 ---
-title: "Bloques Reciclables"
+title: "ulfblk - Bloques Reciclables"
 slug: "bloques-reciclables"
-description: "Ecosistema open source de bloques de codigo reciclables multi-stack (Python + TypeScript). Una caja de legos para construir cualquier proyecto web/API."
-stack: ["python", "typescript", "fastapi", "uv", "pnpm", "turborepo"]
+description: "Ecosistema open source de 27 paquetes composables multi-stack (Python + TypeScript). Infraestructura reutilizable para construir APIs, SaaS multitenant, bots y dashboards."
+stack: ["python", "typescript", "fastapi", "nextjs", "react", "uv", "pnpm", "turborepo"]
 github: "https://github.com/abelardodiaz/web25-991-bloques-reciclables"
 category: "fullstack"
 featured: true
-date: "2026-03-19"
+date: "2026-03-21"
 ---
 
 ## Que es
 
-Un monorepo con bloques de codigo independientes y reutilizables para construir proyectos web y APIs. Cada bloque resuelve un problema especifico (auth, multitenancy, middleware) y se puede usar solo o combinado con otros.
+Un monorepo con 27 paquetes independientes y composables para construir proyectos web y APIs. Cada paquete resuelve un problema especifico (auth, multitenancy, billing, AI/RAG, messaging) y se puede usar solo o combinado con otros. Instala lo que necesites, ignora el resto.
 
-## Bloques disponibles
+Los paquetes exportan **infraestructura, no logica de negocio**: tu defines tus modelos y relaciones, ulfblk provee los patrones probados.
 
-### Python (Backend)
+## Paquetes Python (18 en PyPI)
 
-| Bloque | Descripcion | Status |
-|--------|-------------|--------|
-| `bloque-core` | Middleware, schemas, logging, health checks | MVP |
-| `bloque-auth` | JWT RS256, RBAC, brute force, credential encryption | MVP |
-| `bloque-multitenant` | PostgreSQL RLS transparente via contextvars | MVP |
+| Paquete | Descripcion |
+|---------|-------------|
+| `ulfblk-core` | App factory, middleware, schemas, logging, health checks |
+| `ulfblk-auth` | JWT RS256, RBAC, brute force protection, Fernet credentials |
+| `ulfblk-db` | SQLAlchemy async, mixins, Alembic migrations |
+| `ulfblk-multitenant` | PostgreSQL RLS transparente via contextvars |
+| `ulfblk-redis` | Cache + streams + consumer groups |
+| `ulfblk-gateway` | API Gateway, rate limiting, proxy, circuit breaker |
+| `ulfblk-ai-rag` | ChromaDB vector store, Ollama + OpenAI LLMs, RAG pipeline |
+| `ulfblk-automation` | Rule engine, condition evaluator, action models |
+| `ulfblk-billing` | Stripe checkout, subscriptions, webhook processor |
+| `ulfblk-calendar` | Google Calendar + memory providers, two-way sync |
+| `ulfblk-scheduling` | Slots, availability, conflicts, timezone-aware, concurrency control |
+| `ulfblk-channels` | WhatsApp, Telegram, Email clients + webhook verification |
+| `ulfblk-notifications` | Email + push + templates |
+| `ulfblk-ci-github` | GitHub Actions workflow generators + validators |
+| `ulfblk-ci-gitlab` | GitLab CI workflow generators |
+| `ulfblk-testing` | Shared pytest fixtures |
+| `ulfblk-docker-dev` | Docker Compose para desarrollo local |
+| `ulfblk-docker-prod` | Docker multi-stage optimizado para produccion |
 
-### TypeScript (Frontend)
+## Paquetes TypeScript (9 en npm)
 
-| Bloque | Descripcion | Status |
-|--------|-------------|--------|
-| `@bloque/types` | TypeScript types base (auth, pagination) | Scaffold |
-| `@bloque/ui` | shadcn/ui componentes base | Scaffold |
-| `@bloque/api-client` | Cliente HTTP con interceptors | Scaffold |
+| Paquete | Descripcion |
+|---------|-------------|
+| `@ulfblk/types` | TypeScript types base (entity, api, auth, tenant) |
+| `@ulfblk/api-client` | HTTP client con interceptors + token management (zero deps) |
+| `@ulfblk/ui` | Tailwind CSS preset + `cn()` utility + design tokens |
+| `@ulfblk/auth-react` | Auth hooks + providers + guards (RBAC) |
+| `@ulfblk/dashboard` | Layout, sidebar, header, data tables, tenant selector |
+| `@ulfblk/admin` | React Admin DataProvider + AuthProvider |
+| `@ulfblk/calendar-ui` | SlotPicker, WeekView, DaySelector, useCalendar |
+| `@ulfblk/chat-ui` | MessageBubble, ChatContainer, ChatInput, useChat |
+| `@ulfblk/forms` | FormWizard, WizardStep, TextField, useFormWizard |
+
+Los 3 paquetes de GUI (calendar-ui, chat-ui, forms) usan `'use client'`, hooks headless, i18n via props con defaults en espanol, y Tailwind CSS variables.
+
+## Recetas
+
+Combinaciones documentadas y testeadas de paquetes para arrancar rapido:
+
+| Receta | Paquetes | Descripcion |
+|--------|----------|-------------|
+| API simple | core | FastAPI minima con health checks (6 tests E2E) |
+| Bot de citas | core + db + scheduling + calendar + channels | Booking con deteccion de intents y sync (8 tests) |
+| MVP sin login | core + db + types + api-client | Full-stack Next.js 16 + FastAPI sin auth |
+| SaaS multitenant | core + auth + db + multitenant + dashboard | App multitenant real con PostgreSQL RLS |
 
 ## Por que existe
 
-La mayoria de proyectos arrancan copiando boilerplate de proyectos anteriores. Bloques Reciclables formaliza eso: paquetes testeados, versionados e independientes que se componen como legos segun lo que necesites.
+La mayoria de proyectos arrancan copiando boilerplate de proyectos anteriores. ulfblk formaliza eso: paquetes testeados, versionados e independientes que se componen segun lo que necesites. Extraidos de sistemas en produccion (CRM de 11 microservicios, plataforma inmobiliaria de 9 microservicios).
+
+Diferenciador: **el unico paquete de multitenancy con PostgreSQL RLS para FastAPI** en el ecosistema.
 
 ## Decisiones tecnicas
 
 - **Monorepo dual**: uv workspaces (Python) + pnpm workspaces + Turborepo (TypeScript)
-- **Cada bloque es independiente**: sin dependencias circulares, solo bloque-core es obligatorio
-- **Tests por bloque**: cada package tiene sus propios tests
-- **Recetas documentadas**: combinaciones comunes (API simple, SaaS multitenant, MVP sin login, bot WhatsApp)
+- **Cada paquete es independiente**: sin dependencias circulares, solo ulfblk-core es obligatorio
+- **Tests por paquete**: cada package tiene sus propios tests, CI con 4 jobs en GitHub Actions
+- **Composable, no framework**: instala lo que necesitas, ignora lo demas
