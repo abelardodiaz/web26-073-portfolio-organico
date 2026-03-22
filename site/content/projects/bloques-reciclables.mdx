@@ -1,7 +1,7 @@
 ---
 title: "ulfblk - Bloques Reciclables"
 slug: "bloques-reciclables"
-description: "Ecosistema open source de 27 paquetes composables multi-stack (Python + TypeScript). Infraestructura reutilizable para construir APIs, SaaS multitenant, bots y dashboards."
+description: "Ecosistema open source de 28 paquetes composables multi-stack (Python + TypeScript). Infraestructura reutilizable para construir APIs, SaaS multitenant, bots y dashboards."
 stack: ["python", "typescript", "fastapi", "nextjs", "react", "uv", "pnpm", "turborepo"]
 github: "https://github.com/abelardodiaz/web25-991-bloques-reciclables"
 category: "fullstack"
@@ -11,15 +11,16 @@ date: "2026-03-21"
 
 ## Que es
 
-Un monorepo con 27 paquetes independientes y composables para construir proyectos web y APIs. Cada paquete resuelve un problema especifico (auth, multitenancy, billing, AI/RAG, messaging) y se puede usar solo o combinado con otros. Instala lo que necesites, ignora el resto.
+Un monorepo con 28 paquetes independientes y composables para construir proyectos web y APIs. Cada paquete resuelve un problema especifico (auth, multitenancy, billing, AI/RAG, messaging) y se puede usar solo o combinado con otros. Instala lo que necesites, ignora el resto.
 
 Los paquetes exportan **infraestructura, no logica de negocio**: tu defines tus modelos y relaciones, ulfblk provee los patrones probados.
 
-## Paquetes Python (18 en PyPI)
+## Paquetes Python (19 en PyPI)
 
 | Paquete | Descripcion |
 |---------|-------------|
 | `ulfblk-core` | App factory, middleware, schemas, logging, health checks |
+| `ulfblk-api-keys` | API key auth, prefix hashing, cache, CRUD router |
 | `ulfblk-auth` | JWT RS256, RBAC, brute force protection, Fernet credentials |
 | `ulfblk-db` | SQLAlchemy async, mixins, Alembic migrations |
 | `ulfblk-multitenant` | PostgreSQL RLS transparente via contextvars |
@@ -64,6 +65,8 @@ Combinaciones documentadas y testeadas de paquetes para arrancar rapido:
 | Bot de citas | core + db + scheduling + calendar + channels | Booking con deteccion de intents y sync (8 tests) |
 | MVP sin login | core + db + types + api-client | Full-stack Next.js 16 + FastAPI sin auth |
 | SaaS multitenant | core + auth + db + multitenant + dashboard | App multitenant real con PostgreSQL RLS |
+| EduSync | core + auth + db + scheduling + calendar + channels + 5 mas | SaaS educativo con 11 bloques (31 tests) |
+| Bot WhatsApp | core + channels + ai-rag | Webhook + RAG chatbot |
 
 ## Por que existe
 
