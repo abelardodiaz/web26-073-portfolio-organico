@@ -1,0 +1,245 @@
+---
+title: "Monorepo dual: uv workspaces para Python + pnpm + Turborepo para TypeScript"
+slug: "monorepo-dual-uv-pnpm-turborepo"
+category: "devops"
+stack: ["uv", "pnpm", "turborepo", "python", "typescript"]
+date: "2026-03-09"
+project: "bloques-reciclables"
+---
+
+## Contexto
+
+ulfblk tiene 19 paquetes Python y 9 TypeScript en el mismo repositorio. Cada ecosistema tiene su propio package manager y sus propias convenciones de workspaces. El reto: hacer que coexistan sin pisarse, con CI que corra lint y tests para ambos en paralelo. No queriamos un monorepo tool que abstraiga ambos (como Nx) -- queriamos usar las herramientas nativas de cada ecosistema.
+
+## Lo que aprendi
+
+uv workspaces para Python y pnpm workspaces + Turborepo para TypeScript coexisten bien si mantienes las fronteras claras.
+
+### uv workspace config (Python)
+
+uv usa `pyproject.toml` en la raiz con una seccion `tool.uv.workspace` que lista los miembros.
+
+```toml
+# pyproject.toml (raiz del monorepo)
+[project]
+name = "ulfblk"
+version = "0.1.0"
+requires-python = ">=3.12"
+
+[tool.uv.workspace]
+members = [
+    "packages/ulfblk-core",
+    "packages/ulfblk-auth",
+    "packages/ulfblk-db",
+    "packages/ulfblk-multitenant",
+    "packages/ulfblk-redis",
+    "packages/ulfblk-gateway",
+    "packages/ulfblk-ai-rag",
+    "packages/ulfblk-automation",
+    "packages/ulfblk-billing",
+    "packages/ulfblk-calendar",
+    "packages/ulfblk-scheduling",
+    "packages/ulfblk-channels",
+    "packages/ulfblk-notifications",
+    "packages/ulfblk-ci-github",
+    "packages/ulfblk-ci-gitlab",
+    "packages/ulfblk-testing",
+    "packages/ulfblk-docker-dev",
+    "packages/ulfblk-docker-prod",
+    "packages/ulfblk-api-keys",
+]
+
+[tool.uv]
+dev-dependencies = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "ruff>=0.4",
+]
+```
+
+Cada paquete Python tiene su propio `pyproject.toml` con sus dependencias:
+
+```toml
+# packages/ulfblk-billing/pyproject.toml
+[project]
+name = "ulfblk-billing"
+version = "0.3.0"
+dependencies = [
+    "ulfblk-core",
+    "stripe>=8.0",
+    "httpx>=0.27",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "pytest-asyncio"]
+```
+
+### pnpm workspace config (TypeScript)
+
+```yaml
+# pnpm-workspace.yaml
+packages:
+  - "packages/@ulfblk/*"
+```
+
+Cada paquete TypeScript tiene su `package.json`:
+
+```json
+{
+  "name": "@ulfblk/calendar-ui",
+  "version": "0.3.0",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --dts",
+    "lint": "eslint src/",
+    "test": "vitest run"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "dependencies": {
+    "@ulfblk/types": "workspace:*"
+  },
+  "devDependencies": {
+    "tsup": "^8.0.0",
+    "vitest": "^2.0.0",
+    "typescript": "^5.5.0"
+  }
+}
+```
+
+### Turborepo para orquestacion de TypeScript
+
+Turborepo maneja el build order (respetando dependencias entre paquetes) y cachea resultados.
+
+```json
+{
+  "$schema": "https://turbo.build/schema.json",
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**"]
+    },
+    "lint": {
+      "dependsOn": [],
+      "cache": true
+    },
+    "test": {
+      "dependsOn": ["build"],
+      "cache": false
+    }
+  }
+}
+```
+
+### CI con 4 jobs paralelos
+
+```yaml
+# .github/workflows/ci.yml
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  python-lint:
+    name: Python Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+      - run: uv sync --all-packages
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+
+  python-test:
+    name: Python Test
+    runs-on: ubuntu-latest
+    needs: [python-lint]
+    strategy:
+      matrix:
+        package:
+          - ulfblk-core
+          - ulfblk-auth
+          - ulfblk-db
+          - ulfblk-billing
+          - ulfblk-scheduling
+      fail-fast: false
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: test
+        ports:
+          - 5432:5432
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+      - run: uv sync --all-packages
+      - run: uv run pytest packages/${{ matrix.package }} -v --tb=short
+
+  ts-lint:
+    name: TypeScript Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm turbo lint
+
+  ts-test:
+    name: TypeScript Test
+    runs-on: ubuntu-latest
+    needs: [ts-lint]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm turbo build
+      - run: pnpm turbo test
+```
+
+### Estructura de directorios
+
+```text
+ulfblk/
+  pyproject.toml           # uv workspace root
+  pnpm-workspace.yaml      # pnpm workspace root
+  turbo.json               # Turborepo config
+  packages/
+    ulfblk-core/           # Python
+    ulfblk-auth/           # Python
+    ulfblk-billing/        # Python
+    @ulfblk/
+      types/               # TypeScript
+      api-client/          # TypeScript
+      calendar-ui/         # TypeScript
+```
+
+### Leccion clave
+
+uv workspaces y pnpm workspaces funcionan en el mismo repo si mantienes las fronteras claras: Python bajo `packages/ulfblk-*`, TypeScript bajo `packages/@ulfblk/*`. No intentes unificarlos con un tool que abstraiga ambos -- cada ecosistema tiene sus convenciones y es mejor respetarlas. El CI corre 4 jobs en paralelo: Python lint, Python test (matrix), TS lint, TS test. Rapido y facil de debuggear.
+
+## Referencia
+
+- [uv Workspaces](https://docs.astral.sh/uv/concepts/workspaces/)
+- [pnpm Workspaces](https://pnpm.io/workspaces)
+- [Turborepo Documentation](https://turbo.build/repo/docs)
+- [GitHub Actions Matrix Strategy](https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstrategymatrix)

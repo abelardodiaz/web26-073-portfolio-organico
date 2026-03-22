@@ -1,0 +1,151 @@
+---
+title: "Stripe webhooks con procesamiento idempotente y async"
+slug: "stripe-webhook-idempotent-processor"
+category: "python"
+stack: ["python", "fastapi", "stripe"]
+date: "2026-02-20"
+project: "bloques-reciclables"
+---
+
+## Contexto
+
+ulfblk-billing procesa webhooks de Stripe para manejar pagos, suscripciones y sesiones de checkout. El problema: Stripe reintenta webhooks que fallan (hasta 3 dias), asi que si tu endpoint no es idempotente, vas a procesar el mismo evento multiples veces -- cobros duplicados, emails repetidos, estados inconsistentes.
+
+## Lo que aprendi
+
+El procesamiento de webhooks requiere tres capas: verificacion de firma, chequeo de idempotencia, y dispatch asincrono al handler correcto.
+
+### Verificacion de firma
+
+Stripe firma cada webhook con un secret por endpoint. Si no verificas, cualquiera puede mandar un POST falso a tu endpoint.
+
+```python
+from fastapi import APIRouter, Request, HTTPException
+import stripe
+
+router = APIRouter(prefix="/webhooks", tags=["billing"])
+
+STRIPE_WEBHOOK_SECRET = settings.stripe_webhook_secret
+
+
+@router.post("/stripe")
+async def stripe_webhook(request: Request) -> dict:
+    payload = await request.body()
+    sig_header = request.headers.get("stripe-signature")
+
+    if not sig_header:
+        raise HTTPException(status_code=400, detail="Missing signature header")
+
+    try:
+        event = stripe.Webhook.construct_event(
+            payload=payload,
+            sig_header=sig_header,
+            secret=STRIPE_WEBHOOK_SECRET,
+        )
+    except stripe.error.SignatureVerificationError:
+        raise HTTPException(status_code=400, detail="Invalid signature")
+
+    await process_event(event)
+    return {"status": "ok"}
+```
+
+### Chequeo de idempotencia
+
+Cada evento de Stripe tiene un `id` unico (ej: `evt_1234abc`). Guardar los IDs procesados en la BD y rechazar duplicados es la forma mas simple de idempotencia.
+
+```python
+from sqlalchemy import select
+from app.models import ProcessedStripeEvent
+from app.database import get_session
+
+
+async def is_already_processed(event_id: str) -> bool:
+    """Checa si el evento ya fue procesado."""
+    async with get_session() as session:
+        result = await session.execute(
+            select(ProcessedStripeEvent).where(
+                ProcessedStripeEvent.event_id == event_id
+            )
+        )
+        return result.scalar_one_or_none() is not None
+
+
+async def mark_as_processed(event_id: str, event_type: str) -> None:
+    """Registra el evento como procesado."""
+    async with get_session() as session:
+        record = ProcessedStripeEvent(
+            event_id=event_id,
+            event_type=event_type,
+        )
+        session.add(record)
+        await session.commit()
+```
+
+### Dispatcher de eventos
+
+El dispatcher mapea tipos de evento a handlers async. Cada handler recibe el data object ya tipado.
+
+```python
+from typing import Callable, Awaitable
+
+EventHandler = Callable[[dict], Awaitable[None]]
+
+EVENT_HANDLERS: dict[str, EventHandler] = {
+    "checkout.session.completed": handle_checkout_completed,
+    "invoice.paid": handle_invoice_paid,
+    "customer.subscription.updated": handle_subscription_updated,
+    "customer.subscription.deleted": handle_subscription_deleted,
+}
+
+
+async def process_event(event: dict) -> None:
+    event_id = event["id"]
+    event_type = event["type"]
+
+    if await is_already_processed(event_id):
+        return  # Ya procesado, salir silenciosamente
+
+    handler = EVENT_HANDLERS.get(event_type)
+    if handler is None:
+        return  # Evento que no nos interesa
+
+    await handler(event["data"]["object"])
+    await mark_as_processed(event_id, event_type)
+```
+
+### Handlers async
+
+```python
+async def handle_checkout_completed(session_data: dict) -> None:
+    """Activa la suscripcion despues del pago inicial."""
+    customer_id = session_data["customer"]
+    subscription_id = session_data["subscription"]
+
+    await activate_subscription(
+        stripe_customer_id=customer_id,
+        stripe_subscription_id=subscription_id,
+    )
+
+
+async def handle_invoice_paid(invoice_data: dict) -> None:
+    """Registra el pago y extiende el periodo de suscripcion."""
+    subscription_id = invoice_data["subscription"]
+    amount_paid = invoice_data["amount_paid"]
+    period_end = invoice_data["lines"]["data"][0]["period"]["end"]
+
+    await record_payment(
+        stripe_subscription_id=subscription_id,
+        amount_cents=amount_paid,
+        period_end_timestamp=period_end,
+    )
+```
+
+### Leccion clave
+
+La idempotencia no es opcional con Stripe. Stripe reintenta webhooks que devuelven errores 4xx/5xx, y tambien puede mandar el mismo evento mas de una vez por diseño. Sin idempotencia, un timeout transitorio en tu servidor puede resultar en acciones duplicadas. La tabla de eventos procesados es barata y te ahorra problemas caros.
+
+## Referencia
+
+- [Stripe Webhook Best Practices](https://stripe.com/docs/webhooks/best-practices)
+- [Stripe Webhook Signatures](https://stripe.com/docs/webhooks/signatures)
+- [Idempotency in Distributed Systems](https://stripe.com/docs/api/idempotent_requests)

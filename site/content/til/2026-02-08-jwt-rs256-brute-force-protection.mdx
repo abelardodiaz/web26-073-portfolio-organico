@@ -1,0 +1,156 @@
+---
+title: "JWT RS256 con Fernet credentials y proteccion brute force"
+slug: "jwt-rs256-brute-force-protection"
+category: "python"
+stack: ["python", "fastapi", "security", "jwt"]
+date: "2026-02-08"
+project: "bloques-reciclables"
+---
+
+## Contexto
+
+La mayoria de tutoriales de JWT usan HS256 (clave simetrica): el mismo secreto que firma el token tambien lo verifica. Eso significa que cada microservicio que necesita verificar tokens tiene que tener el secreto, y si uno se compromete, un atacante puede crear tokens arbitrarios. En ulfblk-auth necesitaba que solo el servicio de autenticacion pudiera crear tokens, y que los demas solo pudieran verificarlos.
+
+## Lo que aprendi
+
+RS256 usa un par de llaves asimetricas. La llave privada firma (solo en el auth service), la publica verifica (distribuida a todos los servicios). Ademas, las credenciales en la DB se almacenan con Fernet (cifrado simetrico) y el login tiene proteccion contra fuerza bruta con sliding window.
+
+### Creacion de tokens con RS256
+
+```python
+import jwt
+from datetime import datetime, timedelta, timezone
+from uuid import UUID
+
+from cryptography.hazmat.primitives import serialization
+
+
+def create_access_token(
+    user_id: UUID,
+    tenant_id: UUID,
+    roles: list[str],
+    private_key_pem: bytes,
+    expires_minutes: int = 30,
+) -> str:
+    now = datetime.now(timezone.utc)
+    payload = {
+        "sub": str(user_id),
+        "tid": str(tenant_id),
+        "roles": roles,
+        "iat": now,
+        "exp": now + timedelta(minutes=expires_minutes),
+        "iss": "ulfblk-auth",
+    }
+
+    private_key = serialization.load_pem_private_key(private_key_pem, password=None)
+
+    return jwt.encode(payload, private_key, algorithm="RS256")
+
+
+def verify_token(token: str, public_key_pem: bytes) -> dict:
+    """Cualquier servicio puede verificar con solo la llave publica."""
+    public_key = serialization.load_pem_public_key(public_key_pem)
+
+    return jwt.decode(
+        token,
+        public_key,
+        algorithms=["RS256"],
+        issuer="ulfblk-auth",
+    )
+```
+
+### Almacenamiento de credenciales con Fernet
+
+Las passwords se hashean con bcrypt, pero otros datos sensibles (tokens de terceros, API keys de integraciones) se cifran con Fernet para poder recuperarlos despues.
+
+```python
+from cryptography.fernet import Fernet
+import bcrypt
+
+
+class CredentialManager:
+    def __init__(self, fernet_key: bytes):
+        self._fernet = Fernet(fernet_key)
+
+    def hash_password(self, password: str) -> str:
+        """Passwords se hashean (one-way), no se cifran."""
+        salt = bcrypt.gensalt(rounds=12)
+        return bcrypt.hashpw(password.encode(), salt).decode()
+
+    def verify_password(self, password: str, hashed: str) -> bool:
+        return bcrypt.checkpw(password.encode(), hashed.encode())
+
+    def encrypt_credential(self, plaintext: str) -> str:
+        """Credenciales recuperables se cifran con Fernet."""
+        return self._fernet.encrypt(plaintext.encode()).decode()
+
+    def decrypt_credential(self, ciphertext: str) -> str:
+        return self._fernet.decrypt(ciphertext.encode()).decode()
+```
+
+### Proteccion brute force con sliding window
+
+Un contador por IP y por usuario en Redis. Cada intento fallido incrementa el contador. Si excede el threshold, el login se bloquea temporalmente.
+
+```python
+from redis.asyncio import Redis
+from fastapi import HTTPException, status
+
+
+class BruteForceGuard:
+    def __init__(
+        self,
+        redis: Redis,
+        max_attempts: int = 5,
+        window_seconds: int = 900,  # 15 minutos
+        lockout_seconds: int = 1800,  # 30 minutos
+    ):
+        self._redis = redis
+        self._max_attempts = max_attempts
+        self._window = window_seconds
+        self._lockout = lockout_seconds
+
+    async def check_and_record(self, identifier: str) -> None:
+        """Verificar antes de intentar login. Registrar intento fallido."""
+        lockout_key = f"lockout:{identifier}"
+        attempts_key = f"login_attempts:{identifier}"
+
+        # Verificar si esta en lockout
+        if await self._redis.exists(lockout_key):
+            ttl = await self._redis.ttl(lockout_key)
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail=f"Cuenta bloqueada temporalmente. Intenta en {ttl} segundos.",
+            )
+
+        # Registrar intento
+        pipe = self._redis.pipeline()
+        pipe.incr(attempts_key)
+        pipe.expire(attempts_key, self._window)
+        results = await pipe.execute()
+        current_attempts = results[0]
+
+        # Si excede el limite, activar lockout
+        if current_attempts >= self._max_attempts:
+            await self._redis.setex(lockout_key, self._lockout, "1")
+            await self._redis.delete(attempts_key)
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail="Demasiados intentos fallidos. Cuenta bloqueada temporalmente.",
+            )
+
+    async def reset(self, identifier: str) -> None:
+        """Limpiar contador despues de login exitoso."""
+        await self._redis.delete(f"login_attempts:{identifier}")
+```
+
+### Por que RS256 sobre HS256
+
+Con HS256, si un microservicio se compromete, el atacante tiene el secreto y puede generar tokens para cualquier usuario. Con RS256, comprometer un servicio consumidor solo expone la llave publica, que de todos modos es publica. El unico punto critico es el auth service.
+
+## Referencia
+
+- [RFC 7519 - JSON Web Tokens](https://datatracker.ietf.org/doc/html/rfc7519)
+- [PyJWT RS256](https://pyjwt.readthedocs.io/en/stable/algorithms.html)
+- [Fernet Symmetric Encryption](https://cryptography.io/en/latest/fernet/)
+- [OWASP Brute Force Prevention](https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html)

@@ -1,0 +1,183 @@
+---
+title: "Google Calendar two-way sync con memory providers y conflict resolution"
+slug: "google-calendar-two-way-sync"
+category: "python"
+stack: ["python", "google-calendar-api"]
+date: "2026-02-22"
+project: "bloques-reciclables"
+---
+
+## Contexto
+
+ulfblk-calendar necesita mantener sincronizados los eventos entre una BD local y Google Calendar. El reto: los cambios pueden venir de ambos lados -- un usuario crea un evento en tu app, otro lo modifica desde Google Calendar en su telefono. Sin una estrategia clara de conflictos, terminas con datos inconsistentes o eventos duplicados.
+
+## Lo que aprendi
+
+Two-way sync requiere tres cosas: push notifications para enterarte de cambios en Google, un sync token para traer solo los deltas, y un mecanismo de conflict resolution.
+
+### Memory provider interface
+
+El storage se abstrae detras de un memory provider. Esto permite usar PostgreSQL en produccion, Redis para cache, o un dict en tests.
+
+```python
+from abc import ABC, abstractmethod
+from dataclasses import dataclass
+from datetime import datetime
+
+
+@dataclass
+class CalendarEvent:
+    id: str
+    google_event_id: str | None
+    title: str
+    start: datetime
+    end: datetime
+    sequence: int  # Para conflict resolution
+    updated_at: datetime
+    source: str  # "local" | "google"
+
+
+class CalendarMemoryProvider(ABC):
+    @abstractmethod
+    async def get_event(self, event_id: str) -> CalendarEvent | None: ...
+
+    @abstractmethod
+    async def upsert_event(self, event: CalendarEvent) -> None: ...
+
+    @abstractmethod
+    async def get_sync_token(self, calendar_id: str) -> str | None: ...
+
+    @abstractmethod
+    async def save_sync_token(self, calendar_id: str, token: str) -> None: ...
+
+    @abstractmethod
+    async def list_events_modified_since(self, since: datetime) -> list[CalendarEvent]: ...
+```
+
+### Webhook receiver para push notifications
+
+Google Calendar manda notificaciones push cuando hay cambios. El webhook recibe la notificacion y dispara un sync incremental.
+
+```python
+from fastapi import APIRouter, Request, Response
+
+router = APIRouter(prefix="/webhooks", tags=["calendar"])
+
+
+@router.post("/google-calendar")
+async def google_calendar_webhook(request: Request) -> Response:
+    channel_id = request.headers.get("X-Goog-Channel-ID")
+    resource_id = request.headers.get("X-Goog-Resource-ID")
+    resource_state = request.headers.get("X-Goog-Resource-State")
+
+    if resource_state == "sync":
+        # Confirmacion inicial del canal, ignorar
+        return Response(status_code=200)
+
+    if resource_state == "exists":
+        # Hay cambios, disparar sync incremental
+        await sync_from_google(channel_id=channel_id)
+
+    return Response(status_code=200)
+```
+
+### Sync incremental con delta tokens
+
+En vez de traer todos los eventos cada vez, usamos el sync token de Google para obtener solo lo que cambio.
+
+```python
+from googleapiclient.discovery import build
+
+async def sync_from_google(
+    channel_id: str,
+    service: build = None,
+    memory: CalendarMemoryProvider = None,
+) -> int:
+    """Sincroniza cambios de Google Calendar a la BD local."""
+    calendar_id = await get_calendar_for_channel(channel_id)
+    sync_token = await memory.get_sync_token(calendar_id)
+
+    params = {"calendarId": calendar_id, "singleEvents": True}
+    if sync_token:
+        params["syncToken"] = sync_token
+    else:
+        # Primera sync: traer eventos futuros
+        params["timeMin"] = datetime.utcnow().isoformat() + "Z"
+
+    synced_count = 0
+    page_token = None
+
+    while True:
+        if page_token:
+            params["pageToken"] = page_token
+
+        result = service.events().list(**params).execute()
+
+        for google_event in result.get("items", []):
+            await resolve_and_store(google_event, memory)
+            synced_count += 1
+
+        page_token = result.get("nextPageToken")
+        if not page_token:
+            break
+
+    # Guardar el nuevo sync token para la siguiente llamada
+    new_sync_token = result.get("nextSyncToken")
+    if new_sync_token:
+        await memory.save_sync_token(calendar_id, new_sync_token)
+
+    return synced_count
+```
+
+### Conflict resolution con sequence numbers
+
+Google Calendar usa un campo `sequence` que se incrementa con cada modificacion. La estrategia: last-write-wins comparando sequence numbers.
+
+```python
+async def resolve_and_store(
+    google_event: dict,
+    memory: CalendarMemoryProvider,
+) -> None:
+    """Resuelve conflictos entre evento local y de Google."""
+    google_event_id = google_event["id"]
+    google_sequence = google_event.get("sequence", 0)
+
+    local_event = await memory.get_event_by_google_id(google_event_id)
+
+    if local_event is None:
+        # Evento nuevo de Google, crear local
+        new_event = CalendarEvent(
+            id=generate_id(),
+            google_event_id=google_event_id,
+            title=google_event.get("summary", ""),
+            start=parse_google_datetime(google_event["start"]),
+            end=parse_google_datetime(google_event["end"]),
+            sequence=google_sequence,
+            updated_at=datetime.utcnow(),
+            source="google",
+        )
+        await memory.upsert_event(new_event)
+        return
+
+    # Conflicto: comparar sequence numbers
+    if google_sequence > local_event.sequence:
+        # Google tiene la version mas reciente
+        local_event.title = google_event.get("summary", "")
+        local_event.start = parse_google_datetime(google_event["start"])
+        local_event.end = parse_google_datetime(google_event["end"])
+        local_event.sequence = google_sequence
+        local_event.updated_at = datetime.utcnow()
+        local_event.source = "google"
+        await memory.upsert_event(local_event)
+    # Si local_event.sequence >= google_sequence, el local gana
+```
+
+### Leccion clave
+
+Two-way sync necesita una fuente canonica de verdad para resolver conflictos. En nuestro caso, el sequence number de Google Calendar actua como version vector. Last-write-wins es simple y predecible -- estrategias mas sofisticadas (merge, manual resolution) agregan complejidad que rara vez se justifica en un sistema de calendario.
+
+## Referencia
+
+- [Google Calendar Push Notifications](https://developers.google.com/calendar/api/guides/push)
+- [Google Calendar Incremental Sync](https://developers.google.com/calendar/api/guides/sync)
+- [Google Calendar Events Resource](https://developers.google.com/calendar/api/v3/reference/events)

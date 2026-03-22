@@ -1,0 +1,149 @@
+---
+title: "API Key auth con prefix lookup, hashing y cache"
+slug: "api-key-prefix-hashing-cache"
+category: "python"
+stack: ["python", "fastapi", "security"]
+date: "2026-02-06"
+project: "bloques-reciclables"
+---
+
+## Contexto
+
+Para integraciones machine-to-machine necesitas API keys, pero guardar las keys en texto plano es un riesgo enorme. Tampoco puedes hashear la key completa y hacer un full table scan para buscarla. En ulfblk-api-keys necesitaba un esquema donde la key sea identificable sin exponerla, verificable sin escanear toda la tabla, y eficiente en llamadas repetidas.
+
+## Lo que aprendi
+
+El patron es: las API keys tienen un prefijo visible (primeros 8 caracteres) para identificacion rapida, el resto se hashea con SHA-256. El lookup usa el prefijo como indice, la verificacion compara hashes, y el resultado se cachea en Redis.
+
+### Generacion de la key
+
+La key se genera una sola vez y se muestra al usuario. Despues de eso, solo se almacena el hash.
+
+```python
+import secrets
+import hashlib
+from dataclasses import dataclass
+
+
+@dataclass
+class ApiKeyResult:
+    """Se retorna al crear la key. raw_key solo se muestra una vez."""
+    raw_key: str
+    prefix: str
+    key_hash: str
+
+
+def generate_api_key(prefix_length: int = 8) -> ApiKeyResult:
+    raw_key = secrets.token_urlsafe(32)
+    prefix = raw_key[:prefix_length]
+    key_hash = hashlib.sha256(raw_key.encode()).hexdigest()
+
+    return ApiKeyResult(
+        raw_key=raw_key,
+        prefix=prefix,
+        key_hash=key_hash,
+    )
+```
+
+### Lookup por prefijo y comparacion de hash
+
+El prefijo esta indexado en la base de datos. El lookup es O(1) en vez de un scan completo.
+
+```python
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+
+async def verify_api_key(
+    raw_key: str,
+    db: AsyncSession,
+) -> ApiKeyRecord | None:
+    prefix = raw_key[:8]
+    incoming_hash = hashlib.sha256(raw_key.encode()).hexdigest()
+
+    # Buscar candidatos por prefijo (indice en la columna)
+    stmt = select(ApiKeyRecord).where(
+        ApiKeyRecord.prefix == prefix,
+        ApiKeyRecord.is_active == True,
+    )
+    result = await db.execute(stmt)
+    candidates = result.scalars().all()
+
+    # Comparar hash con cada candidato (normalmente es 1)
+    for candidate in candidates:
+        if secrets.compare_digest(candidate.key_hash, incoming_hash):
+            return candidate
+
+    return None
+```
+
+### Cache en Redis con TTL
+
+Las API keys se validan en cada request. Sin cache, cada request hace un round-trip a la base de datos. Con Redis, las keys verificadas se cachean.
+
+```python
+import json
+from redis.asyncio import Redis
+
+CACHE_TTL = 300  # 5 minutos
+
+
+async def get_cached_or_verify(
+    raw_key: str,
+    redis: Redis,
+    db: AsyncSession,
+) -> ApiKeyRecord | None:
+    cache_key = f"apikey:{hashlib.sha256(raw_key.encode()).hexdigest()}"
+
+    # Intentar cache primero
+    cached = await redis.get(cache_key)
+    if cached is not None:
+        data = json.loads(cached)
+        if not data:
+            return None  # Key invalida cacheada (negative cache)
+        return ApiKeyRecord(**data)
+
+    # Cache miss: verificar en DB
+    record = await verify_api_key(raw_key, db)
+
+    # Cachear resultado (incluyendo misses para prevenir abuse)
+    cache_value = json.dumps(record.to_dict() if record else {})
+    await redis.setex(cache_key, CACHE_TTL, cache_value)
+
+    return record
+```
+
+### Dependency de FastAPI
+
+Todo se integra como un dependency inyectable:
+
+```python
+from fastapi import Depends, HTTPException, Security, status
+from fastapi.security import APIKeyHeader
+
+api_key_header = APIKeyHeader(name="X-API-Key")
+
+
+async def require_api_key(
+    raw_key: str = Security(api_key_header),
+    redis: Redis = Depends(get_redis),
+    db: AsyncSession = Depends(get_db),
+) -> ApiKeyRecord:
+    record = await get_cached_or_verify(raw_key, redis, db)
+    if record is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="API key invalida o inactiva",
+        )
+    return record
+```
+
+### Por que prefix + hash + cache
+
+El prefijo permite identificar la key en logs y dashboards sin exponer el secreto ("key que empieza con `a3Bf9x2K`..."). El hash protege contra data breaches: si se filtra la tabla, nadie puede reconstruir las keys. Y el cache elimina el hit a DB en el 99% de requests repetidos.
+
+## Referencia
+
+- [OWASP API Key Best Practices](https://cheatsheetseries.owasp.org/cheatsheets/API_Security_Cheat_Sheet.html)
+- [secrets.compare_digest](https://docs.python.org/3/library/secrets.html#secrets.compare_digest)
+- [Stripe API Key Design](https://stripe.com/docs/api/authentication)

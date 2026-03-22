@@ -1,0 +1,89 @@
+---
+title: "vercel env pull: sincronizar variables sin copiar secrets a mano"
+slug: "vercel-env-pull-sync"
+category: "tooling"
+stack: ["vercel", "cli", "env"]
+date: "2026-03-13"
+project: "portfolio-organico"
+---
+
+## Contexto
+
+Al trabajar en el portfolio localmente, necesitaba las mismas variables de entorno que estan en Vercel (analytics IDs, API keys, etc.) sin copiar-pegar desde el dashboard.
+
+## Lo que aprendi
+
+`vercel env pull` descarga todas las variables de entorno del proyecto vinculado y las escribe en `.env.local`:
+
+```bash
+cd site
+vercel env pull
+# Vercel CLI 41.x
+# Downloading `development` Environment Variables for Project portfolio-organico
+# Created .env.local file [510ms]
+```
+
+### Que genera
+
+```bash
+# .env.local (generado por vercel env pull)
+NEXT_PUBLIC_GA_ID=G-XXXXXXX
+VERCEL_OIDC_TOKEN=eyJ...
+# etc.
+```
+
+### Workflow tipico
+
+```bash
+# 1. Vincular proyecto (una vez)
+vercel link
+
+# 2. Pull de env vars (cada vez que cambien en Vercel)
+vercel env pull
+
+# 3. Dev con las variables reales
+pnpm dev
+```
+
+### Scopes: development, preview, production
+
+Vercel maneja 3 scopes de variables. `env pull` trae las de `development` por defecto:
+
+```bash
+# Pull de variables de development (default)
+vercel env pull
+
+# Pull de variables de preview
+vercel env pull --environment preview
+
+# Pull de variables de production
+vercel env pull --environment production
+```
+
+### Seguridad
+
+- `.env.local` esta en `.gitignore` por defecto en Next.js -- nunca se commitea
+- Las variables marcadas como "Sensitive" en Vercel son write-only: se descargan pero no se pueden leer desde el dashboard despues
+- Si rotas un secret en Vercel, un `vercel env pull` actualiza tu local automaticamente
+
+### Gotcha: OIDC token expira
+
+Si usas AI Gateway con OIDC (el default de Vercel), el `VERCEL_OIDC_TOKEN` que descarga `env pull` expira en ~24h. En deploys de Vercel se auto-renueva, pero localmente necesitas hacer `vercel env pull` de nuevo.
+
+### Listar y agregar variables
+
+```bash
+# Ver todas las variables del proyecto
+vercel env ls
+
+# Agregar una nueva variable
+vercel env add MY_VAR
+
+# Eliminar una variable
+vercel env rm MY_VAR
+```
+
+## Referencia
+
+- [Vercel Environment Variables](https://vercel.com/docs/environment-variables)
+- [Vercel CLI env](https://vercel.com/docs/cli/env)

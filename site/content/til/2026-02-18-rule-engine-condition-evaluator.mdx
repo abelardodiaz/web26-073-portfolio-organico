@@ -1,0 +1,275 @@
+---
+title: "Rule engine con condition evaluator: automatizacion sin hardcode"
+slug: "rule-engine-condition-evaluator"
+category: "python"
+stack: ["python", "fastapi"]
+date: "2026-02-18"
+project: "bloques-reciclables"
+---
+
+## Contexto
+
+En sistemas de negocio, las reglas cambian constantemente: "si el pedido supera $100 y el cliente es VIP, aplicar 15% de descuento", "si el lead no responde en 48 horas, enviar follow-up automatico". Hardcodear estas reglas significa redeploy cada vez que el equipo de negocio las modifica. En ulfblk-automation necesitaba un motor de reglas donde las condiciones y acciones sean datos, no codigo.
+
+## Lo que aprendi
+
+Las reglas se definen como diccionarios/JSON con una estructura de condiciones (field, operator, value) que se evaluan contra un contexto. El evaluador recorre el arbol de condiciones (AND/OR/NOT) y si el resultado es True, ejecuta las acciones asociadas. Todo es serializable, almacenable en base de datos, y modificable sin tocar codigo.
+
+### Definicion de una regla
+
+Una regla tiene condiciones anidables y acciones a ejecutar:
+
+```python
+from dataclasses import dataclass, field
+from typing import Any
+from enum import Enum
+
+
+class Operator(str, Enum):
+    EQ = "eq"
+    NEQ = "neq"
+    GT = "gt"
+    GTE = "gte"
+    LT = "lt"
+    LTE = "lte"
+    IN = "in"
+    CONTAINS = "contains"
+
+
+class LogicalOp(str, Enum):
+    AND = "and"
+    OR = "or"
+    NOT = "not"
+
+
+@dataclass
+class Condition:
+    """Condicion simple: field operator value."""
+    field: str
+    operator: Operator
+    value: Any
+
+
+@dataclass
+class ConditionGroup:
+    """Grupo logico de condiciones (AND/OR/NOT)."""
+    logical: LogicalOp
+    conditions: list["Condition | ConditionGroup"]
+
+
+@dataclass
+class Action:
+    """Accion a ejecutar cuando la regla se cumple."""
+    type: str
+    params: dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass
+class Rule:
+    name: str
+    description: str
+    conditions: ConditionGroup
+    actions: list[Action]
+    enabled: bool = True
+    priority: int = 0
+```
+
+### El evaluador de condiciones
+
+El evaluador recorre recursivamente el arbol de condiciones y evalua cada una contra los datos del contexto.
+
+```python
+class ConditionEvaluator:
+    """Evalua condiciones contra un contexto de datos."""
+
+    def evaluate(self, node: Condition | ConditionGroup, context: dict) -> bool:
+        if isinstance(node, Condition):
+            return self._evaluate_single(node, context)
+        return self._evaluate_group(node, context)
+
+    def _evaluate_group(self, group: ConditionGroup, context: dict) -> bool:
+        if group.logical == LogicalOp.AND:
+            return all(
+                self.evaluate(cond, context)
+                for cond in group.conditions
+            )
+        elif group.logical == LogicalOp.OR:
+            return any(
+                self.evaluate(cond, context)
+                for cond in group.conditions
+            )
+        elif group.logical == LogicalOp.NOT:
+            # NOT aplica al primer (y unico) elemento
+            return not self.evaluate(group.conditions[0], context)
+
+        return False
+
+    def _evaluate_single(self, condition: Condition, context: dict) -> bool:
+        # Soportar campos anidados con dot notation: "customer.tier"
+        value = self._resolve_field(condition.field, context)
+        if value is None:
+            return False
+
+        op = condition.operator
+        target = condition.value
+
+        if op == Operator.EQ:
+            return value == target
+        elif op == Operator.NEQ:
+            return value != target
+        elif op == Operator.GT:
+            return value > target
+        elif op == Operator.GTE:
+            return value >= target
+        elif op == Operator.LT:
+            return value < target
+        elif op == Operator.LTE:
+            return value <= target
+        elif op == Operator.IN:
+            return value in target
+        elif op == Operator.CONTAINS:
+            return target in value
+
+        return False
+
+    def _resolve_field(self, field_path: str, data: dict) -> Any:
+        """Resolver campos con dot notation: 'customer.tier' -> data['customer']['tier']."""
+        parts = field_path.split(".")
+        current = data
+        for part in parts:
+            if isinstance(current, dict) and part in current:
+                current = current[part]
+            else:
+                return None
+        return current
+```
+
+### Dispatcher de acciones
+
+Las acciones se ejecutan via un registry de handlers. Cada tipo de accion tiene su handler registrado.
+
+```python
+from typing import Callable, Awaitable
+
+ActionHandler = Callable[[dict[str, Any], dict], Awaitable[None]]
+
+
+class ActionDispatcher:
+    def __init__(self):
+        self._handlers: dict[str, ActionHandler] = {}
+
+    def register(self, action_type: str, handler: ActionHandler) -> None:
+        self._handlers[action_type] = handler
+
+    async def dispatch(self, action: Action, context: dict) -> None:
+        handler = self._handlers.get(action.type)
+        if handler is None:
+            raise ValueError(f"No hay handler registrado para accion: {action.type}")
+        await handler(action.params, context)
+```
+
+### Motor de reglas completo
+
+Combina el evaluador y el dispatcher para procesar reglas en orden de prioridad:
+
+```python
+class RuleEngine:
+    def __init__(self, dispatcher: ActionDispatcher):
+        self._evaluator = ConditionEvaluator()
+        self._dispatcher = dispatcher
+        self._rules: list[Rule] = []
+
+    def add_rule(self, rule: Rule) -> None:
+        self._rules.append(rule)
+        # Ordenar por prioridad (mayor primero)
+        self._rules.sort(key=lambda r: r.priority, reverse=True)
+
+    async def execute(self, context: dict) -> list[str]:
+        """Evaluar todas las reglas y ejecutar acciones. Retorna nombres de reglas ejecutadas."""
+        executed = []
+
+        for rule in self._rules:
+            if not rule.enabled:
+                continue
+
+            if self._evaluator.evaluate(rule.conditions, context):
+                for action in rule.actions:
+                    await self._dispatcher.dispatch(action, context)
+                executed.append(rule.name)
+
+        return executed
+```
+
+### Ejemplo: descuento VIP automatico
+
+```python
+# Definir la regla como datos
+vip_discount_rule = Rule(
+    name="vip_high_value_discount",
+    description="15% descuento para VIPs con pedidos mayores a $100",
+    conditions=ConditionGroup(
+        logical=LogicalOp.AND,
+        conditions=[
+            Condition(field="order.total", operator=Operator.GT, value=10000),  # centavos
+            Condition(field="customer.tier", operator=Operator.EQ, value="vip"),
+        ],
+    ),
+    actions=[
+        Action(type="apply_discount", params={"percentage": 15}),
+        Action(type="send_notification", params={
+            "template": "vip_discount_applied",
+            "channel": "email",
+        }),
+    ],
+    priority=10,
+)
+
+
+# Registrar handlers de acciones
+dispatcher = ActionDispatcher()
+
+
+async def apply_discount(params: dict, context: dict) -> None:
+    pct = params["percentage"]
+    original = context["order"]["total"]
+    discount = int(original * pct / 100)
+    context["order"]["discount"] = discount
+    context["order"]["final_total"] = original - discount
+
+
+async def send_notification(params: dict, context: dict) -> None:
+    # Delegar al servicio de notificaciones
+    await notification_service.send(
+        template=params["template"],
+        channel=params["channel"],
+        data=context,
+    )
+
+
+dispatcher.register("apply_discount", apply_discount)
+dispatcher.register("send_notification", send_notification)
+
+# Ejecutar
+engine = RuleEngine(dispatcher)
+engine.add_rule(vip_discount_rule)
+
+context = {
+    "order": {"id": "ord-456", "total": 15000},
+    "customer": {"id": "cust-789", "tier": "vip", "email": "cliente@example.com"},
+}
+
+executed = await engine.execute(context)
+# executed = ["vip_high_value_discount"]
+# context["order"]["discount"] = 2250
+# context["order"]["final_total"] = 12750
+```
+
+### Por que reglas como datos
+
+Las reglas de negocio cambian semanalmente. Si estan hardcodeadas, cada cambio requiere un dev, un PR, tests, y un deploy. Con reglas como datos, el equipo de operaciones puede modificarlas desde un admin panel, se almacenan en la base de datos, y el motor las evalua en runtime. Cero redeploys para cambios de logica de negocio.
+
+## Referencia
+
+- [Rule Engine Pattern](https://martinfowler.com/bliki/RulesEngine.html)
+- [JSON Rules Engine (concepto)](https://github.com/CacheControl/json-rules-engine)
+- [Specification Pattern](https://en.wikipedia.org/wiki/Specification_pattern)

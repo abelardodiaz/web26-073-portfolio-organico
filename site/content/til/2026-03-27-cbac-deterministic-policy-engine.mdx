@@ -1,0 +1,229 @@
+---
+title: "CBAC: policy engine determinista para agentes sin depender del LLM"
+slug: "cbac-deterministic-policy-engine"
+category: "python"
+stack: ["python", "ai-agents", "security"]
+date: "2026-03-27"
+project: "claude-agent-patterns"
+---
+
+## Contexto
+
+Un agente autonomo que decide "deberia hacer esto?" usando el LLM tiene un problema fundamental: las respuestas del LLM no son deterministas. Si le preguntas al modelo "puedo borrar este archivo en produccion?", a veces dice que si y a veces dice que no, dependiendo del contexto del prompt. Para decisiones de seguridad necesitas respuestas deterministas, auditables y predecibles. Necesitaba un sistema de control de acceso que no dependa del LLM para nada.
+
+## Lo que aprendi
+
+Context-Based Access Control (CBAC) es el patron donde defines politicas como funciones Python puras que evaluan el contexto de la accion y retornan allow/deny. No hay prompts, no hay LLM, no hay ambiguedad. Si la politica dice deny, el agente no ejecuta la accion -- sin importar lo que el LLM "piense".
+
+### Contexto de la accion
+
+Cada vez que el agente quiere ejecutar una accion, se construye un objeto de contexto con toda la informacion relevante. Este objeto es inmutable y contiene solo datos -- no logica.
+
+```python
+from __future__ import annotations
+from dataclasses import dataclass, field
+from datetime import datetime, timezone
+from decimal import Decimal
+
+
+@dataclass(frozen=True)
+class ActionContext:
+    """Contexto inmutable de una accion que el agente quiere ejecutar."""
+    action: str                    # "file.delete", "api.call", "db.write"
+    target: str                    # recurso objetivo
+    environment: str               # "production", "staging", "development"
+    timestamp: datetime            # cuando se solicito
+    accumulated_cost: Decimal      # costo acumulado en la sesion
+    actions_this_hour: int         # cuantas acciones van en esta hora
+    requires_external: bool        # si la accion hace llamadas externas
+    agent_id: str                  # identificador del agente
+    metadata: dict = field(default_factory=dict)
+```
+
+### Definicion de politicas
+
+Cada politica es un dataclass con un metodo `evaluate` que recibe el contexto y retorna un resultado estructurado. No es un string, no es un booleano suelto -- es un objeto con la decision y la razon.
+
+```python
+from dataclasses import dataclass
+from enum import Enum
+from typing import Protocol
+
+
+class Decision(Enum):
+    ALLOW = "allow"
+    DENY = "deny"
+    ABSTAIN = "abstain"  # esta politica no aplica
+
+
+@dataclass(frozen=True)
+class PolicyResult:
+    decision: Decision
+    policy_name: str
+    reason: str
+
+
+class Policy(Protocol):
+    """Interfaz que toda politica debe implementar."""
+    name: str
+
+    def evaluate(self, ctx: ActionContext) -> PolicyResult: ...
+
+
+@dataclass
+class NoDeleteInProduction:
+    """Prohibe borrar cualquier recurso en produccion."""
+    name: str = "no-delete-in-production"
+
+    def evaluate(self, ctx: ActionContext) -> PolicyResult:
+        if ctx.environment != "production":
+            return PolicyResult(
+                Decision.ABSTAIN, self.name, "no aplica fuera de produccion"
+            )
+
+        if ctx.action.endswith(".delete"):
+            return PolicyResult(
+                Decision.DENY,
+                self.name,
+                f"borrado bloqueado en produccion: {ctx.target}",
+            )
+
+        return PolicyResult(Decision.ALLOW, self.name, "accion permitida")
+
+
+@dataclass
+class MaxCostPerHour:
+    """Limita el gasto por hora del agente."""
+    name: str = "max-cost-per-hour"
+    max_usd: Decimal = Decimal("2.00")
+
+    def evaluate(self, ctx: ActionContext) -> PolicyResult:
+        if ctx.accumulated_cost > self.max_usd:
+            return PolicyResult(
+                Decision.DENY,
+                self.name,
+                f"costo acumulado ${ctx.accumulated_cost} excede "
+                f"limite ${self.max_usd}/hora",
+            )
+        return PolicyResult(Decision.ALLOW, self.name, "dentro del presupuesto")
+
+
+@dataclass
+class RequireApprovalForExternalCalls:
+    """Bloquea llamadas externas a menos que haya aprobacion previa."""
+    name: str = "require-approval-external"
+    approved_targets: list[str] = field(default_factory=list)
+
+    def evaluate(self, ctx: ActionContext) -> PolicyResult:
+        if not ctx.requires_external:
+            return PolicyResult(
+                Decision.ABSTAIN, self.name, "no es llamada externa"
+            )
+
+        if ctx.target in self.approved_targets:
+            return PolicyResult(
+                Decision.ALLOW, self.name, f"{ctx.target} esta pre-aprobado"
+            )
+
+        return PolicyResult(
+            Decision.DENY,
+            self.name,
+            f"llamada externa a {ctx.target} requiere aprobacion",
+        )
+
+
+@dataclass
+class RateLimitActions:
+    """Limita la cantidad de acciones por hora."""
+    name: str = "rate-limit-actions"
+    max_per_hour: int = 100
+
+    def evaluate(self, ctx: ActionContext) -> PolicyResult:
+        if ctx.actions_this_hour >= self.max_per_hour:
+            return PolicyResult(
+                Decision.DENY,
+                self.name,
+                f"{ctx.actions_this_hour} acciones esta hora, "
+                f"limite es {self.max_per_hour}",
+            )
+        return PolicyResult(Decision.ALLOW, self.name, "dentro del rate limit")
+```
+
+### Policy engine
+
+El engine evalua todas las politicas en orden. Un solo DENY bloquea la accion, sin importar cuantas politicas digan ALLOW. Es un modelo deny-wins, similar a como funcionan los firewalls.
+
+```python
+@dataclass
+class PolicyEngine:
+    """Evalua un conjunto de politicas contra un contexto de accion."""
+    policies: list[Policy] = field(default_factory=list)
+
+    def evaluate(self, ctx: ActionContext) -> tuple[bool, list[PolicyResult]]:
+        """
+        Evalua todas las politicas.
+        Retorna (allowed, results) donde allowed es False si algun DENY existe.
+        """
+        results: list[PolicyResult] = []
+        for policy in self.policies:
+            result = policy.evaluate(ctx)
+            results.append(result)
+
+            # Deny-wins: un solo DENY bloquea todo
+            if result.decision == Decision.DENY:
+                return False, results
+
+        return True, results
+
+    def add_policy(self, policy: Policy) -> None:
+        self.policies.append(policy)
+```
+
+### Uso en el agente
+
+```python
+# Configurar el engine una vez al inicio
+engine = PolicyEngine(policies=[
+    NoDeleteInProduction(),
+    MaxCostPerHour(max_usd=Decimal("1.50")),
+    RequireApprovalForExternalCalls(
+        approved_targets=["api.github.com", "api.openai.com"]
+    ),
+    RateLimitActions(max_per_hour=200),
+])
+
+
+def agent_execute(action: str, target: str, env: str) -> str:
+    """Ejecuta una accion solo si las politicas lo permiten."""
+    ctx = ActionContext(
+        action=action,
+        target=target,
+        environment=env,
+        timestamp=datetime.now(timezone.utc),
+        accumulated_cost=get_session_cost(),
+        actions_this_hour=get_hourly_action_count(),
+        requires_external="api" in action or "http" in action,
+        agent_id="agent-001",
+    )
+
+    allowed, results = engine.evaluate(ctx)
+
+    if not allowed:
+        denied_by = next(r for r in results if r.decision == Decision.DENY)
+        log_denial(ctx, denied_by)
+        raise PermissionError(
+            f"Accion bloqueada por {denied_by.policy_name}: {denied_by.reason}"
+        )
+
+    return execute_action(action, target)
+```
+
+### Por que no preguntarle al LLM
+
+Un LLM puede ser convencido con prompt injection de que "este delete es seguro". Una funcion Python que dice `if env == "production" and action.endswith(".delete"): return DENY` no puede ser convencida de nada. Las politicas deterministas son auditables (puedes leer exactamente que van a hacer), testeables (unit tests normales), y predecibles (mismo input = mismo output siempre). Para decisiones de seguridad, eso es innegociable.
+
+## Referencia
+
+- [OWASP - Access Control](https://owasp.org/www-community/Access_Control)
+- [Protocol classes en Python](https://docs.python.org/3/library/typing.html#typing.Protocol)
+- Pattern 03 del repositorio claude-agent-patterns

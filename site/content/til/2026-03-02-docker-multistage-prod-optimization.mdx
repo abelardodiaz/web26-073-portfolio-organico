@@ -1,0 +1,184 @@
+---
+title: "Docker multi-stage build optimizado: de 1.2GB a 180MB en produccion"
+slug: "docker-multistage-prod-optimization"
+category: "devops"
+stack: ["docker", "python", "fastapi"]
+date: "2026-03-02"
+project: "bloques-reciclables"
+---
+
+## Contexto
+
+ulfblk-docker-prod genera Dockerfiles optimizados para produccion. El Dockerfile tipico de un proyecto Python con FastAPI pesa ~1.2GB porque incluye el compilador, headers de desarrollo, cache de pip y dependencias de build. En produccion no necesitas nada de eso. Menos capas, menos superficie de ataque, deploys mas rapidos.
+
+## Lo que aprendi
+
+Multi-stage builds separan la construccion de la ejecucion. El builder compila todo, el runtime solo copia lo compilado.
+
+### Dockerfile multi-stage
+
+```dockerfile
+# ============================================
+# Stage 1: Builder - compila dependencias
+# ============================================
+FROM python:3.12-slim AS builder
+
+WORKDIR /build
+
+# Instalar dependencias de compilacion (solo en este stage)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copiar requirements primero (cache de Docker layers)
+COPY requirements.txt .
+
+# Compilar wheels en un directorio dedicado
+RUN pip wheel \
+    --no-cache-dir \
+    --wheel-dir=/build/wheels \
+    -r requirements.txt
+
+# ============================================
+# Stage 2: Runtime - imagen minima
+# ============================================
+FROM python:3.12-slim AS runtime
+
+# Dependencias de runtime (solo libpq para psycopg2)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpq5 \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Usuario no-root
+RUN groupadd --gid 1000 appuser \
+    && useradd --uid 1000 --gid 1000 --shell /bin/bash appuser
+
+WORKDIR /app
+
+# Copiar wheels pre-compilados del builder
+COPY --from=builder /build/wheels /tmp/wheels
+
+# Instalar sin compilar (ya estan los wheels)
+RUN pip install \
+    --no-cache-dir \
+    --no-index \
+    --find-links=/tmp/wheels \
+    /tmp/wheels/*.whl \
+    && rm -rf /tmp/wheels
+
+# Copiar solo el codigo de la aplicacion
+COPY --chown=appuser:appuser ./app ./app
+
+# Cambiar a usuario no-root
+USER appuser
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+# Manejo de signals (SIGTERM para graceful shutdown)
+STOPSIGNAL SIGTERM
+
+EXPOSE 8000
+
+CMD ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+```
+
+### Comparacion de tamanos
+
+```text
+REPOSITORY          TAG         SIZE
+myapp-dev           latest      1.2GB    # Todo junto, imagen base full
+myapp-builder       latest      890MB    # Stage 1 (descartado)
+myapp-prod          latest      180MB    # Stage 2 (solo runtime)
+```
+
+La reduccion viene de tres fuentes: sin gcc/headers (~400MB), sin cache de pip (~200MB), sin herramientas de build (~400MB).
+
+### Hardening de seguridad
+
+```dockerfile
+# Variables de entorno para produccion
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
+
+# Filesystem read-only (complementar con --read-only en docker run)
+# Solo /tmp es escribible
+RUN chmod -R a-w /app
+```
+
+### Docker Compose para produccion
+
+```yaml
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+      target: runtime
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "1.0"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+```
+
+### Script de comparacion
+
+```python
+"""Compara el tamano de la imagen antes y despues del multi-stage build."""
+import subprocess
+import json
+
+
+def get_image_size(image_name: str) -> int:
+    """Retorna el tamano de la imagen en bytes."""
+    result = subprocess.run(
+        ["docker", "image", "inspect", image_name, "--format", "{{.Size}}"],
+        capture_output=True,
+        text=True,
+    )
+    return int(result.stdout.strip())
+
+
+def format_size(size_bytes: int) -> str:
+    """Formatea bytes a unidad legible."""
+    for unit in ["B", "KB", "MB", "GB"]:
+        if size_bytes < 1024:
+            return f"{size_bytes:.1f} {unit}"
+        size_bytes /= 1024
+    return f"{size_bytes:.1f} TB"
+
+
+dev_size = get_image_size("myapp-dev")
+prod_size = get_image_size("myapp-prod")
+reduction = ((dev_size - prod_size) / dev_size) * 100
+
+print(f"Dev:  {format_size(dev_size)}")
+print(f"Prod: {format_size(prod_size)}")
+print(f"Reduccion: {reduction:.0f}%")
+```
+
+### Leccion clave
+
+Las imagenes de produccion no deben tener dependencias de build. Cero gcc, cero pip cache, cero dev requirements. El multi-stage build lo hace trivial: un stage para compilar, otro para correr. Ademas, usuario no-root y filesystem read-only no cuestan nada y reducen la superficie de ataque significativamente.
+
+## Referencia
+
+- [Docker Multi-stage Builds](https://docs.docker.com/build/building/multi-stage/)
+- [Docker Security Best Practices](https://docs.docker.com/develop/security-best-practices/)
+- [Python Docker Best Practices](https://testdriven.io/blog/docker-best-practices/)

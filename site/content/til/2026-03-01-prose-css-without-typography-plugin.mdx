@@ -1,0 +1,94 @@
+---
+title: "Prose styling sin @tailwindcss/typography: CSS puro para MDX content"
+slug: "prose-css-without-typography-plugin"
+category: "tailwind"
+stack: ["tailwind-css", "css", "mdx"]
+date: "2026-03-01"
+project: "portfolio-organico-template"
+---
+
+## Contexto
+
+El portfolio renderiza contenido MDX (proyectos y TILs) que necesita typografia rica: headings, code blocks, tablas, blockquotes. La opcion obvia era `@tailwindcss/typography`, pero queria que los estilos respetaran las CSS variables del tema dual (editorial/terminal).
+
+## Lo que aprendi
+
+Escribir ~30 reglas CSS para `.prose` resulta ser mas simple y flexible que configurar el plugin de typography para que use tus custom properties.
+
+```css
+/* app/globals.css - Prose / MDX typography */
+.prose {
+  color: var(--foreground);
+  line-height: 1.75;
+}
+
+.prose h1, .prose h2, .prose h3, .prose h4 {
+  color: var(--foreground);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin-top: 2em;
+  margin-bottom: 0.75em;
+}
+.prose h1 { font-size: 1.875rem; }
+.prose h2 { font-size: 1.5rem; }
+.prose h3 { font-size: 1.25rem; }
+
+.prose code {
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+  background: var(--secondary);
+  padding: 0.15rem 0.4rem;
+  border-radius: 0.25rem;
+}
+
+.prose pre {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem;
+  overflow-x: auto;
+}
+.prose pre code {
+  background: transparent;
+  padding: 0;
+}
+
+.prose blockquote {
+  border-left: 3px solid var(--primary);
+  padding-left: 1em;
+  color: var(--muted-foreground);
+  font-style: italic;
+}
+
+.prose table { width: 100%; border-collapse: collapse; }
+.prose thead th {
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted-foreground);
+  border-bottom: 2px solid var(--border);
+}
+.prose tbody td {
+  padding: 0.625rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+```
+
+### Ventajas sobre `@tailwindcss/typography`
+
+1. **CSS variables nativas**: `var(--primary)`, `var(--border)`, `var(--font-mono)` -- cambian automaticamente con el tema
+2. **Zero dependencias**: una menos en `package.json`
+3. **Sin overrides**: el plugin de typography requiere `prose-invert`, `prose-stone`, etc. para customizar
+4. **Transparente**: 30 reglas CSS que cualquiera puede leer y modificar
+5. **Tema-aware**: los code blocks usan `var(--card)` como fondo, que cambia en editorial vs terminal
+
+### Cuando si usar `@tailwindcss/typography`
+
+Si tu proyecto no tiene temas custom y quieres prose styling listo en 1 minuto, el plugin es perfecto. Pero si ya tienes un design system con custom properties, escribir el CSS directo es mas limpio.
+
+## Referencia
+
+- [@tailwindcss/typography](https://github.com/tailwindlabs/tailwindcss-typography)
+- [MDX styling patterns](https://mdxjs.com/docs/using-mdx/#styling)

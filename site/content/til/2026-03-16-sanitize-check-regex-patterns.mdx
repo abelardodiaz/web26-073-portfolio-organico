@@ -1,0 +1,102 @@
+---
+title: "sanitize_check.py: 20+ regex patterns para escanear datos sensibles antes de publicar"
+slug: "sanitize-check-regex-patterns"
+category: "python"
+stack: ["python", "regex", "security"]
+date: "2026-03-16"
+project: "bloques-reciclables"
+---
+
+## Contexto
+
+Antes de publicar cualquier repo como open-source, necesitaba escanear el codigo buscando datos sensibles: IPs internas, hostnames, API keys, paths privados, credenciales de WireGuard, connection strings. Un solo leak puede comprometer toda la infraestructura.
+
+## Lo que aprendi
+
+Un scanner basado en regex con exit code 0/1 que se integra como pre-commit hook.
+
+### La estructura
+
+```python
+#!/usr/bin/env python3
+"""
+sanitize_check.py - Scan directories for sensitive data before publishing.
+Exit codes: 0 = PASS, 1 = FAIL
+"""
+
+SENSITIVE_PATTERNS = [
+    # IPs internas y publicas
+    (r"10\.X\.Y\.\d+", "VPN IP address"),
+    (r"192\.168\.\d+\.\d+", "Private network IP"),
+    (r"203\.0\.113\.\d+", "Public server IP"),
+
+    # Hostnames
+    (r"myserver\d{2,3}", "Internal server hostname"),
+
+    # API Keys (cada servicio tiene su formato)
+    (r"myapp-\d{3}-[a-f0-9]{48}", "Internal API key"),
+    (r"shpss_[a-f0-9]+", "Shopify secret"),
+    (r"sk-[a-zA-Z0-9]{20,}", "OpenAI/generic API key"),
+
+    # Paths del sistema
+    (r"/home/deploy/apps?", "Server path"),
+    (r"C:\\\\?Users\\\\?myuser", "Windows path"),
+
+    # WireGuard keys (base64 format)
+    (r"[A-Za-z0-9+/]{43}=", "WireGuard public key"),
+    (r"PrivateKey\s*=", "WireGuard private key"),
+
+    # Database connection strings
+    (r"postgres\:\/\/[^\s]+", "Database connection string"),
+    (r"redis\:\/\/[^\s]+", "Redis connection string"),
+    (r"DB_PASSWORD\s*=\s*\S+", "Database password"),
+]
+```
+
+### Exclusiones inteligentes
+
+```python
+EXCLUDED_DIRS = {".git", "node_modules", ".venv", "__pycache__", ".next"}
+EXCLUDED_FILES = {"sanitize_check.py", "02-security-publication-checklist.md"}
+BINARY_EXTENSIONS = {".png", ".jpg", ".woff2", ".pdf", ".lock"}
+```
+
+### El scanner
+
+```python
+def scan_file(filepath, patterns):
+    findings = []
+    with open(filepath, "r", encoding="utf-8", errors="ignore") as f:
+        for line_num, line in enumerate(f, 1):
+            for pattern, description in patterns:
+                if re.search(pattern, line):
+                    findings.append({
+                        "file": filepath,
+                        "line": line_num,
+                        "type": description,
+                        "content": line.strip()[:80],
+                    })
+    return findings
+
+# Exit code para pre-commit hooks
+sys.exit(1 if findings else 0)
+```
+
+### Uso
+
+```bash
+# Manual
+python sanitize_check.py --dir .
+
+# Como pre-commit hook
+python sanitize_check.py --dir . --strict
+```
+
+### Leccion clave
+
+Los patterns deben ser **especificos a tu infraestructura**. Un scanner generico como gitleaks detecta formatos comunes (API keys, tokens), pero no sabe que tus hostnames internos o rangos de IP de VPN son sensibles en tu contexto. La combinacion de ambos (gitleaks + scanner custom) cubre ambos angulos.
+
+## Referencia
+
+- [gitleaks](https://github.com/gitleaks/gitleaks) -- Scanner generico de secrets
+- [OWASP Sensitive Data Exposure](https://owasp.org/www-project-web-security-testing-guide/)

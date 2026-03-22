@@ -1,0 +1,70 @@
+---
+title: "EXCLUDED_FILES en sanitize scanner: el scanner no debe escanearse a si mismo"
+slug: "excluded-files-self-detection"
+category: "python"
+stack: ["python", "security"]
+date: "2026-03-16"
+project: "bloques-reciclables"
+---
+
+## Contexto
+
+Despues de escribir `sanitize_check.py` con 20+ patterns de regex para detectar datos sensibles, lo corri contra el propio repositorio. Resultado: 20+ findings... todos del propio `sanitize_check.py`.
+
+## Lo que aprendi
+
+Un scanner de seguridad que contiene los patterns como strings se auto-detecta como leak. La solucion obvia pero facil de olvidar: excluir los archivos que contienen los patterns por definicion.
+
+```python
+EXCLUDED_FILES = {
+    "sanitize_check.py",                     # contiene los patterns
+    "02-security-publication-checklist.md",   # documenta que buscar
+}
+
+def should_skip_file(filepath):
+    basename = os.path.basename(filepath)
+    if basename in EXCLUDED_FILES:
+        return True
+    _, ext = os.path.splitext(filepath)
+    if ext.lower() in BINARY_EXTENSIONS:
+        return True
+    return False
+```
+
+### El ciclo del problema
+
+1. Escribes pattern: `(r"myserver01", "Internal hostname")`
+2. Corres el scanner contra el repo
+3. El scanner encuentra `"myserver01"` en... `sanitize_check.py` linea 15
+4. Reporta un falso positivo
+5. Multiplica por 20+ patterns = reporte inutil lleno de ruido
+
+### Por que un set y no una lista
+
+```python
+# Set: O(1) lookup
+EXCLUDED_FILES = {"sanitize_check.py", "02-security-publication-checklist.md"}
+
+# vs Lista: O(n) lookup
+EXCLUDED_FILES = ["sanitize_check.py", "02-security-publication-checklist.md"]
+```
+
+Con pocos elementos la diferencia es irrelevante, pero es un buen habito para cuando el scanner crece.
+
+### Alternativa: patterns en archivo externo
+
+Otra solucion es mover los patterns a un `.yaml` o `.json` separado y excluir ese archivo. Pero tener todo en un solo `.py` es mas simple para distribuir y mantener.
+
+### Leccion general
+
+Cualquier herramienta que busca patterns en texto se encontrara a si misma si contiene esos patterns. Aplica a:
+- Linters con reglas custom
+- Validators de formato
+- Grep wrappers
+- CI/CD checks
+
+Siempre incluir una lista de exclusion para los archivos que definen las reglas.
+
+## Referencia
+
+- [False positives in SAST tools](https://owasp.org/www-community/Source_Code_Analysis_Tools)

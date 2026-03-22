@@ -1,0 +1,75 @@
+---
+title: "Dual-theme como storytelling: editorial vs terminal para audiencias diferentes"
+slug: "dual-theme-storytelling"
+category: "architecture"
+stack: ["css", "design-system", "ux"]
+date: "2026-02-21"
+project: "portfolio-organico"
+---
+
+## Contexto
+
+La mayoria de portfolios tienen dark mode y light mode. Este portfolio tiene 4 combinaciones: editorial light/dark + terminal light/dark. No es solo un gimmick visual -- cada tema cuenta una historia diferente.
+
+## Lo que aprendi
+
+Un sistema de temas puede ser mas que colores. Puede ser **dos identidades visuales completas** que hablan a audiencias diferentes.
+
+### Editorial: el profesional
+
+| Aspecto | Implementacion |
+|---------|---------------|
+| Tipografia | Serif (Lora) -- evoca libros, periodismo |
+| Colores | Warm (stone/orange) -- acogedor, accesible |
+| Border radius | 0.5rem -- redondeado, amigable |
+| Voz UI | "Volver a Proyectos", "Un portfolio de" |
+| Audiencia | Reclutadores, PMs, clientes no-tecnicos |
+
+### Terminal: el hacker
+
+| Aspecto | Implementacion |
+|---------|---------------|
+| Tipografia | Mono (JetBrains Mono) -- evoca codigo, CLI |
+| Colores | Cool (slate/emerald) -- tecnico, preciso |
+| Border radius | 0.25rem -- afilado, compacto |
+| Voz UI | "cd ..", "$ whoami", cursor parpadeante |
+| Audiencia | Developers, CTOs, tech leads |
+
+### Como se implementa
+
+Cada componente renderiza **ambas versiones** y CSS decide cual mostrar:
+
+```tsx
+// Server Component - sin 'use client'
+<span className="hidden editorial:inline">Volver a Proyectos</span>
+<span className="hidden terminal:inline">cd ..</span>
+```
+
+```tsx
+// Footer
+<span className="hidden editorial:inline">Un portfolio de</span>
+<span className="hidden terminal:inline">$ whoami</span>
+```
+
+No es conditional rendering en JavaScript -- es CSS puro. Ambos spans estan en el HTML, solo uno se muestra.
+
+### El design system subyacente
+
+```css
+/* 4 bloques de ~25 variables cada uno */
+.theme-editorial      { /* warm, rounded, serif */ }
+.theme-editorial.dark { /* warm dark, same personality */ }
+.theme-terminal       { /* cool, sharp, mono */ }
+.theme-terminal.dark  { /* cool dark, same personality */ }
+```
+
+El dark mode no cambia la personalidad del tema, solo invierte la luminosidad. Editorial dark sigue siendo calido y redondeado. Terminal light sigue siendo frio y afilado.
+
+### Leccion de UX
+
+El toggle de tema no es "preferencia estetica" -- es una forma de dejar que el visitante elija como quiere percibir al autor. Un reclutador ve un profesional pulido. Un developer ve a un colega que vive en la terminal. Mismo contenido, diferente presentacion.
+
+## Referencia
+
+- [Design tokens](https://www.designtokens.org/)
+- [Multi-theme architecture patterns](https://css-tricks.com/a-complete-guide-to-dark-mode-on-the-web/)

@@ -1,0 +1,198 @@
+---
+title: "Markdown como estado persistente de agente: human-readable y git-friendly"
+slug: "markdown-persistent-agent-state"
+category: "python"
+stack: ["python", "ai-agents", "markdown"]
+date: "2026-03-26"
+project: "claude-agent-patterns"
+---
+
+## Contexto
+
+Los agentes autonomos necesitan persistir su estado entre ejecuciones: que tareas completaron, que decisiones tomaron, cuantos tokens consumieron. La opcion obvia es JSON o SQLite, pero ambos tienen un problema cuando necesitas debuggear: requieres herramientas para inspeccionarlos. Queria un formato que un humano pueda abrir con cualquier editor de texto, entender inmediatamente, y que ademas sea git-diffable para trackear cambios de estado en el historial.
+
+## Lo que aprendi
+
+Markdown con YAML frontmatter es el formato perfecto para estado de agentes. El frontmatter almacena datos estructurados (status, timestamps, contadores), y el body almacena el log de decisiones en texto libre. Si el agente crashea a mitad de un write, el archivo sigue siendo legible -- un JSON corrupto no.
+
+### Formato del archivo de estado
+
+```markdown
+---
+agent: task-processor
+status: running
+started_at: "2026-03-25T14:30:00Z"
+updated_at: "2026-03-25T14:35:22Z"
+tasks_completed: 3
+tasks_failed: 1
+tokens_consumed: 12450
+current_task: "analizar-logs-api"
+---
+
+## Log de ejecucion
+
+### 14:30:00 - Inicio de sesion
+- Cargados 5 tasks pendientes del backlog
+- Budget configurado: 50,000 tokens
+
+### 14:31:15 - Task: migrar-schema-v2
+- Estado: completado
+- Tokens: 3,200
+- Resultado: schema migrado, 2 columnas agregadas
+
+### 14:33:40 - Task: validar-endpoints
+- Estado: fallido
+- Error: timeout en GET /api/health (30s)
+- Decision: marcado para retry manual
+```
+
+### Lectura y escritura del estado
+
+En vez de depender de la libreria `python-frontmatter`, uso parsing manual que es mas explicito y no agrega dependencias. El separador `---` en las lineas 1 y N delimita el YAML frontmatter del contenido Markdown.
+
+```python
+from __future__ import annotations
+import yaml
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any
+
+
+@dataclass
+class AgentState:
+    """Estado persistente de un agente en formato Markdown."""
+    metadata: dict[str, Any] = field(default_factory=dict)
+    body: str = ""
+    path: Path | None = None
+
+    @classmethod
+    def load(cls, path: Path) -> AgentState:
+        """Lee un archivo de estado Markdown con YAML frontmatter."""
+        text = path.read_text(encoding="utf-8")
+        state = cls._parse(text)
+        state.path = path
+        return state
+
+    @classmethod
+    def _parse(cls, text: str) -> AgentState:
+        """Parsea frontmatter YAML y body Markdown."""
+        if not text.startswith("---"):
+            return cls(body=text)
+
+        parts = text.split("---", 2)
+        if len(parts) < 3:
+            return cls(body=text)
+
+        frontmatter = yaml.safe_load(parts[1]) or {}
+        body = parts[2].strip()
+        return cls(metadata=frontmatter, body=body)
+
+    def save(self, path: Path | None = None) -> None:
+        """Escribe el estado a disco de forma atomica."""
+        target = path or self.path
+        if target is None:
+            raise ValueError("No se especifico path para guardar")
+
+        content = self._render()
+
+        # Escritura atomica: escribir a temp, luego renombrar
+        tmp_path = target.with_suffix(".tmp")
+        tmp_path.write_text(content, encoding="utf-8")
+        tmp_path.replace(target)
+
+    def _render(self) -> str:
+        """Genera el contenido Markdown con frontmatter."""
+        fm = yaml.dump(
+            self.metadata,
+            default_flow_style=False,
+            allow_unicode=True,
+            sort_keys=False,
+        ).strip()
+        return f"---\n{fm}\n---\n\n{self.body}\n"
+```
+
+### Patron de actualizacion de estado
+
+Cada vez que el agente hace algo significativo, actualiza tanto el frontmatter como el body. El frontmatter refleja el estado actual, el body acumula el historial.
+
+```python
+from datetime import datetime, timezone
+
+
+def update_state(
+    state: AgentState,
+    task_name: str,
+    result: str,
+    tokens: int,
+    error: str | None = None,
+) -> None:
+    """Actualiza el estado despues de procesar un task."""
+    now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    time_short = datetime.now(timezone.utc).strftime("%H:%M:%S")
+
+    # Actualizar frontmatter
+    state.metadata["updated_at"] = now
+    state.metadata["tokens_consumed"] = (
+        state.metadata.get("tokens_consumed", 0) + tokens
+    )
+
+    if error:
+        state.metadata["tasks_failed"] = (
+            state.metadata.get("tasks_failed", 0) + 1
+        )
+        status_text = "fallido"
+    else:
+        state.metadata["tasks_completed"] = (
+            state.metadata.get("tasks_completed", 0) + 1
+        )
+        status_text = "completado"
+
+    # Agregar entrada al log
+    entry = f"\n### {time_short} - Task: {task_name}\n"
+    entry += f"- Estado: {status_text}\n"
+    entry += f"- Tokens: {tokens:,}\n"
+    if error:
+        entry += f"- Error: {error}\n"
+    else:
+        entry += f"- Resultado: {result}\n"
+
+    state.body += entry
+    state.save()
+```
+
+### Git diff del estado
+
+Una de las mayores ventajas es como se ve el diff cuando el estado cambia. En un code review o al debuggear, puedes ver exactamente que paso.
+
+```diff
+ ---
+ agent: task-processor
+-status: running
++status: completed
+ started_at: "2026-03-25T14:30:00Z"
+-updated_at: "2026-03-25T14:35:22Z"
+-tasks_completed: 3
++updated_at: "2026-03-25T14:40:10Z"
++tasks_completed: 5
+ tasks_failed: 1
+-tokens_consumed: 12450
+-current_task: "analizar-logs-api"
++tokens_consumed: 18720
++current_task: null
+ ---
+
++### 14:38:00 - Task: analizar-logs-api
++- Estado: completado
++- Tokens: 4,100
++- Resultado: 3 anomalias detectadas en ultimas 24h
+```
+
+### Por que no JSON o SQLite
+
+JSON es compacto pero un archivo JSON corrupto (por crash a mitad de write) es irrecuperable. Markdown con frontmatter es tolerante a corrupcion parcial -- si se corta a mitad del body, el frontmatter sigue siendo valido y parseable. SQLite es robusto pero requiere herramientas para inspeccion. Markdown lo abres con `cat`, `less`, o cualquier editor. Y en un repositorio git, el diff de un archivo Markdown es inmediatamente legible.
+
+## Referencia
+
+- [YAML frontmatter spec](https://jekyllrb.com/docs/front-matter/)
+- [Atomic file writes in Python](https://docs.python.org/3/library/pathlib.html#pathlib.Path.replace)
+- Pattern 08 del repositorio claude-agent-patterns

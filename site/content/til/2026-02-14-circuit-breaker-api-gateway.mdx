@@ -1,0 +1,212 @@
+---
+title: "Circuit breaker en API Gateway: rate limiting y auto-degradacion"
+slug: "circuit-breaker-api-gateway"
+category: "python"
+stack: ["python", "fastapi", "redis"]
+date: "2026-02-14"
+project: "bloques-reciclables"
+---
+
+## Contexto
+
+Cuando un microservicio downstream se cae o responde lento, el gateway sigue enviandole requests, lo que empeora la situacion (efecto cascada). En ulfblk-gateway necesitaba que el gateway detectara automaticamente cuando un servicio esta fallando, dejara de enviarle trafico, y lo reintentara gradualmente. Ademas, cada cliente debe tener un limite de requests por ventana de tiempo.
+
+## Lo que aprendi
+
+El circuit breaker tiene tres estados: CLOSED (todo normal), OPEN (servicio fallando, rechazar sin intentar), y HALF_OPEN (probar con trafico limitado). El estado y los contadores viven en Redis para que multiples instancias del gateway compartan la misma vision. El rate limiter usa sliding window, tambien en Redis.
+
+### Maquina de estados del circuit breaker
+
+```python
+from enum import Enum
+from redis.asyncio import Redis
+import time
+
+
+class CircuitState(str, Enum):
+    CLOSED = "closed"
+    OPEN = "open"
+    HALF_OPEN = "half_open"
+
+
+class CircuitBreaker:
+    def __init__(
+        self,
+        redis: Redis,
+        service_name: str,
+        failure_threshold: int = 5,
+        recovery_timeout: int = 30,
+        half_open_max_calls: int = 3,
+    ):
+        self._redis = redis
+        self._prefix = f"circuit:{service_name}"
+        self._failure_threshold = failure_threshold
+        self._recovery_timeout = recovery_timeout
+        self._half_open_max = half_open_max_calls
+
+    async def get_state(self) -> CircuitState:
+        state = await self._redis.get(f"{self._prefix}:state")
+        if state is None:
+            return CircuitState.CLOSED
+        return CircuitState(state.decode())
+
+    async def can_execute(self) -> bool:
+        state = await self.get_state()
+
+        if state == CircuitState.CLOSED:
+            return True
+
+        if state == CircuitState.OPEN:
+            # Verificar si ya paso el recovery timeout
+            opened_at = await self._redis.get(f"{self._prefix}:opened_at")
+            if opened_at and time.time() - float(opened_at) >= self._recovery_timeout:
+                await self._transition(CircuitState.HALF_OPEN)
+                return True
+            return False
+
+        if state == CircuitState.HALF_OPEN:
+            # Permitir un numero limitado de calls de prueba
+            count = await self._redis.incr(f"{self._prefix}:half_open_calls")
+            return count <= self._half_open_max
+
+        return False
+
+    async def record_success(self) -> None:
+        state = await self.get_state()
+        if state == CircuitState.HALF_OPEN:
+            # Exito en half-open: cerrar el circuito
+            await self._transition(CircuitState.CLOSED)
+            await self._redis.delete(f"{self._prefix}:failures")
+
+    async def record_failure(self) -> None:
+        state = await self.get_state()
+
+        if state == CircuitState.HALF_OPEN:
+            # Fallo en half-open: abrir de nuevo
+            await self._transition(CircuitState.OPEN)
+            return
+
+        # Incrementar contador de fallos
+        failures = await self._redis.incr(f"{self._prefix}:failures")
+        await self._redis.expire(f"{self._prefix}:failures", self._recovery_timeout)
+
+        if failures >= self._failure_threshold:
+            await self._transition(CircuitState.OPEN)
+
+    async def _transition(self, new_state: CircuitState) -> None:
+        pipe = self._redis.pipeline()
+        pipe.set(f"{self._prefix}:state", new_state.value)
+        if new_state == CircuitState.OPEN:
+            pipe.set(f"{self._prefix}:opened_at", str(time.time()))
+        elif new_state == CircuitState.HALF_OPEN:
+            pipe.set(f"{self._prefix}:half_open_calls", "0")
+        elif new_state == CircuitState.CLOSED:
+            pipe.delete(f"{self._prefix}:opened_at")
+            pipe.delete(f"{self._prefix}:half_open_calls")
+        await pipe.execute()
+```
+
+### Rate limiter con sliding window
+
+Cada cliente tiene un bucket en Redis con el timestamp de cada request. Los requests fuera de la ventana se eliminan automaticamente.
+
+```python
+from fastapi import HTTPException, Request, status
+
+
+class SlidingWindowRateLimiter:
+    def __init__(
+        self,
+        redis: Redis,
+        max_requests: int = 100,
+        window_seconds: int = 60,
+    ):
+        self._redis = redis
+        self._max_requests = max_requests
+        self._window = window_seconds
+
+    async def check(self, client_id: str) -> None:
+        key = f"ratelimit:{client_id}"
+        now = time.time()
+        window_start = now - self._window
+
+        pipe = self._redis.pipeline()
+        # Eliminar requests viejos fuera de la ventana
+        pipe.zremrangebyscore(key, 0, window_start)
+        # Contar requests en la ventana actual
+        pipe.zcard(key)
+        # Agregar el request actual
+        pipe.zadd(key, {str(now): now})
+        # TTL para limpiar keys inactivas
+        pipe.expire(key, self._window)
+        results = await pipe.execute()
+
+        current_count = results[1]
+
+        if current_count >= self._max_requests:
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail=f"Rate limit excedido. Max {self._max_requests} requests por {self._window}s.",
+                headers={"Retry-After": str(self._window)},
+            )
+```
+
+### Proxy con circuit breaker integrado
+
+El gateway hace proxy hacia los servicios downstream, usando el circuit breaker para decidir si enviar el request o retornar un fallback.
+
+```python
+import httpx
+from fastapi import Response
+
+
+async def proxy_request(
+    request: Request,
+    target_url: str,
+    circuit: CircuitBreaker,
+) -> Response:
+    if not await circuit.can_execute():
+        return Response(
+            content='{"error": "Servicio temporalmente no disponible"}',
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            media_type="application/json",
+        )
+
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.request(
+                method=request.method,
+                url=target_url,
+                headers=dict(request.headers),
+                content=await request.body(),
+            )
+
+        if response.status_code >= 500:
+            await circuit.record_failure()
+        else:
+            await circuit.record_success()
+
+        return Response(
+            content=response.content,
+            status_code=response.status_code,
+            media_type=response.headers.get("content-type"),
+        )
+
+    except (httpx.ConnectError, httpx.TimeoutException):
+        await circuit.record_failure()
+        return Response(
+            content='{"error": "Servicio no disponible"}',
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            media_type="application/json",
+        )
+```
+
+### Por que auto-degradacion
+
+Sin circuit breaker, un servicio caido provoca timeouts en cascada: el gateway espera, el cliente espera, los threads se agotan. Con el circuito abierto, el gateway responde 503 inmediatamente (fail fast). Cuando el servicio se recupera, el half-open lo detecta automaticamente. Cero intervencion manual.
+
+## Referencia
+
+- [Circuit Breaker Pattern (Martin Fowler)](https://martinfowler.com/bliki/CircuitBreaker.html)
+- [Redis Sorted Sets para Rate Limiting](https://redis.io/glossary/rate-limiting/)
+- [httpx Async Client](https://www.python-httpx.org/async/)

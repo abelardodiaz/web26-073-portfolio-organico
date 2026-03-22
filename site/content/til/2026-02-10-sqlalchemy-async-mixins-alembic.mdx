@@ -1,0 +1,185 @@
+---
+title: "SQLAlchemy async con mixins reutilizables y Alembic migrations"
+slug: "sqlalchemy-async-mixins-alembic"
+category: "python"
+stack: ["python", "sqlalchemy", "postgresql", "alembic"]
+date: "2026-02-10"
+project: "bloques-reciclables"
+---
+
+## Contexto
+
+En un ecosistema de multiples servicios, cada uno tiene sus propios modelos pero todos necesitan los mismos campos base: `id` (UUID), `created_at`, `updated_at`, `deleted_at` para soft delete. Duplicar esas columnas en cada modelo lleva a inconsistencias (uno usa `datetime` sin timezone, otro olvida el default). En ulfblk-db necesitaba mixins que cualquier modelo pudiera componer, con async desde el principio.
+
+## Lo que aprendi
+
+SQLAlchemy 2.0 soporta mixins con `MappedAsDataclass` o `DeclarativeBase`. Los mixins definen columnas reutilizables que se heredan por composicion. Combinado con sesiones async via asyncpg y Alembic configurado para async, tienes una capa de datos consistente en todos los servicios.
+
+### Definicion de mixins
+
+Cada mixin agrega un grupo de columnas con un proposito claro:
+
+```python
+from datetime import datetime, timezone
+from uuid import UUID, uuid4
+
+from sqlalchemy import func
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+
+
+class Base(DeclarativeBase):
+    pass
+
+
+class UUIDMixin:
+    """Primary key UUID generado automaticamente."""
+    id: Mapped[UUID] = mapped_column(
+        primary_key=True,
+        default=uuid4,
+        server_default=func.gen_random_uuid(),
+    )
+
+
+class TimestampMixin:
+    """Timestamps automaticos de creacion y actualizacion."""
+    created_at: Mapped[datetime] = mapped_column(
+        default=lambda: datetime.now(timezone.utc),
+        server_default=func.now(),
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        default=lambda: datetime.now(timezone.utc),
+        server_default=func.now(),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
+
+
+class SoftDeleteMixin:
+    """Borrado logico en vez de DELETE fisico."""
+    deleted_at: Mapped[datetime | None] = mapped_column(default=None)
+
+    @property
+    def is_deleted(self) -> bool:
+        return self.deleted_at is not None
+```
+
+### Composicion de mixins en un modelo
+
+Un modelo compone los mixins que necesite. Sin repetir columnas, sin olvidar campos:
+
+```python
+from sqlalchemy import String, ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column
+
+
+class Order(Base, UUIDMixin, TimestampMixin, SoftDeleteMixin):
+    __tablename__ = "orders"
+
+    customer_id: Mapped[UUID] = mapped_column(ForeignKey("customers.id"))
+    total: Mapped[int]  # centavos
+    status: Mapped[str] = mapped_column(String(20), default="pending")
+    tenant_id: Mapped[UUID] = mapped_column(index=True)
+```
+
+Eso genera una tabla con `id`, `created_at`, `updated_at`, `deleted_at`, `customer_id`, `total`, `status`, `tenant_id` -- sin escribir las primeras cuatro columnas manualmente.
+
+### Async session factory
+
+La sesion se crea con asyncpg como driver. Cada request obtiene su propia sesion via dependency injection.
+
+```python
+from sqlalchemy.ext.asyncio import (
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
+
+
+def create_session_factory(database_url: str) -> async_sessionmaker[AsyncSession]:
+    engine = create_async_engine(
+        database_url,
+        echo=False,
+        pool_size=10,
+        max_overflow=20,
+        pool_pre_ping=True,
+    )
+
+    return async_sessionmaker(
+        engine,
+        class_=AsyncSession,
+        expire_on_commit=False,
+    )
+
+
+# Dependency para FastAPI
+async def get_db(
+    session_factory: async_sessionmaker[AsyncSession],
+) -> AsyncSession:
+    async with session_factory() as session:
+        async with session.begin():
+            yield session
+```
+
+### Alembic configurado para async
+
+El archivo `env.py` de Alembic necesita una configuracion especial para funcionar con async:
+
+```python
+# alembic/env.py
+import asyncio
+from logging.config import fileConfig
+
+from alembic import context
+from sqlalchemy.ext.asyncio import create_async_engine
+
+from app.models import Base  # importar todos los modelos
+from app.config import settings
+
+config = context.config
+fileConfig(config.config_file_name)
+
+target_metadata = Base.metadata
+
+
+def run_migrations_offline() -> None:
+    context.configure(
+        url=settings.database_url,
+        target_metadata=target_metadata,
+        literal_binds=True,
+    )
+    with context.begin_transaction():
+        context.run_migrations()
+
+
+async def run_migrations_online() -> None:
+    engine = create_async_engine(settings.database_url)
+
+    async with engine.connect() as connection:
+        await connection.run_sync(_do_migrations)
+
+    await engine.dispose()
+
+
+def _do_migrations(connection) -> None:
+    context.configure(
+        connection=connection,
+        target_metadata=target_metadata,
+    )
+    with context.begin_transaction():
+        context.run_migrations()
+
+
+if context.is_offline_mode():
+    run_migrations_offline()
+else:
+    asyncio.run(run_migrations_online())
+```
+
+### Por que mixins y no una clase base monolitica
+
+Una clase base con todas las columnas fuerza a todos los modelos a tener soft delete, timestamps, etc. Con mixins, un modelo puede ser `UUIDMixin + TimestampMixin` sin soft delete, o incluso solo `TimestampMixin` con su propio ID tipo integer. La composicion es mas flexible que la herencia monolitica.
+
+## Referencia
+
+- [SQLAlchemy 2.0 Mixins](https://docs.sqlalchemy.org/en/20/orm/declarative_mixins.html)
+- [SQLAlchemy Async](https://docs.sqlalchemy.org/en/20/orm/extensions/asyncio.html)
+- [Alembic Async Cookbook](https://alembic.sqlalchemy.org/en/latest/cookbook.html#using-asyncio-with-alembic)

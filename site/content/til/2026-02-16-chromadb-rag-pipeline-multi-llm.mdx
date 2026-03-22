@@ -1,0 +1,254 @@
+---
+title: "RAG pipeline con ChromaDB, Ollama y OpenAI en un solo modulo"
+slug: "chromadb-rag-pipeline-multi-llm"
+category: "python"
+stack: ["python", "chromadb", "openai", "ollama"]
+date: "2026-02-16"
+project: "bloques-reciclables"
+---
+
+## Contexto
+
+Queria un pipeline RAG (Retrieval-Augmented Generation) que funcionara igual en desarrollo local (sin pagar API) y en produccion (con OpenAI). En ulfblk-ai-rag necesitaba que el LLM fuera intercambiable via configuracion, que los documentos se almacenaran en un vector store local (ChromaDB), y que el flujo de ingest -> embed -> retrieve -> generate fuera el mismo independientemente del proveedor.
+
+## Lo que aprendi
+
+La clave es abstraer el LLM detras de una interfaz comun. ChromaDB maneja embeddings y busqueda vectorial. El pipeline de RAG es una secuencia de pasos bien definidos: chunk -> embed -> store -> retrieve -> prompt -> generate.
+
+### Abstraccion del LLM provider
+
+Una interfaz base que tanto Ollama como OpenAI implementan:
+
+```python
+from abc import ABC, abstractmethod
+from dataclasses import dataclass
+
+
+@dataclass
+class LLMResponse:
+    content: str
+    model: str
+    tokens_used: int | None = None
+
+
+class LLMProvider(ABC):
+    @abstractmethod
+    async def generate(self, prompt: str, system: str = "") -> LLMResponse:
+        ...
+
+
+class OllamaProvider(LLMProvider):
+    def __init__(self, base_url: str = "http://localhost:11434", model: str = "llama3"):
+        self._base_url = base_url
+        self._model = model
+
+    async def generate(self, prompt: str, system: str = "") -> LLMResponse:
+        import httpx
+
+        async with httpx.AsyncClient(timeout=120.0) as client:
+            response = await client.post(
+                f"{self._base_url}/api/generate",
+                json={
+                    "model": self._model,
+                    "prompt": prompt,
+                    "system": system,
+                    "stream": False,
+                },
+            )
+            data = response.json()
+            return LLMResponse(
+                content=data["response"],
+                model=self._model,
+            )
+
+
+class OpenAIProvider(LLMProvider):
+    def __init__(self, api_key: str, model: str = "gpt-4o"):
+        from openai import AsyncOpenAI
+
+        self._client = AsyncOpenAI(api_key=api_key)
+        self._model = model
+
+    async def generate(self, prompt: str, system: str = "") -> LLMResponse:
+        messages = []
+        if system:
+            messages.append({"role": "system", "content": system})
+        messages.append({"role": "user", "content": prompt})
+
+        response = await self._client.chat.completions.create(
+            model=self._model,
+            messages=messages,
+        )
+
+        choice = response.choices[0]
+        return LLMResponse(
+            content=choice.message.content,
+            model=self._model,
+            tokens_used=response.usage.total_tokens if response.usage else None,
+        )
+```
+
+### Ingestion: chunking y almacenamiento en ChromaDB
+
+Los documentos se dividen en chunks de tamano configurable con overlap para mantener contexto entre fragmentos.
+
+```python
+import chromadb
+from uuid import uuid4
+
+
+class DocumentStore:
+    def __init__(self, collection_name: str = "documents", persist_dir: str = "./chroma_data"):
+        self._client = chromadb.PersistentClient(path=persist_dir)
+        self._collection = self._client.get_or_create_collection(
+            name=collection_name,
+            metadata={"hnsw:space": "cosine"},
+        )
+
+    def ingest(
+        self,
+        text: str,
+        metadata: dict | None = None,
+        chunk_size: int = 500,
+        chunk_overlap: int = 50,
+    ) -> int:
+        """Dividir texto en chunks y almacenar. Retorna cantidad de chunks."""
+        chunks = self._chunk_text(text, chunk_size, chunk_overlap)
+
+        ids = [str(uuid4()) for _ in chunks]
+        metadatas = [metadata or {} for _ in chunks]
+
+        self._collection.add(
+            documents=chunks,
+            ids=ids,
+            metadatas=metadatas,
+        )
+
+        return len(chunks)
+
+    def _chunk_text(self, text: str, size: int, overlap: int) -> list[str]:
+        chunks = []
+        start = 0
+        while start < len(text):
+            end = start + size
+            chunk = text[start:end]
+            if chunk.strip():
+                chunks.append(chunk.strip())
+            start += size - overlap
+        return chunks
+```
+
+### Retrieval: busqueda de chunks similares
+
+ChromaDB usa embeddings internos (por defecto sentence-transformers) para buscar los chunks mas relevantes.
+
+```python
+@dataclass
+class RetrievedChunk:
+    text: str
+    distance: float
+    metadata: dict
+
+
+class DocumentStore:
+    # ... (metodos anteriores)
+
+    def retrieve(self, query: str, top_k: int = 5) -> list[RetrievedChunk]:
+        """Buscar los top_k chunks mas similares a la query."""
+        results = self._collection.query(
+            query_texts=[query],
+            n_results=top_k,
+        )
+
+        chunks = []
+        for i, doc in enumerate(results["documents"][0]):
+            chunks.append(RetrievedChunk(
+                text=doc,
+                distance=results["distances"][0][i],
+                metadata=results["metadatas"][0][i],
+            ))
+
+        return chunks
+```
+
+### Pipeline RAG completo
+
+El pipeline combina retrieval y generation en un solo flujo:
+
+```python
+PROMPT_TEMPLATE = """Usa el siguiente contexto para responder la pregunta.
+Si no puedes responder con el contexto proporcionado, di que no tienes suficiente informacion.
+
+Contexto:
+{context}
+
+Pregunta: {question}
+
+Respuesta:"""
+
+
+class RAGPipeline:
+    def __init__(self, store: DocumentStore, llm: LLMProvider):
+        self._store = store
+        self._llm = llm
+
+    async def query(
+        self,
+        question: str,
+        top_k: int = 5,
+        system_prompt: str = "Eres un asistente util que responde basandose en el contexto proporcionado.",
+    ) -> LLMResponse:
+        # 1. Recuperar chunks relevantes
+        chunks = self._store.retrieve(question, top_k=top_k)
+
+        # 2. Construir contexto a partir de los chunks
+        context = "\n\n---\n\n".join(chunk.text for chunk in chunks)
+
+        # 3. Formatear prompt con template
+        prompt = PROMPT_TEMPLATE.format(
+            context=context,
+            question=question,
+        )
+
+        # 4. Generar respuesta con el LLM
+        response = await self._llm.generate(prompt, system=system_prompt)
+
+        return response
+```
+
+### Uso con factory por configuracion
+
+El LLM provider se selecciona via config, sin cambiar codigo:
+
+```python
+def create_llm(config: dict) -> LLMProvider:
+    provider = config.get("llm_provider", "ollama")
+
+    if provider == "ollama":
+        return OllamaProvider(
+            base_url=config.get("ollama_url", "http://localhost:11434"),
+            model=config.get("ollama_model", "llama3"),
+        )
+    elif provider == "openai":
+        return OpenAIProvider(
+            api_key=config["openai_api_key"],
+            model=config.get("openai_model", "gpt-4o"),
+        )
+    else:
+        raise ValueError(f"LLM provider desconocido: {provider}")
+
+
+# En desarrollo: usa Ollama gratis
+# En produccion: cambia llm_provider a "openai" en el .env
+```
+
+### Por que la abstraccion importa
+
+En desarrollo local uso Ollama con llama3 y no pago nada. En staging pruebo con OpenAI mini para validar calidad. En produccion uso gpt-4o. El mismo pipeline, el mismo codigo, la misma interfaz. Cambio una variable de entorno y listo.
+
+## Referencia
+
+- [ChromaDB Getting Started](https://docs.trychroma.com/getting-started)
+- [Ollama API](https://github.com/ollama/ollama/blob/main/docs/api.md)
+- [OpenAI Chat Completions](https://platform.openai.com/docs/guides/text-generation)
+- [RAG Pattern](https://www.promptingguide.ai/techniques/rag)

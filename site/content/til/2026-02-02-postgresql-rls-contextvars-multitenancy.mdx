@@ -1,0 +1,111 @@
+---
+title: "PostgreSQL RLS via contextvars: multitenancy transparente sin WHERE manual"
+slug: "postgresql-rls-contextvars-multitenancy"
+category: "python"
+stack: ["python", "fastapi", "postgresql", "sqlalchemy"]
+date: "2026-02-02"
+project: "bloques-reciclables"
+---
+
+## Contexto
+
+En un SaaS multitenant, el error mas peligroso es mostrar datos de un tenant a otro. La solucion clasica es agregar `WHERE tenant_id = :id` a cada query, pero eso depende de que ningun dev se le olvide. En ulfblk-multitenant necesitaba un mecanismo que hiciera imposible la fuga de datos entre tenants, sin depender de la disciplina del desarrollador.
+
+## Lo que aprendi
+
+PostgreSQL Row-Level Security (RLS) filtra filas a nivel de base de datos. Si combinas eso con Python `contextvars`, el tenant_id se propaga automaticamente desde el request hasta la query sin que el dev escriba un solo WHERE.
+
+### La politica RLS en PostgreSQL
+
+La politica se define una sola vez por tabla. Usa una variable de sesion (`app.current_tenant`) que se setea en cada conexion.
+
+```sql
+-- Habilitar RLS en la tabla
+ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
+
+-- Politica: cada tenant solo ve sus propias filas
+CREATE POLICY tenant_isolation ON orders
+    USING (tenant_id = current_setting('app.current_tenant')::uuid);
+
+-- Forzar RLS incluso para el owner de la tabla
+ALTER TABLE orders FORCE ROW LEVEL SECURITY;
+```
+
+### El contextvar que viaja con el request
+
+Un `ContextVar` almacena el tenant_id durante toda la vida del request. Es thread-safe y compatible con asyncio.
+
+```python
+from contextvars import ContextVar
+from uuid import UUID
+
+_current_tenant: ContextVar[UUID | None] = ContextVar(
+    "current_tenant", default=None
+)
+
+
+def get_current_tenant() -> UUID:
+    tenant = _current_tenant.get()
+    if tenant is None:
+        raise RuntimeError("tenant_id no esta seteado en el contexto")
+    return tenant
+
+
+def set_current_tenant(tenant_id: UUID) -> None:
+    _current_tenant.set(tenant_id)
+```
+
+### Middleware que setea el tenant en cada request
+
+El middleware extrae el tenant_id del JWT (o header), lo guarda en el contextvar, y lo setea como variable de sesion en PostgreSQL.
+
+```python
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request
+from starlette.responses import Response
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import text
+
+
+class TenantMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next) -> Response:
+        tenant_id = request.state.user.tenant_id  # del JWT ya validado
+
+        # Setear en el contextvar de Python
+        set_current_tenant(tenant_id)
+
+        # Setear en la sesion de PostgreSQL para RLS
+        db: AsyncSession = request.state.db
+        await db.execute(
+            text("SET LOCAL app.current_tenant = :tid"),
+            {"tid": str(tenant_id)},
+        )
+
+        response = await call_next(request)
+        return response
+```
+
+### Query sin WHERE explicito
+
+Lo mejor es lo que NO tienes que escribir. Una query normal retorna solo las filas del tenant actual:
+
+```python
+from sqlalchemy import select
+from app.models import Order
+
+
+async def list_orders(db: AsyncSession) -> list[Order]:
+    # Sin WHERE tenant_id = ... porque RLS lo hace automatico
+    result = await db.execute(select(Order).order_by(Order.created_at.desc()))
+    return list(result.scalars().all())
+```
+
+### Por que esto es superior al filtro manual
+
+El filtro manual falla cuando un dev olvida el WHERE en una sola query. Con RLS, la base de datos garantiza el aislamiento. Incluso si alguien ejecuta `SELECT * FROM orders` directamente, solo ve las filas de su tenant. Zero leakage sin depender de la disciplina humana.
+
+## Referencia
+
+- [PostgreSQL Row Level Security](https://www.postgresql.org/docs/current/ddl-rowsecurity.html)
+- [Python contextvars](https://docs.python.org/3/library/contextvars.html)
+- [SET LOCAL en transacciones](https://www.postgresql.org/docs/current/sql-set.html)

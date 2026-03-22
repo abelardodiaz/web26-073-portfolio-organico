@@ -1,0 +1,92 @@
+---
+title: "generateStaticParams + gray-matter: SSG desde archivos MDX sin CMS"
+slug: "generate-static-params-gray-matter"
+category: "nextjs"
+stack: ["next.js", "gray-matter", "mdx", "typescript"]
+date: "2026-02-11"
+project: "portfolio-organico"
+---
+
+## Contexto
+
+Para el portfolio necesitaba paginas estaticas generadas desde archivos `.mdx` en disco -- sin base de datos, sin CMS, sin API calls en runtime.
+
+## Lo que aprendi
+
+El patron combina tres piezas: `gray-matter` para parsear frontmatter YAML, `fs.readdirSync` para listar archivos, y `generateStaticParams` para decirle a Next.js que rutas generar en build time.
+
+### 1. Content loader (`lib/content.ts`)
+
+```typescript
+import fs from "fs";
+import path from "path";
+import matter from "gray-matter";
+
+const contentDir = path.join(process.cwd(), "content");
+
+export type TilEntry = {
+  title: string;
+  slug: string;
+  category: string;
+  stack: string[];
+  date: string;
+  body: string;
+};
+
+export function getAllTils(): TilEntry[] {
+  const tilDir = path.join(contentDir, "til");
+  if (!fs.existsSync(tilDir)) return [];
+
+  const files = fs
+    .readdirSync(tilDir)
+    .filter((f) => f.endsWith(".mdx") || f.endsWith(".md"));
+
+  return files.map((file) => {
+    const raw = fs.readFileSync(path.join(tilDir, file), "utf-8");
+    const { data, content } = matter(raw);
+    const slug = file.replace(/\.mdx?$/, "");
+
+    return {
+      title: data.title ?? slug,
+      slug: data.slug ?? slug,
+      category: data.category ?? "general",
+      stack: data.stack ?? [],
+      date: data.date ?? "",
+      body: content,
+    } satisfies TilEntry;
+  });
+}
+```
+
+### 2. Static params (`app/til/[slug]/page.tsx`)
+
+```typescript
+export async function generateStaticParams() {
+  const tils = getAllTils();
+  return tils.map((t) => ({ slug: t.slug }));
+}
+
+export default async function TilPage({ params }: Props) {
+  const { slug } = await params;
+  const til = getTilBySlug(slug);
+  if (!til) notFound();
+
+  return (
+    <article className="prose max-w-none">
+      <MdxContent source={til.body} />
+    </article>
+  );
+}
+```
+
+### Resultado
+
+- **Build time**: Next.js lee todos los `.mdx`, genera HTML estatico para cada slug
+- **Runtime**: Zero filesystem calls, zero DB calls -- es HTML puro servido desde CDN
+- **Agregar contenido**: crear un `.mdx` con frontmatter, push a git, Vercel auto-deploya
+- **`satisfies`**: TypeScript valida que el objeto cumple el tipo sin perder la inferencia
+
+## Referencia
+
+- [generateStaticParams](https://nextjs.org/docs/app/api-reference/functions/generate-static-params)
+- [gray-matter](https://github.com/jonschlinkert/gray-matter)

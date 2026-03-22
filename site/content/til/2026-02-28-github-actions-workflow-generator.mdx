@@ -1,0 +1,251 @@
+---
+title: "GitHub Actions workflows generados programaticamente con Python"
+slug: "github-actions-workflow-generator"
+category: "python"
+stack: ["python", "github-actions", "ci-cd"]
+date: "2026-02-28"
+project: "bloques-reciclables"
+---
+
+## Contexto
+
+ulfblk-ci-github genera archivos YAML de GitHub Actions programaticamente. En un monorepo con 28 paquetes, mantener workflows a mano es insostenible: cambiar la version de Python en un job requiere editarlo en N archivos, un typo en un runner name pasa desapercibido hasta que falla en CI. Necesitabamos tratar los workflows como codigo generado, no como config editada a mano.
+
+## Lo que aprendi
+
+Un workflow builder en Python que genera YAML valido y un sistema de validadores que detectan errores comunes antes de hacer commit.
+
+### Modelo del workflow
+
+```python
+from dataclasses import dataclass, field
+from typing import Any
+
+
+@dataclass
+class Step:
+    name: str
+    uses: str | None = None
+    run: str | None = None
+    with_params: dict[str, str] = field(default_factory=dict)
+    env: dict[str, str] = field(default_factory=dict)
+
+    def to_dict(self) -> dict[str, Any]:
+        step: dict[str, Any] = {"name": self.name}
+        if self.uses:
+            step["uses"] = self.uses
+        if self.run:
+            step["run"] = self.run
+        if self.with_params:
+            step["with"] = self.with_params
+        if self.env:
+            step["env"] = self.env
+        return step
+
+
+@dataclass
+class Job:
+    name: str
+    runs_on: str = "ubuntu-latest"
+    steps: list[Step] = field(default_factory=list)
+    needs: list[str] = field(default_factory=list)
+    strategy: dict[str, Any] | None = None
+    permissions: dict[str, str] = field(default_factory=dict)
+
+    def to_dict(self) -> dict[str, Any]:
+        job: dict[str, Any] = {
+            "name": self.name,
+            "runs-on": self.runs_on,
+            "steps": [s.to_dict() for s in self.steps],
+        }
+        if self.needs:
+            job["needs"] = self.needs
+        if self.strategy:
+            job["strategy"] = self.strategy
+        if self.permissions:
+            job["permissions"] = self.permissions
+        return job
+
+
+@dataclass
+class Workflow:
+    name: str
+    on: dict[str, Any]
+    jobs: dict[str, Job] = field(default_factory=dict)
+    permissions: dict[str, str] = field(default_factory=dict)
+
+    def to_dict(self) -> dict[str, Any]:
+        wf: dict[str, Any] = {
+            "name": self.name,
+            "on": self.on,
+        }
+        if self.permissions:
+            wf["permissions"] = self.permissions
+        wf["jobs"] = {k: v.to_dict() for k, v in self.jobs.items()}
+        return wf
+```
+
+### Builder con helpers comunes
+
+```python
+import yaml
+from pathlib import Path
+
+
+class WorkflowBuilder:
+    """Builder para generar workflows de GitHub Actions."""
+
+    def __init__(self, name: str):
+        self.workflow = Workflow(name=name, on={})
+
+    def on_push(self, branches: list[str], paths: list[str] | None = None):
+        trigger: dict[str, Any] = {"branches": branches}
+        if paths:
+            trigger["paths"] = paths
+        self.workflow.on["push"] = trigger
+        return self
+
+    def on_pull_request(self, branches: list[str]):
+        self.workflow.on["pull_request"] = {"branches": branches}
+        return self
+
+    def add_job(self, job_id: str, job: Job):
+        self.workflow.jobs[job_id] = job
+        return self
+
+    def build(self) -> dict:
+        return self.workflow.to_dict()
+
+    def write(self, output_path: Path) -> None:
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(output_path, "w", encoding="utf-8") as f:
+            yaml.dump(
+                self.build(),
+                f,
+                default_flow_style=False,
+                sort_keys=False,
+                allow_unicode=True,
+            )
+
+
+def checkout_step(fetch_depth: int = 1) -> Step:
+    return Step(
+        name="Checkout code",
+        uses="actions/checkout@v4",
+        with_params={"fetch-depth": str(fetch_depth)},
+    )
+
+
+def setup_python_step(version: str = "3.12") -> Step:
+    return Step(
+        name=f"Setup Python {version}",
+        uses="actions/setup-python@v5",
+        with_params={"python-version": version},
+    )
+
+
+def setup_uv_step() -> Step:
+    return Step(
+        name="Install uv",
+        uses="astral-sh/setup-uv@v4",
+    )
+```
+
+### Generacion de un workflow real
+
+```python
+def generate_python_ci(packages: list[str], python_version: str = "3.12") -> dict:
+    """Genera CI para N paquetes Python con lint y test en paralelo."""
+    builder = WorkflowBuilder("Python CI")
+    builder.on_push(branches=["main"]).on_pull_request(branches=["main"])
+
+    lint_job = Job(
+        name="Lint",
+        steps=[
+            checkout_step(),
+            setup_python_step(python_version),
+            setup_uv_step(),
+            Step(name="Install dependencies", run="uv sync --all-packages"),
+            Step(name="Run ruff", run="uv run ruff check ."),
+            Step(name="Run ruff format check", run="uv run ruff format --check ."),
+        ],
+    )
+
+    test_job = Job(
+        name="Test",
+        needs=["lint"],
+        strategy={
+            "matrix": {"package": packages},
+            "fail-fast": False,
+        },
+        steps=[
+            checkout_step(),
+            setup_python_step(python_version),
+            setup_uv_step(),
+            Step(name="Install dependencies", run="uv sync --all-packages"),
+            Step(
+                name="Run tests",
+                run="uv run pytest packages/${{ matrix.package }} -v --tb=short",
+            ),
+        ],
+    )
+
+    builder.add_job("lint", lint_job)
+    builder.add_job("test", test_job)
+    return builder.build()
+```
+
+### Validadores
+
+```python
+VALID_RUNNERS = {"ubuntu-latest", "ubuntu-22.04", "ubuntu-24.04", "macos-latest"}
+DEPRECATED_ACTIONS = {
+    "actions/checkout@v3": "Upgrade to actions/checkout@v4",
+    "actions/setup-python@v4": "Upgrade to actions/setup-python@v5",
+}
+
+
+@dataclass
+class ValidationError:
+    job_id: str
+    message: str
+
+
+def validate_workflow(workflow: dict) -> list[ValidationError]:
+    """Valida un workflow buscando errores comunes."""
+    errors: list[ValidationError] = []
+
+    for job_id, job in workflow.get("jobs", {}).items():
+        runner = job.get("runs-on", "")
+        if runner not in VALID_RUNNERS:
+            errors.append(ValidationError(
+                job_id=job_id,
+                message=f"Runner '{runner}' no es valido, usa: {VALID_RUNNERS}",
+            ))
+
+        for step in job.get("steps", []):
+            action = step.get("uses", "")
+            if action in DEPRECATED_ACTIONS:
+                errors.append(ValidationError(
+                    job_id=job_id,
+                    message=f"Action deprecada '{action}': {DEPRECATED_ACTIONS[action]}",
+                ))
+
+        if not job.get("permissions") and not workflow.get("permissions"):
+            errors.append(ValidationError(
+                job_id=job_id,
+                message="No hay permissions definidos (ni a nivel workflow ni job)",
+            ))
+
+    return errors
+```
+
+### Leccion clave
+
+CI config es codigo que deberia generarse y validarse, no editarse a mano. Cuando tienes un monorepo con N paquetes, un builder que genera los workflows elimina la duplicacion y los validadores detectan errores antes de que GitHub te los reporte 10 minutos despues en un run fallido.
+
+## Referencia
+
+- [GitHub Actions Workflow Syntax](https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions)
+- [PyYAML Documentation](https://pyyaml.org/wiki/PyYAMLDocumentation)
+- [astral-sh/setup-uv](https://github.com/astral-sh/setup-uv)

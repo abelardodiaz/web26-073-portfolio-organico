@@ -1,0 +1,91 @@
+---
+title: "ButtonLink: componer Next.js Link dentro de base-ui Button via render prop"
+slug: "buttonlink-render-prop-pattern"
+category: "shadcn"
+stack: ["base-ui", "next.js", "typescript"]
+date: "2026-02-23"
+project: "portfolio-organico"
+---
+
+## Contexto
+
+Necesitaba un componente que se viera como un Button (con todas las variantes de estilo) pero que funcionara como un `<a>` semantico usando Next.js `Link` para client-side navigation.
+
+## Lo que aprendi
+
+Base UI soporta un `render` prop que permite cambiar el elemento HTML subyacente. Combinado con Next.js `Link`, obtienes un link semantico con estilos de boton.
+
+```tsx
+import Link from "next/link";
+import { Button, type buttonVariants } from "@/components/ui/button";
+import type { VariantProps } from "class-variance-authority";
+
+type ButtonLinkProps = VariantProps<typeof buttonVariants> & {
+  href: string;
+  className?: string;
+  children: React.ReactNode;
+};
+
+export function ButtonLink({
+  href,
+  variant,
+  size,
+  className,
+  children,
+}: ButtonLinkProps) {
+  return (
+    <Button
+      variant={variant}
+      size={size}
+      className={className}
+      render={<Link href={href} />}
+    >
+      {children}
+    </Button>
+  );
+}
+```
+
+### Uso
+
+```tsx
+<ButtonLink href="/projects" variant="outline" size="sm">
+  Ver proyectos
+</ButtonLink>
+```
+
+### Que genera en el DOM
+
+```html
+<a href="/projects" class="inline-flex items-center ... border border-input ...">
+  Ver proyectos
+</a>
+```
+
+Es un `<a>` real (semantico, accesible, click-derecho funciona) pero con los estilos del `Button`.
+
+### Por que no `<Link className={buttonVariants(...)}>` directamente
+
+Funciona, pero:
+1. Pierdes los focus styles y disabled states de Base UI
+2. Tienes que importar `buttonVariants` y `cn` en cada uso
+3. No tienes el `data-slot` attribute que Base UI agrega
+
+### Por que no `asChild` (patron de Radix)
+
+Base UI usa `render` prop en vez de `asChild`. El concepto es similar pero la implementacion es diferente:
+
+```tsx
+// Radix style (asChild)
+<Button asChild><Link href="/path">Text</Link></Button>
+
+// Base UI style (render prop)
+<Button render={<Link href="/path" />}>Text</Button>
+```
+
+El `render` prop es mas explicito sobre que elemento se va a renderizar.
+
+## Referencia
+
+- [Base UI Render Prop](https://base-ui.com/react/handbook/composition)
+- [Next.js Link](https://nextjs.org/docs/app/api-reference/components/link)

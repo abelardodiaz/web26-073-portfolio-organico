@@ -1,0 +1,193 @@
+---
+title: "Normalizacion de respuestas entre APIs de LLM heterogeneas"
+slug: "response-normalization-heterogeneous-llms"
+category: "python"
+stack: ["python", "ai", "openai", "gemini"]
+date: "2026-03-29"
+project: "multi-ai-provider-patterns"
+---
+
+## Contexto
+
+Cada provider de LLM devuelve respuestas en formatos completamente diferentes. OpenAI usa `choices[0].message.content`, Gemini usa `candidates[0].content.parts[0].text`, DeepSeek sigue el formato OpenAI pero con campos extra. Si tu codigo de aplicacion trabaja directamente con estas estructuras, terminas con condicionales por todos lados y cada nuevo provider requiere cambios en multiples archivos. Necesitaba una capa de normalizacion en el boundary del gateway.
+
+## Lo que aprendi
+
+El patron es simple: normalizar en el punto de entrada, antes de que la respuesta llegue al codigo de aplicacion. Todo se mapea a un `NormalizedResponse` con los campos que realmente importan.
+
+### Respuestas raw de cada provider
+
+Asi se ven las respuestas reales (simplificadas) de 3 providers distintos:
+
+```python
+# OpenAI - choices[0].message.content
+openai_raw = {
+    "id": "chatcmpl-abc123",
+    "object": "chat.completion",
+    "model": "gpt-4-turbo",
+    "choices": [{
+        "index": 0,
+        "message": {"role": "assistant", "content": "La respuesta va aqui."},
+        "finish_reason": "stop",
+    }],
+    "usage": {"prompt_tokens": 50, "completion_tokens": 12, "total_tokens": 62},
+}
+
+# Gemini - candidates[0].content.parts[0].text
+gemini_raw = {
+    "candidates": [{
+        "content": {
+            "parts": [{"text": "La respuesta va aqui."}],
+            "role": "model",
+        },
+        "finishReason": "STOP",
+    }],
+    "usageMetadata": {
+        "promptTokenCount": 48,
+        "candidatesTokenCount": 14,
+        "totalTokenCount": 62,
+    },
+}
+
+# DeepSeek - formato compatible con OpenAI pero con campos extra
+deepseek_raw = {
+    "id": "ds-abc123",
+    "object": "chat.completion",
+    "model": "deepseek-chat",
+    "choices": [{
+        "index": 0,
+        "message": {"role": "assistant", "content": "La respuesta va aqui."},
+        "finish_reason": "stop",
+    }],
+    "usage": {
+        "prompt_tokens": 50,
+        "completion_tokens": 12,
+        "total_tokens": 62,
+        "prompt_cache_hit_tokens": 40,  # Campo exclusivo de DeepSeek
+    },
+}
+```
+
+### Dataclass unificado
+
+```python
+from dataclasses import dataclass, field
+from typing import Any
+
+
+@dataclass
+class NormalizedResponse:
+    """Respuesta unificada independiente del provider."""
+    content: str
+    model: str
+    provider: str
+    tokens_used: int
+    latency_ms: float
+    finish_reason: str = "stop"
+    raw_response: dict[str, Any] = field(default_factory=dict, repr=False)
+
+    @property
+    def cost_estimate(self) -> float:
+        """Estimacion de costo basada en tokens y provider."""
+        rates = {
+            "openai": 0.01,
+            "google": 0.0,
+            "deepseek": 0.0014,
+        }
+        rate = rates.get(self.provider, 0.01)
+        return (self.tokens_used / 1000) * rate
+```
+
+### Normalizadores por provider
+
+```python
+import time
+from typing import Callable
+
+# Tipo para funciones normalizadoras
+Normalizer = Callable[[dict[str, Any], float], NormalizedResponse]
+
+
+def normalize_openai(raw: dict[str, Any], latency_ms: float) -> NormalizedResponse:
+    """Normaliza respuesta de OpenAI/compatible."""
+    choice = raw["choices"][0]
+    usage = raw.get("usage", {})
+    return NormalizedResponse(
+        content=choice["message"]["content"],
+        model=raw["model"],
+        provider="openai",
+        tokens_used=usage.get("total_tokens", 0),
+        latency_ms=latency_ms,
+        finish_reason=choice.get("finish_reason", "unknown"),
+        raw_response=raw,
+    )
+
+
+def normalize_gemini(raw: dict[str, Any], latency_ms: float) -> NormalizedResponse:
+    """Normaliza respuesta de Google Gemini."""
+    candidate = raw["candidates"][0]
+    text = candidate["content"]["parts"][0]["text"]
+    usage = raw.get("usageMetadata", {})
+    return NormalizedResponse(
+        content=text,
+        model="gemini",
+        provider="google",
+        tokens_used=usage.get("totalTokenCount", 0),
+        latency_ms=latency_ms,
+        finish_reason=candidate.get("finishReason", "unknown").lower(),
+        raw_response=raw,
+    )
+
+
+def normalize_deepseek(raw: dict[str, Any], latency_ms: float) -> NormalizedResponse:
+    """Normaliza respuesta de DeepSeek (formato OpenAI con extras)."""
+    response = normalize_openai(raw, latency_ms)
+    response.provider = "deepseek"
+    return response
+
+
+# Registry de normalizadores
+NORMALIZERS: dict[str, Normalizer] = {
+    "openai": normalize_openai,
+    "google": normalize_gemini,
+    "deepseek": normalize_deepseek,
+}
+```
+
+### Uso en el router
+
+```python
+def call_provider(
+    provider_key: str,
+    prompt: str,
+) -> NormalizedResponse:
+    """Llama al provider y retorna respuesta normalizada."""
+    provider_name = provider_key.split(":")[0]
+    normalizer = NORMALIZERS.get(provider_name)
+
+    if normalizer is None:
+        raise ValueError(f"Sin normalizador para provider: {provider_name}")
+
+    start = time.perf_counter()
+    raw_response = _send_request(provider_key, prompt)  # Llamada HTTP real
+    latency_ms = (time.perf_counter() - start) * 1000
+
+    return normalizer(raw_response, latency_ms)
+
+
+# El codigo de aplicacion NUNCA toca el formato raw
+response = call_provider("openai:gpt-4-turbo", "Explica circuit breakers")
+print(response.content)       # Siempre igual
+print(response.tokens_used)   # Siempre igual
+print(response.cost_estimate) # Calculo automatico
+```
+
+### Por que normalizar en el boundary
+
+Si dejas que los formatos raw se filtren al codigo de aplicacion, terminas con `if provider == "openai"` en docenas de archivos. Normalizar en el boundary significa que agregar un nuevo provider (Anthropic, Mistral, Cohere) requiere una sola funcion normalizadora y cero cambios en el resto del codigo.
+
+## Referencia
+
+- [OpenAI Chat Completions API](https://platform.openai.com/docs/api-reference/chat/create)
+- [Gemini API Reference](https://ai.google.dev/api/generate-content)
+- [Pattern 03 - Response Normalization](https://github.com/abelardodiaz/multi-ai-provider-patterns)

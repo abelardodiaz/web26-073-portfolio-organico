@@ -1,0 +1,246 @@
+---
+title: "Componentes headless con hooks, i18n via props y defaults en espanol"
+slug: "headless-hooks-i18n-props-defaults"
+category: "react"
+stack: ["react", "typescript", "tailwind"]
+date: "2026-03-04"
+project: "bloques-reciclables"
+---
+
+## Contexto
+
+Los tres paquetes GUI de ulfblk (calendar-ui, chat-ui, forms) necesitan ser usables en proyectos en espanol e ingles sin agregar una libreria de i18n como react-intl o next-intl. Tambien necesitan ser customizables en apariencia sin forzar un design system especifico. La solucion: hooks headless que separan logica de presentacion, e i18n via props con defaults en espanol.
+
+## Lo que aprendi
+
+El patron headless hook expone estado y acciones, el componente de render los consume. Los strings de UI van como props con valores default, asi el componente funciona out-of-the-box en espanol pero se puede sobreescribir para cualquier idioma.
+
+### Hook headless: useCalendar
+
+El hook maneja toda la logica (seleccion de fechas, navegacion entre semanas, slots disponibles) y retorna estado + acciones.
+
+```typescript
+'use client';
+
+import { useState, useCallback, useMemo } from 'react';
+
+interface CalendarSlot {
+  id: string;
+  startTime: string;
+  endTime: string;
+  available: boolean;
+}
+
+interface UseCalendarOptions {
+  initialDate?: Date;
+  onSlotSelect?: (slot: CalendarSlot) => void;
+}
+
+interface UseCalendarReturn {
+  currentDate: Date;
+  selectedSlot: CalendarSlot | null;
+  weekDays: Date[];
+  goToNextWeek: () => void;
+  goToPrevWeek: () => void;
+  selectSlot: (slot: CalendarSlot) => void;
+  isToday: (date: Date) => boolean;
+}
+
+export function useCalendar(options: UseCalendarOptions = {}): UseCalendarReturn {
+  const [currentDate, setCurrentDate] = useState(options.initialDate ?? new Date());
+  const [selectedSlot, setSelectedSlot] = useState<CalendarSlot | null>(null);
+
+  const weekDays = useMemo(() => {
+    const start = new Date(currentDate);
+    start.setDate(start.getDate() - start.getDay() + 1); // Lunes
+    return Array.from({ length: 7 }, (_, i) => {
+      const day = new Date(start);
+      day.setDate(start.getDate() + i);
+      return day;
+    });
+  }, [currentDate]);
+
+  const goToNextWeek = useCallback(() => {
+    setCurrentDate(prev => {
+      const next = new Date(prev);
+      next.setDate(next.getDate() + 7);
+      return next;
+    });
+  }, []);
+
+  const goToPrevWeek = useCallback(() => {
+    setCurrentDate(prev => {
+      const next = new Date(prev);
+      next.setDate(next.getDate() - 7);
+      return next;
+    });
+  }, []);
+
+  const selectSlot = useCallback((slot: CalendarSlot) => {
+    setSelectedSlot(slot);
+    options.onSlotSelect?.(slot);
+  }, [options.onSlotSelect]);
+
+  const isToday = useCallback((date: Date) => {
+    const today = new Date();
+    return date.toDateString() === today.toDateString();
+  }, []);
+
+  return {
+    currentDate,
+    selectedSlot,
+    weekDays,
+    goToNextWeek,
+    goToPrevWeek,
+    selectSlot,
+    isToday,
+  };
+}
+```
+
+### i18n via props con defaults en espanol
+
+Los strings de UI son props opcionales. Si no los pasas, se usan los defaults en espanol.
+
+```typescript
+interface CalendarLabels {
+  nextWeek: string;
+  prevWeek: string;
+  noSlotsAvailable: string;
+  selectTime: string;
+  today: string;
+  weekDays: string[];
+}
+
+const DEFAULT_LABELS: CalendarLabels = {
+  nextWeek: 'Siguiente semana',
+  prevWeek: 'Semana anterior',
+  noSlotsAvailable: 'No hay horarios disponibles',
+  selectTime: 'Selecciona un horario',
+  today: 'Hoy',
+  weekDays: ['Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab', 'Dom'],
+};
+```
+
+### Componente que consume el hook
+
+```tsx
+'use client';
+
+interface SlotPickerProps {
+  slots: CalendarSlot[];
+  onSelect: (slot: CalendarSlot) => void;
+  labels?: Partial<CalendarLabels>;
+  className?: string;
+}
+
+export function SlotPicker({
+  slots,
+  onSelect,
+  labels: customLabels,
+  className,
+}: SlotPickerProps) {
+  const labels = { ...DEFAULT_LABELS, ...customLabels };
+  const calendar = useCalendar({ onSlotSelect: onSelect });
+
+  return (
+    <div className={className}>
+      {/* Navegacion */}
+      <div className="flex items-center justify-between mb-4">
+        <button
+          onClick={calendar.goToPrevWeek}
+          className="text-sm text-[--color-text-secondary] hover:text-[--color-text-primary]"
+        >
+          {labels.prevWeek}
+        </button>
+        <button
+          onClick={calendar.goToNextWeek}
+          className="text-sm text-[--color-text-secondary] hover:text-[--color-text-primary]"
+        >
+          {labels.nextWeek}
+        </button>
+      </div>
+
+      {/* Dias de la semana */}
+      <div className="grid grid-cols-7 gap-1 mb-4">
+        {calendar.weekDays.map((day, i) => (
+          <div
+            key={day.toISOString()}
+            className={`text-center text-sm p-2 rounded ${
+              calendar.isToday(day)
+                ? 'bg-[--color-accent] text-[--color-bg]'
+                : 'text-[--color-text-secondary]'
+            }`}
+          >
+            <span className="block text-xs">{labels.weekDays[i]}</span>
+            <span className="block font-medium">{day.getDate()}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Slots */}
+      {slots.length === 0 ? (
+        <p className="text-sm text-[--color-text-secondary]">
+          {labels.noSlotsAvailable}
+        </p>
+      ) : (
+        <div className="grid grid-cols-3 gap-2">
+          {slots.filter(s => s.available).map(slot => (
+            <button
+              key={slot.id}
+              onClick={() => calendar.selectSlot(slot)}
+              className={`p-2 text-sm rounded border transition-colors ${
+                calendar.selectedSlot?.id === slot.id
+                  ? 'border-[--color-accent] bg-[--color-accent]/10'
+                  : 'border-[--color-border] hover:border-[--color-accent]'
+              }`}
+            >
+              {slot.startTime}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+```
+
+### Uso en ingles (sobreescribiendo labels)
+
+```tsx
+<SlotPicker
+  slots={availableSlots}
+  onSelect={handleSelect}
+  labels={{
+    nextWeek: 'Next week',
+    prevWeek: 'Previous week',
+    noSlotsAvailable: 'No time slots available',
+    weekDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+  }}
+/>
+```
+
+### Tailwind CSS variables en vez de colores hardcodeados
+
+Los componentes usan CSS variables (`--color-accent`, `--color-text-primary`, etc.) en vez de clases como `text-blue-500`. Esto permite que cada proyecto defina su propia paleta sin modificar los componentes.
+
+```css
+/* En el proyecto que consume el paquete */
+:root {
+  --color-accent: #2563eb;
+  --color-bg: #ffffff;
+  --color-text-primary: #1a1a1a;
+  --color-text-secondary: #6b7280;
+  --color-border: #e5e7eb;
+}
+```
+
+### Leccion clave
+
+Headless hooks + i18n via props = internacionalizacion sin dependencias. No necesitas react-intl ni next-intl si tus componentes aceptan los strings como props opcionales con defaults. El consumidor elige: usa los defaults en espanol o pasa sus propios strings. Y con CSS variables en vez de colores de Tailwind, el componente se adapta a cualquier design system.
+
+## Referencia
+
+- [React Headless UI Pattern](https://www.merrickchristensen.com/articles/headless-user-interface-components/)
+- [Tailwind CSS Variables](https://tailwindcss.com/docs/customizing-colors#using-css-variables)
+- [React useCallback](https://react.dev/reference/react/useCallback)

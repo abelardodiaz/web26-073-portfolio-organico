@@ -1,0 +1,142 @@
+---
+title: "FastAPI App Factory: middleware composable y health checks listos"
+slug: "fastapi-app-factory-health-checks"
+category: "python"
+stack: ["python", "fastapi"]
+date: "2026-02-04"
+project: "bloques-reciclables"
+---
+
+## Contexto
+
+Cuando tienes un ecosistema de microservicios, cada uno necesita lo mismo al arrancar: CORS, logging, manejo de errores, y endpoints de health check. Copiar-pegar esa configuracion entre servicios lleva a inconsistencias. En ulfblk-core necesitaba un patron donde cada microservicio arranque identico, y las diferencias sean solo las rutas y la config.
+
+## Lo que aprendi
+
+El patron App Factory encapsula toda la inicializacion en una sola funcion `create_app()`. Recibe configuracion, compone middleware en orden, registra health checks, y retorna una instancia de FastAPI lista para recibir routers.
+
+### La funcion create_app
+
+```python
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from ulfblk_core.config import AppConfig
+from ulfblk_core.middleware.logging import RequestLoggingMiddleware
+from ulfblk_core.middleware.errors import ErrorHandlerMiddleware
+from ulfblk_core.routes.health import health_router
+
+
+def create_app(
+    config: AppConfig,
+    title: str = "ulfblk service",
+    version: str = "0.1.0",
+) -> FastAPI:
+    app = FastAPI(
+        title=title,
+        version=version,
+        docs_url="/docs" if config.debug else None,
+        redoc_url=None,
+    )
+
+    # Middleware se aplica en orden inverso (el ultimo registrado ejecuta primero)
+    _register_middleware(app, config)
+
+    # Health checks siempre disponibles
+    app.include_router(health_router, tags=["health"])
+
+    return app
+
+
+def _register_middleware(app: FastAPI, config: AppConfig) -> None:
+    # Error handler (ejecuta primero, captura todo)
+    app.add_middleware(ErrorHandlerMiddleware)
+
+    # Request logging
+    app.add_middleware(
+        RequestLoggingMiddleware,
+        log_headers=config.debug,
+    )
+
+    # CORS
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=config.cors_origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+```
+
+### Health checks: /health y /ready
+
+Dos endpoints con propositos distintos. `/health` responde si el proceso esta vivo (liveness). `/ready` verifica que las dependencias (DB, Redis) estan conectadas (readiness).
+
+```python
+from fastapi import APIRouter, status
+from fastapi.responses import JSONResponse
+
+health_router = APIRouter()
+
+
+@health_router.get("/health", status_code=status.HTTP_200_OK)
+async def health() -> dict:
+    """Liveness check. Si responde, el proceso esta vivo."""
+    return {"status": "ok"}
+
+
+@health_router.get("/ready", status_code=status.HTTP_200_OK)
+async def ready() -> JSONResponse:
+    """Readiness check. Verifica dependencias externas."""
+    checks: dict[str, str] = {}
+    all_ok = True
+
+    # Verificar base de datos
+    try:
+        await _check_db()
+        checks["database"] = "ok"
+    except Exception:
+        checks["database"] = "error"
+        all_ok = False
+
+    # Verificar Redis
+    try:
+        await _check_redis()
+        checks["redis"] = "ok"
+    except Exception:
+        checks["redis"] = "error"
+        all_ok = False
+
+    status_code = status.HTTP_200_OK if all_ok else status.HTTP_503_SERVICE_UNAVAILABLE
+    return JSONResponse(
+        content={"status": "ok" if all_ok else "degraded", "checks": checks},
+        status_code=status_code,
+    )
+```
+
+### Uso en cada microservicio
+
+Cada servicio solo necesita crear su app y agregar sus routers:
+
+```python
+from ulfblk_core import create_app
+from ulfblk_core.config import AppConfig
+
+from app.routes import orders_router, customers_router
+
+config = AppConfig()
+app = create_app(config, title="Orders Service", version="1.0.0")
+
+app.include_router(orders_router, prefix="/api/v1")
+app.include_router(customers_router, prefix="/api/v1")
+```
+
+### Por que funciona
+
+El factory garantiza que todos los servicios tienen la misma estructura de middleware, los mismos health checks, y el mismo comportamiento de errores. Si necesitas agregar un middleware nuevo (rate limiting, tracing), lo agregas en `_register_middleware` y todos los servicios lo heredan en el siguiente deploy.
+
+## Referencia
+
+- [FastAPI Middleware](https://fastapi.tiangolo.com/tutorial/middleware/)
+- [Kubernetes Liveness and Readiness Probes](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/)
+- [Factory Pattern](https://refactoring.guru/design-patterns/factory-method)

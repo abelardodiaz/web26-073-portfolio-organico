@@ -1,0 +1,91 @@
+---
+title: "Animacion con CSS transitions en vez de framer-motion: RotatingLabel"
+slug: "css-transitions-instead-of-framer-motion"
+category: "react"
+stack: ["react", "css", "typescript"]
+date: "2026-02-27"
+project: "portfolio-organico"
+---
+
+## Contexto
+
+Necesitaba un componente que rota entre dos labels con animacion de fade-out/swap/fade-in. El reflejo es instalar framer-motion, pero para una animacion tan simple es overkill (~30kb).
+
+## Lo que aprendi
+
+`useState` + `setInterval` + CSS `transition` resuelven el 90% de las animaciones simples sin dependencias externas.
+
+```tsx
+"use client";
+import { useEffect, useState } from "react";
+
+const labels = [
+  "Full-Stack + AI Agents",
+  "sistemas autonomos en produccion",
+];
+
+export function RotatingLabel() {
+  const [index, setIndex] = useState(0);
+  const [visible, setVisible] = useState(true);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      // 1. Fade out
+      setVisible(false);
+
+      // 2. Swap text after transition completes (350ms)
+      setTimeout(() => {
+        setIndex((i) => (i + 1) % labels.length);
+        // 3. Fade in
+        setVisible(true);
+      }, 350);
+    }, 4000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <span
+      className="inline-block transition-all duration-350"
+      style={{
+        opacity: visible ? 1 : 0,
+        transform: visible ? "translateY(0)" : "translateY(4px)",
+      }}
+    >
+      {labels[index]}
+    </span>
+  );
+}
+```
+
+### Desglose de la secuencia
+
+```
+t=0s      visible=true   "Full-Stack + AI Agents" (opaco)
+t=4s      visible=false  fade out (350ms CSS transition)
+t=4.35s   index=1        swap text + visible=true, fade in
+t=8s      visible=false  fade out again
+t=8.35s   index=0        swap back + fade in
+...
+```
+
+### Cuando SI usar framer-motion
+
+- Animaciones con spring physics (bounce, overshoot)
+- Shared layout animations (morph entre elementos)
+- Gesture-driven animations (drag, pinch)
+- Exit animations (`AnimatePresence`)
+
+### Cuando CSS transitions bastan
+
+- Fade in/out
+- Slide in/out
+- Scale up/down
+- Cualquier combinacion de `opacity`, `transform`, `color`
+
+Para el caso de RotatingLabel, son 2 propiedades CSS (`opacity` + `translateY`). No necesita 30kb de JavaScript.
+
+## Referencia
+
+- [CSS Transitions](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_transitions)
+- [framer-motion bundle size](https://bundlephobia.com/package/framer-motion)

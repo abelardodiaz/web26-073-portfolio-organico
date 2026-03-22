@@ -1,0 +1,196 @@
+---
+title: "n8n webhook-driven architecture: desacoplar formularios del CRM"
+slug: "n8n-webhook-driven-decoupling"
+category: "python"
+stack: ["python", "flask", "n8n", "webhooks"]
+date: "2026-03-31"
+project: "flask-survey-referral-system"
+---
+
+## Contexto
+
+El sistema de encuestas Flask originalmente escribia directamente al CRM (Google Sheets + notificaciones por WhatsApp). Cada vez que el cliente queria agregar un canal de notificacion (Telegram, email, Slack) o cambiar de CRM, habia que modificar el codigo de Flask, re-testear y redesplegar. La app de encuestas no deberia saber ni importarle que pasa despues de que el usuario completa el formulario.
+
+## Lo que aprendi
+
+La solucion es desacoplar via webhooks: Flask solo envia un POST a n8n con los datos del formulario. n8n se encarga de todo lo demas (CRM, notificaciones, integraciones). Si n8n esta caido, Flask guarda los datos localmente y n8n puede reprocesarlos despues.
+
+### Webhook POST desde Flask
+
+```python
+import os
+import json
+import logging
+from datetime import datetime, timezone
+from pathlib import Path
+
+import httpx
+
+logger = logging.getLogger("webhook")
+
+WEBHOOK_URL = os.getenv("N8N_WEBHOOK_URL", "")
+WEBHOOK_TIMEOUT = int(os.getenv("N8N_WEBHOOK_TIMEOUT", "5"))
+FALLBACK_DIR = Path(os.getenv("WEBHOOK_FALLBACK_DIR", "data/pending_webhooks"))
+
+
+def send_to_webhook(survey_data: dict, referral_code: str) -> bool:
+    """Envia datos de la encuesta a n8n via webhook POST.
+
+    Retorna True si el envio fue exitoso, False si se guardo en fallback.
+    """
+    payload = {
+        "source": "flask-survey",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "referral_code": referral_code,
+        "survey": survey_data,
+    }
+
+    if not WEBHOOK_URL:
+        logger.warning("N8N_WEBHOOK_URL no configurado, guardando en fallback")
+        _save_fallback(payload)
+        return False
+
+    try:
+        response = httpx.post(
+            WEBHOOK_URL,
+            json=payload,
+            timeout=WEBHOOK_TIMEOUT,
+            headers={"Content-Type": "application/json"},
+        )
+        response.raise_for_status()
+        logger.info("Webhook enviado OK: %s", response.status_code)
+        return True
+
+    except httpx.TimeoutException:
+        logger.warning("Webhook timeout (%ds), guardando en fallback", WEBHOOK_TIMEOUT)
+        _save_fallback(payload)
+        return False
+
+    except httpx.HTTPStatusError as exc:
+        logger.error("Webhook error HTTP %d, guardando en fallback", exc.response.status_code)
+        _save_fallback(payload)
+        return False
+
+    except httpx.RequestError as exc:
+        logger.error("Webhook error de conexion: %s, guardando en fallback", exc)
+        _save_fallback(payload)
+        return False
+```
+
+### Fallback local cuando n8n no responde
+
+```python
+def _save_fallback(payload: dict) -> Path:
+    """Guarda el payload en disco para reprocesamiento posterior."""
+    FALLBACK_DIR.mkdir(parents=True, exist_ok=True)
+
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S_%f")
+    filename = f"webhook_{timestamp}.json"
+    filepath = FALLBACK_DIR / filename
+
+    filepath.write_text(json.dumps(payload, ensure_ascii=False, indent=2))
+    logger.info("Fallback guardado: %s", filepath)
+    return filepath
+
+
+def get_pending_webhooks() -> list[Path]:
+    """Lista webhooks pendientes de envio."""
+    if not FALLBACK_DIR.exists():
+        return []
+    return sorted(FALLBACK_DIR.glob("webhook_*.json"))
+
+
+def retry_pending_webhooks() -> dict[str, int]:
+    """Reintenta enviar webhooks pendientes. Retorna conteo de exitos/fallos."""
+    pending = get_pending_webhooks()
+    results = {"sent": 0, "failed": 0, "total": len(pending)}
+
+    for filepath in pending:
+        payload = json.loads(filepath.read_text())
+
+        try:
+            response = httpx.post(
+                WEBHOOK_URL,
+                json=payload,
+                timeout=WEBHOOK_TIMEOUT,
+                headers={"Content-Type": "application/json"},
+            )
+            response.raise_for_status()
+            filepath.unlink()  # Eliminar el archivo despues de envio exitoso
+            results["sent"] += 1
+            logger.info("Retry exitoso: %s", filepath.name)
+
+        except (httpx.HTTPError, httpx.RequestError):
+            results["failed"] += 1
+            logger.warning("Retry fallido: %s", filepath.name)
+
+    return results
+```
+
+### Integracion en la ruta de Flask
+
+```python
+from flask import Flask, request, jsonify, session
+
+app = Flask(__name__)
+
+
+@app.route("/survey/complete", methods=["POST"])
+def complete_survey():
+    """Endpoint final de la encuesta. Guarda en BD y notifica via webhook."""
+    survey_data = {
+        "name": session.get("name"),
+        "phone": session.get("phone"),
+        "current_provider": session.get("current_provider"),
+        "desired_speed": session.get("desired_speed"),
+        "priority": session.get("priority"),
+        "comments": request.form.get("comments", ""),
+    }
+
+    referral_code = session.get("referral_code", "direct")
+
+    # 1. Guardar en la BD local (siempre funciona)
+    save_to_database(survey_data, referral_code)
+
+    # 2. Notificar a n8n (fire-and-forget, con fallback)
+    webhook_ok = send_to_webhook(survey_data, referral_code)
+
+    if not webhook_ok:
+        logger.info(
+            "Encuesta guardada en BD. Webhook pendiente de retry para %s",
+            referral_code,
+        )
+
+    # El usuario nunca sabe si el webhook fallo -- su experiencia no cambia
+    return jsonify({"status": "ok", "referral_code": referral_code})
+```
+
+### Workflow conceptual en n8n
+
+El workflow de n8n recibe el POST y lo distribuye a multiples destinos sin que Flask sepa cuales son:
+
+```
+Webhook Trigger (POST /survey-complete)
+    |
+    +-- Google Sheets: agregar fila con datos de encuesta
+    |
+    +-- WhatsApp API: enviar notificacion al admin
+    |
+    +-- Telegram Bot: alerta en canal del equipo
+    |
+    +-- Condicional: si referral_code != "direct"
+            |
+            +-- Actualizar contador de referidos en Sheets
+```
+
+Cambiar de Google Sheets a HubSpot, agregar un canal de Slack, o modificar las reglas de notificacion son cambios que se hacen en n8n sin tocar una sola linea de Python.
+
+### Por que desacoplar asi
+
+El beneficio principal no es tecnico, es operativo. El equipo de marketing puede modificar las automatizaciones en n8n (interfaz visual) sin depender de un developer para cada cambio. Flask hace una sola cosa bien: recoger datos y confirmarle al usuario. Todo lo demas es responsabilidad de n8n.
+
+## Referencia
+
+- [n8n Webhook Node Documentation](https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.webhook/)
+- [httpx - Python HTTP client](https://www.python-httpx.org/)
+- [Flask Survey Referral System](https://github.com/abelardodiaz/flask-multi-step-survey-and-referral-system)

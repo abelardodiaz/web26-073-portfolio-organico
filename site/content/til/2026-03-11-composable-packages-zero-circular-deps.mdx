@@ -1,0 +1,249 @@
+---
+title: "28 paquetes composables sin dependencias circulares: arquitectura de ulfblk"
+slug: "composable-packages-zero-circular-deps"
+category: "architecture"
+stack: ["python", "typescript", "architecture"]
+date: "2026-03-11"
+project: "bloques-reciclables"
+---
+
+## Contexto
+
+ulfblk tiene 28 paquetes (19 Python + 9 TypeScript) que se pueden combinar segun lo que necesites. El peligro en cualquier monorepo con paquetes interrelacionados: dependencias circulares. Si billing importa de scheduling y scheduling importa de billing, no puedes instalar uno sin el otro, los tests se acoplan, y mover un paquete a otro repo se vuelve imposible. Necesitabamos una regla arquitectonica que previniera esto desde el diseno.
+
+## Lo que aprendi
+
+La regla es simple: depende de core, no de siblings. Cada paquete solo puede depender de `ulfblk-core` (el unico obligatorio) y de dependencias externas. Las integraciones entre paquetes se validan con "recetas".
+
+### Grafo de dependencias
+
+```text
+                    ulfblk-core
+                   /     |     \
+                  /      |      \
+          ulfblk-auth  ulfblk-db  ulfblk-redis
+              |          |            |
+              |     ulfblk-multitenant|
+              |          |            |
+        ulfblk-billing   |     ulfblk-gateway
+              |          |
+        ulfblk-scheduling|
+              |          |
+        ulfblk-calendar  |
+              |          |
+        ulfblk-channels  |
+                         |
+                  ulfblk-ai-rag
+
+  Regla: las flechas solo van hacia abajo.
+  Ningun paquete depende de un hermano del mismo nivel.
+```
+
+En TypeScript, la estructura es similar:
+
+```text
+                @ulfblk/types
+               /      |      \
+    @ulfblk/api-client |   @ulfblk/ui
+              |        |        |
+    @ulfblk/auth-react |   @ulfblk/dashboard
+                       |
+              @ulfblk/calendar-ui
+              @ulfblk/chat-ui
+              @ulfblk/forms
+```
+
+### Declaracion explicita de dependencias (Python)
+
+Cada paquete declara exactamente de que depende. No hay imports implicitos entre hermanos.
+
+```toml
+# packages/ulfblk-scheduling/pyproject.toml
+[project]
+name = "ulfblk-scheduling"
+version = "0.3.0"
+dependencies = [
+    "ulfblk-core",        # Unica dependencia interna
+    "sqlalchemy>=2.0",
+]
+
+# NO tiene ulfblk-calendar, ulfblk-channels, etc.
+# Si necesitas scheduling + calendar, usas una receta.
+```
+
+```toml
+# packages/ulfblk-billing/pyproject.toml
+[project]
+name = "ulfblk-billing"
+version = "0.3.0"
+dependencies = [
+    "ulfblk-core",        # Unica dependencia interna
+    "stripe>=8.0",
+    "httpx>=0.27",
+]
+
+# NO depende de ulfblk-auth ni de ulfblk-db directamente.
+# La integracion con auth se hace en la app, no en el paquete.
+```
+
+### Declaracion explicita de dependencias (TypeScript)
+
+```json
+{
+  "name": "@ulfblk/calendar-ui",
+  "dependencies": {
+    "@ulfblk/types": "workspace:*"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  }
+}
+```
+
+`@ulfblk/types` es el equivalente de `ulfblk-core` en TypeScript: el unico paquete del que todos pueden depender. Los paquetes GUI nunca importan de `@ulfblk/api-client` ni de `@ulfblk/auth-react`.
+
+### Recetas: composicion validada
+
+Las recetas documentan y testean combinaciones especificas de paquetes. Son la forma oficial de decir "estos paquetes funcionan juntos".
+
+```python
+# recipes/bot-de-citas/test_integration.py
+"""
+Receta: Bot de Citas
+Paquetes: core + db + scheduling + calendar + channels
+Valida que la combinacion funciona end-to-end.
+"""
+import pytest
+from ulfblk_core import create_app
+from ulfblk_db import init_db
+from ulfblk_scheduling import SlotService
+from ulfblk_calendar import CalendarSync
+from ulfblk_channels import ChannelRouter
+
+
+@pytest.fixture
+async def app():
+    """Crea una app con todos los paquetes de la receta."""
+    application = create_app(
+        packages=[
+            "ulfblk_db",
+            "ulfblk_scheduling",
+            "ulfblk_calendar",
+            "ulfblk_channels",
+        ]
+    )
+    await init_db(application)
+    return application
+
+
+async def test_booking_flow(app):
+    """Flujo completo: crear slot, reservar, sincronizar, notificar."""
+    slot_service = SlotService()
+    calendar_sync = CalendarSync()
+    channel_router = ChannelRouter()
+
+    # 1. Crear slot disponible
+    slot = await slot_service.create_slot(
+        provider_id="provider-1",
+        start_utc="2026-03-15T10:00:00Z",
+        end_utc="2026-03-15T11:00:00Z",
+    )
+    assert slot.is_available
+
+    # 2. Reservar
+    booked = await slot_service.book(slot.id, user_id="user-1")
+    assert not booked.is_available
+
+    # 3. Sync a Google Calendar
+    event_id = await calendar_sync.push_to_google(booked)
+    assert event_id is not None
+
+    # 4. Notificar por WhatsApp
+    msg_id = await channel_router.send(
+        channel="whatsapp",
+        recipient="+521234567890",
+        content=f"Tu cita fue confirmada: {booked.start_utc}",
+    )
+    assert msg_id is not None
+```
+
+### Validacion automatica del grafo
+
+Un script simple que detecta dependencias circulares parseando los pyproject.toml de cada paquete.
+
+```python
+"""Detecta dependencias circulares en el monorepo."""
+from pathlib import Path
+import tomllib
+
+
+def build_dependency_graph(packages_dir: Path) -> dict[str, list[str]]:
+    """Construye el grafo de dependencias internas."""
+    graph: dict[str, list[str]] = {}
+
+    for pyproject_path in packages_dir.glob("*/pyproject.toml"):
+        with open(pyproject_path, "rb") as f:
+            config = tomllib.load(f)
+
+        pkg_name = config["project"]["name"]
+        deps = config["project"].get("dependencies", [])
+
+        # Filtrar solo dependencias internas (ulfblk-*)
+        internal_deps = [
+            d.split(">=")[0].split("==")[0].strip()
+            for d in deps
+            if d.startswith("ulfblk-")
+        ]
+        graph[pkg_name] = internal_deps
+
+    return graph
+
+
+def find_cycles(graph: dict[str, list[str]]) -> list[list[str]]:
+    """Detecta ciclos con DFS."""
+    cycles: list[list[str]] = []
+    visited: set[str] = set()
+    path: list[str] = []
+
+    def dfs(node: str) -> None:
+        if node in path:
+            cycle_start = path.index(node)
+            cycles.append(path[cycle_start:] + [node])
+            return
+        if node in visited:
+            return
+        path.append(node)
+        for dep in graph.get(node, []):
+            dfs(dep)
+        path.pop()
+        visited.add(node)
+
+    for node in graph:
+        dfs(node)
+
+    return cycles
+
+
+packages_dir = Path("packages")
+graph = build_dependency_graph(packages_dir)
+cycles = find_cycles(graph)
+
+if cycles:
+    print(f"FAIL: {len(cycles)} dependencias circulares encontradas:")
+    for cycle in cycles:
+        print(f"  {' -> '.join(cycle)}")
+else:
+    print(f"OK: {len(graph)} paquetes, 0 dependencias circulares")
+```
+
+### Leccion clave
+
+La regla "depende de core, no de siblings" elimina las dependencias circulares a nivel arquitectonico. No es un linter que detecta ciclos despues de crearlos -- es una restriccion de diseno que los previene. Las integraciones entre paquetes se hacen en la capa de aplicacion (la app que consume los paquetes) o en las recetas, nunca dentro de los paquetes mismos. Esto mantiene cada paquete genuinamente independiente e instalable por separado.
+
+## Referencia
+
+- [Designing Composable Systems](https://www.tedinski.com/2018/02/06/system-boundaries.html)
+- [uv Workspaces](https://docs.astral.sh/uv/concepts/workspaces/)
+- [pnpm Workspaces](https://pnpm.io/workspaces)
+- [Directed Acyclic Graphs in Software Architecture](https://en.wikipedia.org/wiki/Directed_acyclic_graph)

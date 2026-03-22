@@ -1,0 +1,99 @@
+---
+title: "Multi-step forms con session + persistencia dual en Flask"
+slug: "flask-multistep-form-session-persistence"
+category: "python"
+stack: ["python", "flask", "sqlite"]
+date: "2026-03-06"
+project: "flask-survey-referral-system"
+---
+
+## Contexto
+
+Un survey multi-paso con verificacion OTP tiene un problema: entre el paso 1 (enviar datos) y el paso 2 (verificar codigo), el usuario puede cerrar el tab, perder conexion, o la cookie de session puede expirar. Si los datos solo viven en `session`, se pierden. Si solo viven en DB, no tienes acceso rapido durante el flujo.
+
+## Lo que aprendi
+
+El patron de "dual write" guarda los datos del formulario en ambos lugares simultaneamente: Flask session (acceso rapido, volatil) y SQLite (persistente, recuperable).
+
+### Paso 1: Submit del formulario
+
+En el submit inicial, se extraen los datos del form, se construye un JSON unificado, y se escribe en ambos stores:
+
+```python
+@app.route('/submit-survey', methods=['POST'])
+def submit_survey():
+    user_uuid = session.get('user_uuid')
+
+    form_data = {
+        'name': request.form.get('name', '').strip(),
+        'phone': request.form.get('phone', '').strip(),
+        'fraccionamiento': request.form.get('fraccionamiento', ''),
+        # ... mas campos
+    }
+
+    # Generar JSON unificado con toda la metadata
+    json_data = generate_unified_json(
+        etapa="1submit",
+        form_data=form_data,
+        session=session,
+        request=request,
+        otp_code=otp_code,
+    )
+
+    # Dual write: session + DB
+    store_survey_data(user_uuid, json_data)  # SQLite
+    session['otp_code'] = otp_code            # Session
+    session['confirmation_token'] = token     # Session
+```
+
+### La funcion de persistencia
+
+SQLite usa `INSERT OR REPLACE` para hacer upsert atomico por `user_uuid`:
+
+```python
+def store_survey_data(user_uuid, json_data):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    json_str = json.dumps(json_data) if isinstance(json_data, dict) else json_data
+
+    cursor.execute('''
+    INSERT OR REPLACE INTO survey_data
+    (user_uuid, json_data, updated_at)
+    VALUES (?, ?, ?)
+    ''', (user_uuid, json_str, get_mexico_timestamp()))
+
+    conn.commit()
+    conn.close()
+```
+
+### Paso 2: Verificacion OTP
+
+Cuando el usuario verifica el OTP, los datos se recuperan desde DB (no desde session), se actualizan con el nuevo estado, y se escriben de vuelta:
+
+```python
+# Recuperar desde DB (no depende de session)
+stored_data = get_survey_data(user_uuid)
+
+# Actualizar con estado de verificacion
+json_data = generate_unified_json(
+    etapa="2otp",
+    session=session,
+    otp_code=stored_otp,
+)
+
+# Persistir el nuevo estado
+store_survey_data(user_uuid, json_data)
+```
+
+### Por que funciona
+
+- **Session**: acceso instantaneo para datos volatiles del flujo (OTP actual, intentos, token)
+- **SQLite**: fuente de verdad para los datos del formulario que no deben perderse
+- **`generate_unified_json()`**: funcion centralizadora que arma el JSON consistente para ambas etapas, evitando que los campos se desincronicen entre session y DB
+
+Si la session se pierde entre paso 1 y paso 2, el sistema puede reconstruir el estado desde DB usando el `user_uuid`. El dato critico del formulario nunca se pierde.
+
+## Referencia
+
+- [Flask Sessions](https://flask.palletsprojects.com/en/latest/quickstart/#sessions)
+- [SQLite INSERT OR REPLACE](https://www.sqlite.org/lang_replace.html)

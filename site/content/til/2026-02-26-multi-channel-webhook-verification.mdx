@@ -1,0 +1,189 @@
+---
+title: "Multi-channel messaging: WhatsApp, Telegram y Email con webhook verification"
+slug: "multi-channel-webhook-verification"
+category: "python"
+stack: ["python", "fastapi", "whatsapp", "telegram"]
+date: "2026-02-26"
+project: "bloques-reciclables"
+---
+
+## Contexto
+
+ulfblk-channels necesita enviar y recibir mensajes por WhatsApp (Meta Cloud API), Telegram (Bot API) y Email (SMTP). Cada proveedor tiene su propio mecanismo de verificacion de webhooks, su formato de payload y sus reglas de rate limiting. Sin una abstraccion, el codigo de negocio termina lleno de ifs por proveedor.
+
+## Lo que aprendi
+
+La clave es una interfaz unificada para enviar y handlers separados para recibir, porque la verificacion de cada proveedor es fundamentalmente diferente.
+
+### Interfaz del canal
+
+```python
+from abc import ABC, abstractmethod
+from dataclasses import dataclass
+from enum import Enum
+
+
+class ChannelType(str, Enum):
+    WHATSAPP = "whatsapp"
+    TELEGRAM = "telegram"
+    EMAIL = "email"
+
+
+@dataclass
+class OutgoingMessage:
+    channel: ChannelType
+    recipient: str  # Telefono, chat_id, o email
+    content: str
+    metadata: dict | None = None
+
+
+@dataclass
+class IncomingMessage:
+    channel: ChannelType
+    sender: str
+    content: str
+    raw_payload: dict
+
+
+class ChannelClient(ABC):
+    @abstractmethod
+    async def send_message(self, message: OutgoingMessage) -> str:
+        """Envia mensaje y retorna el ID del mensaje enviado."""
+        ...
+
+    @abstractmethod
+    async def parse_incoming(self, payload: dict) -> IncomingMessage | None:
+        """Parsea el payload del webhook a un IncomingMessage."""
+        ...
+```
+
+### Verificacion de webhook: WhatsApp (Meta Cloud API)
+
+WhatsApp usa un challenge de verificacion GET con hub.verify_token. Cuando configuras el webhook, Meta manda un GET con un token que tu defines y un challenge string que debes devolver tal cual.
+
+```python
+from fastapi import APIRouter, Request, Response, HTTPException, Query
+
+router = APIRouter(prefix="/webhooks", tags=["channels"])
+
+WHATSAPP_VERIFY_TOKEN = settings.whatsapp_verify_token
+
+
+@router.get("/whatsapp")
+async def whatsapp_verify(
+    hub_mode: str = Query(None, alias="hub.mode"),
+    hub_token: str = Query(None, alias="hub.verify_token"),
+    hub_challenge: str = Query(None, alias="hub.challenge"),
+) -> Response:
+    """Verificacion de webhook de Meta (WhatsApp Cloud API)."""
+    if hub_mode == "subscribe" and hub_token == WHATSAPP_VERIFY_TOKEN:
+        return Response(content=hub_challenge, media_type="text/plain")
+    raise HTTPException(status_code=403, detail="Verification failed")
+
+
+@router.post("/whatsapp")
+async def whatsapp_incoming(request: Request) -> dict:
+    """Recibe mensajes entrantes de WhatsApp."""
+    payload = await request.json()
+
+    # Validar que es un mensaje y no un status update
+    entries = payload.get("entry", [])
+    for entry in entries:
+        for change in entry.get("changes", []):
+            value = change.get("value", {})
+            messages = value.get("messages", [])
+            for msg in messages:
+                incoming = IncomingMessage(
+                    channel=ChannelType.WHATSAPP,
+                    sender=msg["from"],
+                    content=msg.get("text", {}).get("body", ""),
+                    raw_payload=msg,
+                )
+                await process_incoming(incoming)
+
+    return {"status": "ok"}
+```
+
+### Verificacion de webhook: Telegram (Bot API)
+
+Telegram usa un header `X-Telegram-Bot-Api-Secret-Token` que defines al configurar el webhook con setWebhook. Mas simple que Meta, pero diferente.
+
+```python
+TELEGRAM_SECRET_TOKEN = settings.telegram_secret_token
+
+
+@router.post("/telegram")
+async def telegram_incoming(request: Request) -> dict:
+    """Recibe updates de Telegram con verificacion por secret token."""
+    secret = request.headers.get("X-Telegram-Bot-Api-Secret-Token")
+    if secret != TELEGRAM_SECRET_TOKEN:
+        raise HTTPException(status_code=403, detail="Invalid secret token")
+
+    payload = await request.json()
+    message = payload.get("message")
+
+    if message and message.get("text"):
+        incoming = IncomingMessage(
+            channel=ChannelType.TELEGRAM,
+            sender=str(message["from"]["id"]),
+            content=message["text"],
+            raw_payload=payload,
+        )
+        await process_incoming(incoming)
+
+    return {"status": "ok"}
+```
+
+### Cliente unificado para enviar
+
+```python
+import httpx
+
+
+class WhatsAppClient(ChannelClient):
+    def __init__(self, access_token: str, phone_number_id: str):
+        self.access_token = access_token
+        self.phone_number_id = phone_number_id
+        self.base_url = f"https://graph.facebook.com/v18.0/{phone_number_id}/messages"
+
+    async def send_message(self, message: OutgoingMessage) -> str:
+        async with httpx.AsyncClient() as client:
+            resp = await client.post(
+                self.base_url,
+                headers={"Authorization": f"Bearer {self.access_token}"},
+                json={
+                    "messaging_product": "whatsapp",
+                    "to": message.recipient,
+                    "type": "text",
+                    "text": {"body": message.content},
+                },
+            )
+            resp.raise_for_status()
+            return resp.json()["messages"][0]["id"]
+
+
+class ChannelRouter:
+    """Rutea mensajes al cliente correcto segun el canal."""
+
+    def __init__(self):
+        self._clients: dict[ChannelType, ChannelClient] = {}
+
+    def register(self, channel: ChannelType, client: ChannelClient) -> None:
+        self._clients[channel] = client
+
+    async def send(self, message: OutgoingMessage) -> str:
+        client = self._clients.get(message.channel)
+        if client is None:
+            raise ValueError(f"No client registered for {message.channel}")
+        return await client.send_message(message)
+```
+
+### Leccion clave
+
+El baile de verificacion es diferente para cada proveedor y no tiene sentido abstraerlo -- WhatsApp usa GET con challenge, Telegram usa un header, Email es push-based sin webhook. Pero la interfaz de envio puede ser identica: `send(channel, recipient, content)`. Abstrae donde hay uniformidad (envio), deja explicito donde hay diferencias (verificacion).
+
+## Referencia
+
+- [WhatsApp Cloud API Webhooks](https://developers.facebook.com/docs/whatsapp/cloud-api/webhooks)
+- [Telegram Bot API setWebhook](https://core.telegram.org/bots/api#setwebhook)
+- [Meta Webhook Verification](https://developers.facebook.com/docs/graph-api/webhooks/getting-started)

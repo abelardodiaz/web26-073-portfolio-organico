@@ -1,0 +1,153 @@
+---
+title: "Context window routing: tamano real vs marketing en LLMs"
+slug: "context-window-marketing-vs-real"
+category: "python"
+stack: ["python", "ai", "llm"]
+date: "2026-03-28"
+project: "multi-ai-provider-patterns"
+---
+
+## Contexto
+
+Los providers de LLM anuncian context windows impresionantes: DeepSeek dice 128K, GPT-4 dice 128K, Gemini dice 1M. Pero en produccion, la calidad de las respuestas se degrada mucho antes de alcanzar esos limites. Si rutas una solicitud de 100K tokens a DeepSeek confiando en el marketing, vas a recibir respuestas incompletas o con alucinaciones. Necesitaba que el router multi-provider tome decisiones basadas en la capacidad real, no en la teorica.
+
+## Lo que aprendi
+
+La solucion es mantener dos campos por provider: `marketed_context_window` (lo que dice la documentacion oficial) y `real_context_window` (lo que funciona bien en produccion, verificado con pruebas propias). El router siempre usa el valor real para tomar decisiones.
+
+### Configuracion de providers con contexto dual
+
+```python
+from dataclasses import dataclass
+
+
+@dataclass
+class ProviderConfig:
+    """Configuracion de un provider con context windows reales y de marketing."""
+    name: str
+    model: str
+    marketed_context_window: int  # Lo que dice la documentacion
+    real_context_window: int      # Lo que funciona en produccion
+    cost_per_1k_tokens: float
+    priority: int = 0
+
+    @property
+    def usable_ratio(self) -> float:
+        """Porcentaje del context window que realmente es utilizable."""
+        return self.real_context_window / self.marketed_context_window
+
+
+PROVIDERS: dict[str, ProviderConfig] = {
+    "openai:gpt-4-turbo": ProviderConfig(
+        name="openai",
+        model="gpt-4-turbo",
+        marketed_context_window=128_000,
+        real_context_window=32_000,
+        cost_per_1k_tokens=0.01,
+        priority=1,
+    ),
+    "deepseek:deepseek-chat": ProviderConfig(
+        name="deepseek",
+        model="deepseek-chat",
+        marketed_context_window=128_000,
+        real_context_window=64_000,
+        cost_per_1k_tokens=0.0014,
+        priority=2,
+    ),
+    "google:gemini-2.0-flash": ProviderConfig(
+        name="google",
+        model="gemini-2.0-flash",
+        marketed_context_window=1_000_000,
+        real_context_window=200_000,
+        cost_per_1k_tokens=0.0,
+        priority=3,
+    ),
+}
+```
+
+### Conteo de tokens y seleccion de provider
+
+```python
+def estimate_tokens(text: str) -> int:
+    """Estimacion rapida: ~4 caracteres por token en ingles, ~3 en espanol."""
+    return len(text) // 3
+
+
+def select_provider(
+    prompt: str,
+    providers: dict[str, ProviderConfig],
+    prefer_cheapest: bool = True,
+) -> ProviderConfig | None:
+    """Selecciona un provider cuyo context window REAL soporte el prompt."""
+    token_count = estimate_tokens(prompt)
+
+    # Margen de seguridad del 20% para la respuesta
+    required_tokens = int(token_count * 1.2)
+
+    candidates = [
+        p for p in providers.values()
+        if p.real_context_window >= required_tokens
+    ]
+
+    if not candidates:
+        return None
+
+    if prefer_cheapest:
+        candidates.sort(key=lambda p: (p.cost_per_1k_tokens, -p.priority))
+    else:
+        candidates.sort(key=lambda p: (-p.real_context_window, p.priority))
+
+    return candidates[0]
+```
+
+### Logging de decisiones para auditoria
+
+```python
+import logging
+
+logger = logging.getLogger("context_router")
+
+
+def route_with_audit(prompt: str) -> ProviderConfig | None:
+    """Rutea y registra la decision, incluyendo la diferencia marketing vs real."""
+    token_count = estimate_tokens(prompt)
+    selected = select_provider(prompt, PROVIDERS)
+
+    if selected is None:
+        logger.warning(
+            "Sin provider disponible para %d tokens. "
+            "Maximo real disponible: %d tokens",
+            token_count,
+            max(p.real_context_window for p in PROVIDERS.values()),
+        )
+        return None
+
+    logger.info(
+        "Routed %d tokens -> %s:%s (real: %dK, marketing: %dK, usable: %.0f%%)",
+        token_count,
+        selected.name,
+        selected.model,
+        selected.real_context_window // 1000,
+        selected.marketed_context_window // 1000,
+        selected.usable_ratio * 100,
+    )
+    return selected
+```
+
+### Por que importa la diferencia
+
+La tabla de produccion muestra que ningun provider entrega el 100% de su context window anunciado:
+
+| Provider | Marketing | Real | Ratio |
+|----------|-----------|------|-------|
+| GPT-4 Turbo | 128K | 32K | 25% |
+| DeepSeek Chat | 128K | 64K | 50% |
+| Gemini 2.0 Flash | 1M | 200K | 20% |
+
+Los valores "reales" los obtuve enviando prompts de tamano creciente y midiendo cuando la calidad de las respuestas cae debajo de un umbral aceptable. No es un numero fijo -- depende del tipo de tarea. Para tareas de analisis complejo, los limites reales son aun mas bajos.
+
+## Referencia
+
+- [OpenAI Models - Context Window](https://platform.openai.com/docs/models)
+- [DeepSeek API Documentation](https://platform.deepseek.com/api-docs)
+- [Pattern 04 - Context Window-Aware Routing](https://github.com/abelardodiaz/multi-ai-provider-patterns)

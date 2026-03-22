@@ -1,0 +1,203 @@
+---
+title: "Anti-recursion guard: 4 capas de proteccion en agentes autonomos"
+slug: "anti-recursion-guard-four-layers"
+category: "python"
+stack: ["python", "ai-agents"]
+date: "2026-03-24"
+project: "claude-agent-patterns"
+---
+
+## Contexto
+
+Cuando un agente autonomo puede invocarse a si mismo o disparar cadenas de acciones que se retroalimentan, un solo mecanismo de proteccion no basta. Un agente que analiza un error puede decidir "necesito mas contexto", pedir mas datos, encontrar otro error, y entrar en un loop infinito que consume tokens y dinero. Necesitaba multiples capas independientes donde cada una pueda detener la ejecucion por su cuenta.
+
+## Lo que aprendi
+
+La clave es que cada capa mide una dimension distinta del problema. Si una falla o no aplica, las otras siguen protegiendo. Las cuatro capas son: profundidad de llamada, presupuesto de tokens, tope de costo, y politica determinista.
+
+### Capa 1: Depth counter (profundidad de llamada)
+
+Un decorador que trackea cuantas veces se ha llamado recursivamente una funcion en la misma cadena de ejecucion. Cuando la profundidad excede el limite, corta la ejecucion inmediatamente.
+
+```python
+from __future__ import annotations
+import functools
+import threading
+from typing import TypeVar, Callable, Any
+
+T = TypeVar("T")
+
+_depth_local = threading.local()
+
+
+def max_depth(limit: int) -> Callable:
+    """Decorador que limita la profundidad de llamadas recursivas."""
+    def decorator(fn: Callable[..., T]) -> Callable[..., T]:
+        key = f"_depth_{fn.__qualname__}"
+
+        @functools.wraps(fn)
+        def wrapper(*args: Any, **kwargs: Any) -> T:
+            current = getattr(_depth_local, key, 0)
+            if current >= limit:
+                raise RecursionError(
+                    f"{fn.__qualname__} alcanzo profundidad maxima: {limit}"
+                )
+            setattr(_depth_local, key, current + 1)
+            try:
+                return fn(*args, **kwargs)
+            finally:
+                setattr(_depth_local, key, current)
+
+        return wrapper
+    return decorator
+
+
+@max_depth(limit=5)
+def agent_analyze(task: str) -> str:
+    # Si el agente decide llamarse a si mismo, el depth counter lo detiene
+    if needs_more_context(task):
+        return agent_analyze(f"contexto adicional para: {task}")
+    return f"resultado de {task}"
+```
+
+### Capa 2: Token budget (presupuesto acumulado)
+
+Un contador que suma los tokens consumidos a lo largo de toda la sesion. No importa si la recursion es directa o indirecta -- si el agente consume demasiados tokens en total, se detiene.
+
+```python
+from dataclasses import dataclass, field
+
+
+@dataclass
+class TokenBudget:
+    """Presupuesto de tokens para una sesion de agente."""
+    max_tokens: int
+    consumed: int = field(default=0, init=False)
+
+    def consume(self, tokens: int) -> None:
+        self.consumed += tokens
+        if self.consumed > self.max_tokens:
+            raise RuntimeError(
+                f"Token budget agotado: {self.consumed}/{self.max_tokens}"
+            )
+
+    @property
+    def remaining(self) -> int:
+        return max(0, self.max_tokens - self.consumed)
+
+    def has_budget(self, required: int = 1) -> bool:
+        return self.remaining >= required
+
+
+# Uso en el loop del agente
+budget = TokenBudget(max_tokens=50_000)
+
+def agent_step(prompt: str, budget: TokenBudget) -> str:
+    if not budget.has_budget(required=500):
+        return "presupuesto insuficiente, deteniendo"
+
+    response = call_llm(prompt)
+    budget.consume(response.usage.total_tokens)
+    return response.content
+```
+
+### Capa 3: Cost cap (tope de costo en USD)
+
+Similar al token budget pero traducido a dinero real. Esto es critico porque distintos modelos tienen distintos precios -- 50k tokens de GPT-4 cuestan diferente que 50k de Claude Haiku.
+
+```python
+from dataclasses import dataclass, field
+from decimal import Decimal
+
+
+@dataclass
+class CostAccumulator:
+    """Acumula costos y corta ejecucion al superar el tope."""
+    max_usd: Decimal
+    accumulated: Decimal = field(default_factory=lambda: Decimal("0"))
+
+    # Precios por millon de tokens (ejemplo)
+    PRICING: dict[str, Decimal] = field(default_factory=lambda: {
+        "claude-sonnet-4-20250514": Decimal("3.00"),
+        "claude-haiku-35": Decimal("0.25"),
+    })
+
+    def add(self, model: str, tokens: int) -> None:
+        price_per_million = self.PRICING.get(model, Decimal("5.00"))
+        cost = price_per_million * Decimal(tokens) / Decimal(1_000_000)
+        self.accumulated += cost
+
+        if self.accumulated > self.max_usd:
+            raise RuntimeError(
+                f"Cost cap excedido: ${self.accumulated:.4f} / ${self.max_usd:.2f}"
+            )
+
+    @property
+    def remaining_usd(self) -> Decimal:
+        return max(Decimal("0"), self.max_usd - self.accumulated)
+
+
+# Tope de $0.50 USD por sesion
+costs = CostAccumulator(max_usd=Decimal("0.50"))
+costs.add("claude-sonnet-4-20250514", tokens=12_000)
+```
+
+### Capa 4: Politica determinista (CBAC)
+
+Un sistema de reglas que evalua el contexto de la accion sin preguntarle al LLM. Si la secuencia de acciones coincide con un patron peligroso, se bloquea.
+
+```python
+from dataclasses import dataclass
+
+
+@dataclass
+class ActionContext:
+    action_type: str
+    depth: int
+    total_tokens: int
+    consecutive_same_action: int
+
+
+def policy_no_repeated_actions(ctx: ActionContext) -> bool:
+    """Bloquea si la misma accion se ejecuta 3+ veces consecutivas."""
+    return ctx.consecutive_same_action < 3
+
+
+def policy_max_depth(ctx: ActionContext) -> bool:
+    """Bloquea si la profundidad supera el limite."""
+    return ctx.depth < 10
+
+
+def evaluate_policies(
+    ctx: ActionContext,
+    policies: list[callable],
+) -> tuple[bool, str | None]:
+    """Evalua todas las politicas. Retorna (allowed, reason)."""
+    for policy in policies:
+        if not policy(ctx):
+            return False, f"Bloqueado por politica: {policy.__name__}"
+    return True, None
+
+
+# Uso
+policies = [policy_no_repeated_actions, policy_max_depth]
+ctx = ActionContext(
+    action_type="analyze",
+    depth=3,
+    total_tokens=15_000,
+    consecutive_same_action=4,
+)
+allowed, reason = evaluate_policies(ctx, policies)
+if not allowed:
+    print(f"Accion denegada: {reason}")
+```
+
+### Por que 4 capas y no 1
+
+Cada capa mide algo diferente: la profundidad detecta recursion directa, el budget detecta consumo acumulado sin importar el patron, el cost cap traduce a impacto real en dinero, y la politica detecta patrones de comportamiento sospechosos. Un agente que hace 3 llamadas profundas pero cada una consume 20k tokens pasa el depth check pero no el budget. Otro que hace muchas llamadas baratas pasa el cost cap pero no la politica de acciones repetidas. Las 4 juntas hacen que un runaway sea practicamente imposible.
+
+## Referencia
+
+- [Anthropic - Building effective agents](https://docs.anthropic.com/en/docs/build-with-claude/agentic)
+- [Python threading.local](https://docs.python.org/3/library/threading.html#thread-local-data)
+- Pattern 02 del repositorio claude-agent-patterns

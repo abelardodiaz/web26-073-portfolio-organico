@@ -1,0 +1,76 @@
+---
+title: "Security headers en next.config.ts: 4 headers que todo sitio deberia tener"
+slug: "security-headers-next-config"
+category: "nextjs"
+stack: ["next.js", "security", "typescript"]
+date: "2026-03-15"
+project: "bloques-reciclables"
+---
+
+## Contexto
+
+Al deployar el portfolio a produccion, necesitaba agregar security headers basicos. Next.js permite configurarlos en `next.config.ts` sin necesidad de middleware ni servidor custom.
+
+## Lo que aprendi
+
+Cuatro headers minimos que todo sitio deberia tener, configurados en `next.config.ts`:
+
+```typescript
+// next.config.ts
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
+  async headers() {
+    return [
+      {
+        source: "/(.*)",
+        headers: [
+          {
+            key: "X-Frame-Options",
+            value: "DENY",
+          },
+          {
+            key: "X-Content-Type-Options",
+            value: "nosniff",
+          },
+          {
+            key: "Referrer-Policy",
+            value: "strict-origin-when-cross-origin",
+          },
+          {
+            key: "X-DNS-Prefetch-Control",
+            value: "on",
+          },
+        ],
+      },
+    ];
+  },
+};
+
+export default nextConfig;
+```
+
+### Que hace cada uno
+
+| Header | Valor | Proteccion |
+|--------|-------|------------|
+| `X-Frame-Options` | `DENY` | Previene clickjacking (nadie puede meter tu sitio en un iframe) |
+| `X-Content-Type-Options` | `nosniff` | Evita que el browser adivine MIME types (previene ataques de content sniffing) |
+| `Referrer-Policy` | `strict-origin-when-cross-origin` | Envia el origen completo en same-origin, solo el dominio en cross-origin |
+| `X-DNS-Prefetch-Control` | `on` | Permite DNS prefetching para mejorar performance de navegacion |
+
+### Gotcha
+
+La funcion `headers()` debe ser `async` aunque no tenga `await` -- es parte del contrato de la API de Next.js. Si la defines como sincrona, TypeScript no se queja pero podrías encontrar comportamiento inesperado en algunos entornos.
+
+### Lo que falta para produccion seria
+
+Para un sitio mas complejo agregar:
+- `Content-Security-Policy` (requiere configurar cada fuente de scripts/estilos)
+- `Strict-Transport-Security` (HSTS, si tienes control total del dominio)
+- `Permissions-Policy` (controlar acceso a camera, microphone, etc.)
+
+## Referencia
+
+- [Next.js headers() config](https://nextjs.org/docs/app/api-reference/config/next-config-js/headers)
+- [OWASP Secure Headers](https://owasp.org/www-project-secure-headers/)

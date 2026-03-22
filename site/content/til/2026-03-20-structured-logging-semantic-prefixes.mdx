@@ -1,0 +1,87 @@
+---
+title: "Logging con prefijos semanticos para grep sin log aggregation"
+slug: "structured-logging-semantic-prefixes"
+category: "tooling"
+stack: ["python", "logging", "devops"]
+date: "2026-03-20"
+project: "flask-survey-referral-system"
+---
+
+## Contexto
+
+En un servidor pequeno con Flask, no justifica montar un stack de observabilidad (ELK, Grafana Loki, Datadog). Pero cuando algo falla en produccion, necesitas poder filtrar los logs por flujo: solo ver los webhooks, solo ver las verificaciones OTP, solo ver los duplicados. Con `logger.info("algo paso")` generico, terminas leyendo cientos de lineas irrelevantes.
+
+## Lo que aprendi
+
+Usar prefijos semanticos entre corchetes al inicio de cada log permite filtrar con `grep` cualquier flujo del sistema. Es structured logging minimalista sin dependencias.
+
+### El patron
+
+```python
+logger = logging.getLogger(__name__)
+
+# Flujo principal
+logger.info(f"[VISIT] Nueva visita - UUID: {user_uuid}")
+logger.info(f"[SUBMIT] Survey recibido - UUID: {user_uuid}, Frac: {frac}")
+
+# Verificacion OTP
+logger.info(f"[OTP-VERIFY] Verificacion exitosa - UUID: {user_uuid}")
+logger.info(f"[OTP-VERIFY] Codigo expirado - UUID: {user_uuid}")
+logger.info(f"[OTP-VERIFY] Codigo incorrecto - UUID: {user_uuid}, Intentos: {n}")
+
+# Reenvio OTP
+logger.info(f"[OTP-RESEND] Nuevo OTP generado - UUID: {user_uuid}, Intento: {n}")
+logger.warning(f"[OTP-RESEND] Maximo de intentos alcanzado - UUID: {user_uuid}")
+
+# Webhooks
+logger.info(f"[WEBHOOK] Enviado exitosamente - UUID: {user_uuid}")
+logger.warning(f"[WEBHOOK] Respuesta no exitosa: {status_code}")
+logger.error(f"[WEBHOOK] Error al enviar: {str(e)}")
+
+# Duplicados
+logger.info(f"[DUPLICATE] Telefono duplicado detectado: {phone[-4:]}")
+
+# Administracion
+logger.info(f"[ADMIN] Status actualizado - UUID: {user_uuid}")
+logger.info(f"[SESSION-RESET] Sesion reiniciada - UUID anterior: {old_uuid}")
+```
+
+### Uso con grep
+
+```bash
+# Solo verificaciones OTP
+grep '\[OTP-VERIFY\]' app.log
+
+# Solo errores de webhook
+grep '\[WEBHOOK\]' app.log | grep -i error
+
+# Rastrear un usuario especifico por todo el flujo
+grep 'UUID: abc-123' app.log
+
+# Contar duplicados del dia
+grep '\[DUPLICATE\]' app.log | wc -l
+
+# Ver el flujo completo de un registro
+grep 'UUID: abc-123' app.log
+# [VISIT] Nueva visita - UUID: abc-123
+# [SUBMIT] Survey recibido - UUID: abc-123, Frac: Colinas
+# [WEBHOOK] Enviado exitosamente - UUID: abc-123
+# [OTP-VERIFY] Verificacion exitosa - UUID: abc-123
+```
+
+### Convenciones que lo hacen util
+
+1. **Prefijo siempre al inicio**: `[SUBMIT] mensaje` no `mensaje [SUBMIT]`
+2. **Mayusculas**: mas facil de localizar visualmente y con regex
+3. **Incluir UUID**: permite trazar el flujo completo de un usuario
+4. **Nivel de log correcto**: `info` para operaciones normales, `warning` para limites alcanzados, `error` para fallos de integracion
+5. **Datos sensibles truncados**: `phone[-4:]` en vez del numero completo
+
+### Cuando escalar a algo mas
+
+Si necesitas dashboards, alertas automaticas, o correlacion entre multiples servicios, entonces si necesitas un log aggregator. Pero para un servicio Flask con un solo archivo `app.log`, grep con prefijos semanticos cubre el 90% de los casos de debugging.
+
+## Referencia
+
+- [Python logging](https://docs.python.org/3/library/logging.html)
+- [12-Factor App: Logs](https://12factor.net/logs)
