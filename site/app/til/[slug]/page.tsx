@@ -63,7 +63,17 @@ export default async function TilEntryPage({ params }: Props) {
           )}
           <span className="font-mono text-xs">{til.date}</span>
           {til.stack.length > 0 && (
-            <span className="text-xs">{til.stack.join(", ")}</span>
+            <span className="flex items-center gap-1.5">
+              {til.stack.map((s) => (
+                <Link
+                  key={s}
+                  href={`/til/stack/${s}`}
+                  className="rounded border border-border px-1.5 py-0.5 font-mono text-xs text-muted-foreground transition-colors hover:text-primary hover:border-primary/30"
+                >
+                  {s}
+                </Link>
+              ))}
+            </span>
           )}
         </div>
       </header>
