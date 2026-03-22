@@ -44,6 +44,8 @@ export function TilFeed({ tils, tagSets, activeFilter }: Props) {
   function renderStackTag(stack: string, isTerminal: boolean) {
     const isActive =
       activeFilter?.type === "stack" && activeFilter.value === stack;
+    const count = tagSets.stackCounts[stack] ?? 0;
+    const label = `${stack} (${count})`;
 
     const baseClass = isTerminal
       ? "rounded px-2 py-0.5 font-mono text-[11px] transition-colors border"
@@ -56,7 +58,7 @@ export function TilFeed({ tils, tagSets, activeFilter }: Props) {
     if (isActive) {
       return (
         <span key={stack} className={`${baseClass} ${activeClass}`}>
-          {stack}
+          {label}
         </span>
       );
     }
@@ -66,7 +68,7 @@ export function TilFeed({ tils, tagSets, activeFilter }: Props) {
         href={`/til/stack/${stack}`}
         className={`${baseClass} ${inactiveClass} hover:text-primary hover:border-primary/30`}
       >
-        {stack}
+        {label}
       </Link>
     );
   }
