@@ -47,13 +47,16 @@ export function TilFeed({ tils, tagSets, activeFilter }: Props) {
     const count = tagSets.stackCounts[stack] ?? 0;
     const label = `${stack} (${count})`;
 
+    const maxCount = Math.max(...Object.values(tagSets.stackCounts), 1);
+    const intensity = Math.round((count / maxCount) * 100);
+    const opacity = Math.max(20, Math.min(intensity, 100));
+
     const baseClass = isTerminal
       ? "rounded px-2 py-0.5 font-mono text-[11px] transition-colors border"
       : "rounded-full px-3 py-1 text-xs font-medium transition-colors border";
 
     const activeClass =
       "border-primary/30 text-primary bg-primary/10";
-    const inactiveClass = "border-border text-muted-foreground";
 
     if (isActive) {
       return (
@@ -66,7 +69,8 @@ export function TilFeed({ tils, tagSets, activeFilter }: Props) {
       <Link
         key={stack}
         href={`/til/stack/${stack}`}
-        className={`${baseClass} ${inactiveClass} hover:text-primary hover:border-primary/30`}
+        className={`${baseClass} border-border hover:text-primary hover:border-primary/30`}
+        style={{ color: `oklch(0.65 0.15 25 / ${opacity}%)` }}
       >
         {label}
       </Link>

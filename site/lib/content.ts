@@ -74,11 +74,11 @@ export function getTilTagSets(tils: TilEntry[]): TilTagSets {
     ...new Set(tils.map((t) => t.project).filter(Boolean) as string[]),
   ].sort();
   const allStacks = tils.flatMap((t) => t.stack).filter(Boolean);
-  const stacks = [...new Set(allStacks)].sort();
   const stackCounts: Record<string, number> = {};
   for (const s of allStacks) {
     stackCounts[s] = (stackCounts[s] ?? 0) + 1;
   }
+  const stacks = [...new Set(allStacks)].sort((a, b) => stackCounts[b] - stackCounts[a]);
   return { categories, projects, stacks, stackCounts };
 }
 
