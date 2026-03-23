@@ -2,9 +2,18 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import { useTheme } from "@/components/shared/ThemeProvider";
-import { ThemeSelector } from "@/components/shared/ThemeSelector";
-import { ThemeToggle } from "@/components/shared/ThemeToggle";
+
+const ThemeSelector = dynamic(
+  () => import("@/components/shared/ThemeSelector").then((m) => ({ default: m.ThemeSelector })),
+  { ssr: false }
+);
+
+const ThemeToggle = dynamic(
+  () => import("@/components/shared/ThemeToggle").then((m) => ({ default: m.ThemeToggle })),
+  { ssr: false }
+);
 
 const editorialNav = [
   { href: "/projects", label: "Proyectos" },

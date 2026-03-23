@@ -16,13 +16,15 @@ export const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
   variable: "--font-terminal",
   display: "swap",
+  preload: false,
 });
 
 export const ibmPlexMono = IBM_Plex_Mono({
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
+  weight: ["400", "600"],
   variable: "--font-terminal-mono",
   display: "swap",
+  preload: false,
 });
 
 export const fontVariables = [

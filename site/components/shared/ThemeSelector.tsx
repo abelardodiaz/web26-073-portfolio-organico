@@ -1,20 +1,22 @@
 "use client";
 
 import { useTheme } from "./ThemeProvider";
-import { Button } from "@/components/ui/button";
+import { buttonVariants, cn } from "@/components/ui/button-variants";
 
 export function ThemeSelector() {
   const { theme, setTheme } = useTheme();
 
   return (
-    <Button
-      variant="ghost"
-      size="sm"
+    <button
+      type="button"
       onClick={() =>
         setTheme(theme === "editorial" ? "terminal" : "editorial")
       }
       aria-label="Cambiar tema visual"
-      className="gap-1.5 font-mono text-xs text-muted-foreground"
+      className={cn(
+        buttonVariants({ variant: "ghost", size: "sm" }),
+        "gap-1.5 font-mono text-xs text-muted-foreground"
+      )}
     >
       {theme === "editorial" ? (
         <>
@@ -52,6 +54,6 @@ export function ThemeSelector() {
           editorial
         </>
       )}
-    </Button>
+    </button>
   );
 }

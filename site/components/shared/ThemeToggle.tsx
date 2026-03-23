@@ -1,17 +1,17 @@
 "use client";
 
 import { useTheme } from "./ThemeProvider";
-import { Button } from "@/components/ui/button";
+import { buttonVariants, cn } from "@/components/ui/button-variants";
 
 export function ThemeToggle() {
   const { toggleMode } = useTheme();
 
   return (
-    <Button
-      variant="ghost"
-      size="icon"
+    <button
+      type="button"
       onClick={toggleMode}
       aria-label="Toggle light/dark mode"
+      className={cn(buttonVariants({ variant: "ghost", size: "icon" }))}
     >
       <svg
         className="size-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0"
@@ -47,6 +47,6 @@ export function ThemeToggle() {
       >
         <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
       </svg>
-    </Button>
+    </button>
   );
 }

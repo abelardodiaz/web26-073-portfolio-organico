@@ -27,16 +27,21 @@ export function useTheme() {
   return ctx;
 }
 
-export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setThemeRaw] = useState<Theme>("editorial");
-  const [mode, setModeRaw] = useState<Mode>("dark");
+function getInitialTheme(): Theme {
+  if (typeof window === "undefined") return "editorial";
+  const t = localStorage.getItem("site-theme");
+  return t === "editorial" || t === "terminal" ? t : "editorial";
+}
 
-  useEffect(() => {
-    const t = localStorage.getItem("site-theme");
-    const m = localStorage.getItem("site-mode");
-    if (t === "editorial" || t === "terminal") setThemeRaw(t);
-    if (m === "light" || m === "dark") setModeRaw(m);
-  }, []);
+function getInitialMode(): Mode {
+  if (typeof window === "undefined") return "dark";
+  const m = localStorage.getItem("site-mode");
+  return m === "light" || m === "dark" ? m : "dark";
+}
+
+export function ThemeProvider({ children }: { children: ReactNode }) {
+  const [theme, setThemeRaw] = useState<Theme>(getInitialTheme);
+  const [mode, setModeRaw] = useState<Mode>(getInitialMode);
 
   useEffect(() => {
     const html = document.documentElement;
