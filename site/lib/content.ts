@@ -62,20 +62,14 @@ export function getAllTils(): TilEntry[] {
 }
 
 export type TilTagSets = {
-  categories: string[];
   projects: string[];
 };
 
 export function getTilTagSets(tils: TilEntry[]): TilTagSets {
-  const categories = [...new Set(tils.map((t) => t.category))].sort();
   const projects = [
     ...new Set(tils.map((t) => t.project).filter(Boolean) as string[]),
   ].sort();
-  return { categories, projects };
-}
-
-export function getAllTilCategories(): string[] {
-  return [...new Set(getAllTils().map((t) => t.category))].sort();
+  return { projects };
 }
 
 export function getAllTilProjects(): string[] {

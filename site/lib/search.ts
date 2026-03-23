@@ -50,3 +50,11 @@ export function getPopularStacks(items: SearchItem[], limit = 12): string[] {
     .slice(0, limit)
     .map(([tag]) => tag);
 }
+
+export function getSearchCategories(items: SearchItem[]): string[] {
+  return [...new Set(items.map((i) => i.category))].sort();
+}
+
+export function getSearchProjects(items: SearchItem[]): string[] {
+  return [...new Set(items.filter((i) => i.type === "project").map((i) => i.title))].sort();
+}

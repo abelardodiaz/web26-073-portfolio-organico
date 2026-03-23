@@ -8,6 +8,8 @@ import type { SearchItem } from "@/lib/search";
 type Props = {
   items: SearchItem[];
   popularStacks?: string[];
+  categories?: string[];
+  projects?: string[];
 };
 
 function matchesQuery(item: SearchItem, q: string): boolean {
@@ -20,7 +22,7 @@ function matchesQuery(item: SearchItem, q: string): boolean {
   );
 }
 
-export function SearchBox({ items, popularStacks = [] }: Props) {
+export function SearchBox({ items, popularStacks = [], categories = [], projects = [] }: Props) {
   const searchParams = useSearchParams();
   const [query, setQuery] = useState("");
 
@@ -35,8 +37,8 @@ export function SearchBox({ items, popularStacks = [] }: Props) {
     return items.filter((item) => matchesQuery(item, q));
   }, [query, items]);
 
-  const projects = results.filter((r) => r.type === "project");
-  const tils = results.filter((r) => r.type === "til");
+  const projectResults = results.filter((r) => r.type === "project");
+  const tilResults = results.filter((r) => r.type === "til");
   const hasResults = results.length > 0;
   const hasQuery = query.trim().length > 0;
 
@@ -69,43 +71,33 @@ export function SearchBox({ items, popularStacks = [] }: Props) {
         </div>
       </div>
 
-      {/* ── Stack suggestions (when idle) ── */}
-      {!hasQuery && popularStacks.length > 0 && (
-        <div className="mt-6">
-          <div className="hidden editorial:block">
-            <span className="text-xs font-semibold uppercase tracking-widest text-[var(--fg-subtle)]">
-              Filtrar por stack
-            </span>
-            <div className="flex flex-wrap gap-2 mt-3">
-              {popularStacks.map((s) => (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => setQuery(s)}
-                  className="rounded-full border border-border px-3 py-1 text-xs font-medium text-muted-foreground transition-colors hover:border-primary/30 hover:text-primary"
-                >
-                  {s}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="hidden terminal:block">
-            <span className="font-mono text-[11px] uppercase tracking-widest text-[var(--fg-subtle)]">
-              stack:
-            </span>
-            <div className="flex flex-wrap gap-2 mt-3">
-              {popularStacks.map((s) => (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => setQuery(s)}
-                  className="rounded border border-border px-2 py-0.5 font-mono text-[11px] text-muted-foreground transition-colors hover:border-primary/30 hover:text-primary"
-                >
-                  {s}
-                </button>
-              ))}
-            </div>
-          </div>
+      {/* ── Quick filters (when idle) ── */}
+      {!hasQuery && (categories.length > 0 || projects.length > 0 || popularStacks.length > 0) && (
+        <div className="mt-6 space-y-4">
+          {categories.length > 0 && (
+            <FilterRow
+              label="Categoria"
+              terminalLabel="cat:"
+              items={categories}
+              onSelect={setQuery}
+            />
+          )}
+          {projects.length > 0 && (
+            <FilterRow
+              label="Proyecto"
+              terminalLabel="proj:"
+              items={projects}
+              onSelect={setQuery}
+            />
+          )}
+          {popularStacks.length > 0 && (
+            <FilterRow
+              label="Stack"
+              terminalLabel="stack:"
+              items={popularStacks}
+              onSelect={setQuery}
+            />
+          )}
         </div>
       )}
 
@@ -124,21 +116,21 @@ export function SearchBox({ items, popularStacks = [] }: Props) {
           )}
 
           {/* Projects group */}
-          {projects.length > 0 && (
+          {projectResults.length > 0 && (
             <ResultGroup
               label="Proyectos"
               terminalLabel="projects"
-              items={projects}
+              items={projectResults}
             />
           )}
 
           {/* TILs group */}
-          {tils.length > 0 && (
+          {tilResults.length > 0 && (
             <ResultGroup
               label="TIL"
               terminalLabel="til"
-              items={tils}
-              className={projects.length > 0 ? "mt-6" : undefined}
+              items={tilResults}
+              className={projectResults.length > 0 ? "mt-6" : undefined}
             />
           )}
 
@@ -248,5 +240,52 @@ function ResultGroup({
         ))}
       </ul>
     </div>
+  );
+}
+
+function FilterRow({
+  label,
+  terminalLabel,
+  items,
+  onSelect,
+}: {
+  label: string;
+  terminalLabel: string;
+  items: string[];
+  onSelect: (value: string) => void;
+}) {
+  return (
+    <>
+      <div className="hidden editorial:flex flex-wrap items-center gap-2">
+        <span className="text-xs font-semibold uppercase tracking-widest text-[var(--fg-subtle)] mr-1">
+          {label}
+        </span>
+        {items.map((s) => (
+          <button
+            key={s}
+            type="button"
+            onClick={() => onSelect(s)}
+            className="rounded-full border border-border px-3 py-1 text-xs font-medium text-muted-foreground transition-colors hover:border-primary/30 hover:text-primary"
+          >
+            {s}
+          </button>
+        ))}
+      </div>
+      <div className="hidden terminal:flex flex-wrap items-center gap-2">
+        <span className="font-mono text-[11px] uppercase tracking-widest text-[var(--fg-subtle)] mr-1">
+          {terminalLabel}
+        </span>
+        {items.map((s) => (
+          <button
+            key={s}
+            type="button"
+            onClick={() => onSelect(s)}
+            className="rounded border border-border px-2 py-0.5 font-mono text-[11px] text-muted-foreground transition-colors hover:border-primary/30 hover:text-primary"
+          >
+            {s}
+          </button>
+        ))}
+      </div>
+    </>
   );
 }

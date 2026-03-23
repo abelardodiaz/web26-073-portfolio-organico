@@ -3,7 +3,6 @@ import {
   getAllProjects,
   getAllProjectCategories,
   getAllTils,
-  getAllTilCategories,
   getAllTilProjects,
 } from "@/lib/content";
 
@@ -39,13 +38,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.7,
   }));
 
-  const tilCategories = getAllTilCategories().map((cat) => ({
-    url: `${BASE_URL}/til/categoria/${cat}`,
-    lastModified: new Date(),
-    changeFrequency: "weekly" as const,
-    priority: 0.7,
-  }));
-
   const tilProjects = getAllTilProjects().map((proj) => ({
     url: `${BASE_URL}/til/proyecto/${proj}`,
     lastModified: new Date(),
@@ -53,5 +45,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.7,
   }));
 
-  return [...staticRoutes, ...projects, ...projectCategories, ...tils, ...tilCategories, ...tilProjects];
+  return [...staticRoutes, ...projects, ...projectCategories, ...tils, ...tilProjects];
 }

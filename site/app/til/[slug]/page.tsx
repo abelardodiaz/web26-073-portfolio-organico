@@ -48,7 +48,7 @@ export default async function TilEntryPage({ params }: Props) {
         <h1 className="mb-2 text-3xl font-bold tracking-tight">{til.title}</h1>
         <div className="flex items-center gap-3 text-sm text-muted-foreground">
           <Link
-            href={`/til/categoria/${til.category}`}
+            href={`/search?q=${encodeURIComponent(til.category)}`}
             className="rounded bg-primary/10 px-2 py-0.5 font-mono text-xs uppercase text-primary transition-colors hover:bg-primary/20"
           >
             {til.category}

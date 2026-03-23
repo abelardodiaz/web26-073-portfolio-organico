@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { TilEntry, TilTagSets } from "@/lib/content";
 
-type ActiveFilter = { type: "category" | "project"; value: string };
+type ActiveFilter = { type: "project"; value: string };
 
 type Props = {
   tils: TilEntry[];
@@ -10,37 +10,6 @@ type Props = {
 };
 
 export function TilFeed({ tils, tagSets, activeFilter }: Props) {
-  function renderCategoryTag(cat: string, isTerminal: boolean) {
-    const isActive =
-      activeFilter?.type === "category" && activeFilter.value === cat;
-
-    const baseClass = isTerminal
-      ? "rounded px-2 py-0.5 font-mono text-[11px] transition-colors"
-      : "rounded-full px-3 py-1 text-xs font-medium transition-colors";
-
-    const activeClass =
-      "bg-primary/15 text-primary border border-primary/30";
-    const inactiveClass =
-      "bg-secondary text-secondary-foreground border border-transparent";
-
-    if (isActive) {
-      return (
-        <span key={cat} className={`${baseClass} ${activeClass}`}>
-          {cat}
-        </span>
-      );
-    }
-    return (
-      <Link
-        key={cat}
-        href={`/til/categoria/${cat}`}
-        className={`${baseClass} ${inactiveClass} hover:bg-primary/10 hover:text-primary`}
-      >
-        {cat}
-      </Link>
-    );
-  }
-
   function renderProjectTag(proj: string, isTerminal: boolean) {
     const isActive =
       activeFilter?.type === "project" && activeFilter.value === proj;
@@ -74,80 +43,44 @@ export function TilFeed({ tils, tagSets, activeFilter }: Props) {
   return (
     <>
       {/* ── Editorial tag bar ── */}
-      <div className="hidden editorial:block mb-8 space-y-3">
-        <div className="flex flex-wrap items-center gap-2">
+      {tagSets.projects.length > 0 && (
+        <div className="hidden editorial:flex flex-wrap items-center gap-2 mb-8">
           <span className="text-xs font-semibold uppercase tracking-widest text-[var(--fg-subtle)] mr-1">
-            Categoria
+            Proyecto
           </span>
           <Link
             href="/til"
-            className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+            className={`rounded-full px-3 py-1 text-xs font-medium transition-colors border ${
               !activeFilter
-                ? "bg-primary/15 text-primary border border-primary/30"
-                : "bg-secondary text-secondary-foreground border border-transparent hover:bg-primary/10 hover:text-primary"
+                ? "bg-primary/15 text-primary border-primary/30"
+                : "bg-secondary text-secondary-foreground border-transparent hover:bg-primary/10 hover:text-primary"
             }`}
           >
             Todos
           </Link>
-          {tagSets.categories.map((cat) => renderCategoryTag(cat, false))}
+          {tagSets.projects.map((proj) => renderProjectTag(proj, false))}
         </div>
-        {tagSets.projects.length > 0 && (
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs font-semibold uppercase tracking-widest text-[var(--fg-subtle)] mr-1">
-              Proyecto
-            </span>
-            <Link
-              href="/til"
-              className={`rounded-full px-3 py-1 text-xs font-medium transition-colors border ${
-                !activeFilter
-                  ? "border-border text-foreground ring-1 ring-primary/30"
-                  : "border-border text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              Todos
-            </Link>
-            {tagSets.projects.map((proj) => renderProjectTag(proj, false))}
-          </div>
-        )}
-      </div>
+      )}
 
       {/* ── Terminal tag bar ── */}
-      <div className="hidden terminal:block mb-8 space-y-3">
-        <div className="flex flex-wrap items-center gap-2">
+      {tagSets.projects.length > 0 && (
+        <div className="hidden terminal:flex flex-wrap items-center gap-2 mb-8">
           <span className="font-mono text-[11px] uppercase tracking-widest text-[var(--fg-subtle)] mr-1">
-            cat:
+            proj:
           </span>
           <Link
             href="/til"
-            className={`rounded px-2 py-0.5 font-mono text-[11px] transition-colors ${
+            className={`rounded px-2 py-0.5 font-mono text-[11px] transition-colors border ${
               !activeFilter
-                ? "bg-primary/15 text-primary border border-primary/30"
-                : "bg-secondary text-secondary-foreground border border-transparent hover:bg-primary/10 hover:text-primary"
+                ? "bg-primary/15 text-primary border-primary/30"
+                : "bg-secondary text-secondary-foreground border-transparent hover:bg-primary/10 hover:text-primary"
             }`}
           >
             *
           </Link>
-          {tagSets.categories.map((cat) => renderCategoryTag(cat, true))}
+          {tagSets.projects.map((proj) => renderProjectTag(proj, true))}
         </div>
-        {tagSets.projects.length > 0 && (
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="font-mono text-[11px] uppercase tracking-widest text-[var(--fg-subtle)] mr-1">
-              proj:
-            </span>
-            <Link
-              href="/til"
-              className={`rounded px-2 py-0.5 font-mono text-[11px] transition-colors border ${
-                !activeFilter
-                  ? "border-border text-foreground ring-1 ring-primary/30"
-                  : "border-border text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              *
-            </Link>
-            {tagSets.projects.map((proj) => renderProjectTag(proj, true))}
-          </div>
-        )}
-      </div>
+      )}
 
       {/* ── Editorial feed ── */}
       {tils.length > 0 && (
