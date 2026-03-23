@@ -37,3 +37,16 @@ export function getSearchIndex(): SearchItem[] {
 
   return [...projects, ...tils];
 }
+
+export function getPopularStacks(items: SearchItem[], limit = 12): string[] {
+  const counts: Record<string, number> = {};
+  for (const item of items) {
+    for (const s of item.stack) {
+      counts[s] = (counts[s] ?? 0) + 1;
+    }
+  }
+  return Object.entries(counts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, limit)
+    .map(([tag]) => tag);
+}

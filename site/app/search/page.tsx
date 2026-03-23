@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { getSearchIndex } from "@/lib/search";
+import { Suspense } from "react";
+import { getSearchIndex, getPopularStacks } from "@/lib/search";
 import { SearchBox } from "@/components/search/SearchBox";
 
 export const metadata: Metadata = {
@@ -10,6 +11,7 @@ export const metadata: Metadata = {
 
 export default function SearchPage() {
   const items = getSearchIndex();
+  const popularStacks = getPopularStacks(items);
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-16">
@@ -34,7 +36,9 @@ export default function SearchPage() {
         </p>
       </div>
 
-      <SearchBox items={items} />
+      <Suspense>
+        <SearchBox items={items} popularStacks={popularStacks} />
+      </Suspense>
     </div>
   );
 }

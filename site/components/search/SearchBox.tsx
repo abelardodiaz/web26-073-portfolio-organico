@@ -1,11 +1,13 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import type { SearchItem } from "@/lib/search";
 
 type Props = {
   items: SearchItem[];
+  popularStacks?: string[];
 };
 
 function matchesQuery(item: SearchItem, q: string): boolean {
@@ -18,8 +20,14 @@ function matchesQuery(item: SearchItem, q: string): boolean {
   );
 }
 
-export function SearchBox({ items }: Props) {
+export function SearchBox({ items, popularStacks = [] }: Props) {
+  const searchParams = useSearchParams();
   const [query, setQuery] = useState("");
+
+  useEffect(() => {
+    const q = searchParams.get("q");
+    if (q) setQuery(q);
+  }, [searchParams]);
 
   const results = useMemo(() => {
     const q = query.trim();
@@ -60,6 +68,46 @@ export function SearchBox({ items }: Props) {
           />
         </div>
       </div>
+
+      {/* ── Stack suggestions (when idle) ── */}
+      {!hasQuery && popularStacks.length > 0 && (
+        <div className="mt-6">
+          <div className="hidden editorial:block">
+            <span className="text-xs font-semibold uppercase tracking-widest text-[var(--fg-subtle)]">
+              Filtrar por stack
+            </span>
+            <div className="flex flex-wrap gap-2 mt-3">
+              {popularStacks.map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => setQuery(s)}
+                  className="rounded-full border border-border px-3 py-1 text-xs font-medium text-muted-foreground transition-colors hover:border-primary/30 hover:text-primary"
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="hidden terminal:block">
+            <span className="font-mono text-[11px] uppercase tracking-widest text-[var(--fg-subtle)]">
+              stack:
+            </span>
+            <div className="flex flex-wrap gap-2 mt-3">
+              {popularStacks.map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => setQuery(s)}
+                  className="rounded border border-border px-2 py-0.5 font-mono text-[11px] text-muted-foreground transition-colors hover:border-primary/30 hover:text-primary"
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Results ── */}
       {hasQuery && (
