@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { TilEntry, TilTagSets } from "@/lib/content";
 
-type ActiveFilter = { type: "category" | "project" | "stack"; value: string };
+type ActiveFilter = { type: "category" | "project"; value: string };
 
 type Props = {
   tils: TilEntry[];
@@ -37,42 +37,6 @@ export function TilFeed({ tils, tagSets, activeFilter }: Props) {
         className={`${baseClass} ${inactiveClass} hover:bg-primary/10 hover:text-primary`}
       >
         {cat}
-      </Link>
-    );
-  }
-
-  function renderStackTag(stack: string, isTerminal: boolean) {
-    const isActive =
-      activeFilter?.type === "stack" && activeFilter.value === stack;
-    const count = tagSets.stackCounts[stack] ?? 0;
-    const label = `${stack} (${count})`;
-
-    const maxCount = Math.max(...Object.values(tagSets.stackCounts), 1);
-    const intensity = Math.round((count / maxCount) * 100);
-    const opacity = Math.max(20, Math.min(intensity, 100));
-
-    const baseClass = isTerminal
-      ? "rounded px-2 py-0.5 font-mono text-[11px] transition-colors border"
-      : "rounded-full px-3 py-1 text-xs font-medium transition-colors border";
-
-    const activeClass =
-      "border-primary/30 text-primary bg-primary/10";
-
-    if (isActive) {
-      return (
-        <span key={stack} className={`${baseClass} ${activeClass}`}>
-          {label}
-        </span>
-      );
-    }
-    return (
-      <Link
-        key={stack}
-        href={`/til/stack/${stack}`}
-        className={`${baseClass} border-border hover:text-primary hover:border-primary/30`}
-        style={{ color: `oklch(0.65 0.15 25 / ${opacity}%)` }}
-      >
-        {label}
       </Link>
     );
   }
@@ -145,24 +109,6 @@ export function TilFeed({ tils, tagSets, activeFilter }: Props) {
             {tagSets.projects.map((proj) => renderProjectTag(proj, false))}
           </div>
         )}
-        {tagSets.stacks.length > 0 && (
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs font-semibold uppercase tracking-widest text-[var(--fg-subtle)] mr-1">
-              Stack
-            </span>
-            <Link
-              href="/til"
-              className={`rounded-full px-3 py-1 text-xs font-medium transition-colors border ${
-                !activeFilter
-                  ? "border-primary/30 text-primary bg-primary/10"
-                  : "border-border text-muted-foreground hover:text-primary hover:border-primary/30"
-              }`}
-            >
-              Todos
-            </Link>
-            {tagSets.stacks.map((s) => renderStackTag(s, false))}
-          </div>
-        )}
       </div>
 
       {/* ── Terminal tag bar ── */}
@@ -199,24 +145,6 @@ export function TilFeed({ tils, tagSets, activeFilter }: Props) {
               *
             </Link>
             {tagSets.projects.map((proj) => renderProjectTag(proj, true))}
-          </div>
-        )}
-        {tagSets.stacks.length > 0 && (
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="font-mono text-[11px] uppercase tracking-widest text-[var(--fg-subtle)] mr-1">
-              stack:
-            </span>
-            <Link
-              href="/til"
-              className={`rounded px-2 py-0.5 font-mono text-[11px] transition-colors border ${
-                !activeFilter
-                  ? "border-primary/30 text-primary bg-primary/10"
-                  : "border-border text-muted-foreground hover:text-primary hover:border-primary/30"
-              }`}
-            >
-              *
-            </Link>
-            {tagSets.stacks.map((s) => renderStackTag(s, true))}
           </div>
         )}
       </div>

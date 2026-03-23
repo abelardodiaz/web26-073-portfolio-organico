@@ -67,7 +67,7 @@ export default async function TilEntryPage({ params }: Props) {
               {til.stack.map((s) => (
                 <Link
                   key={s}
-                  href={`/til/stack/${s}`}
+                  href={`/search?q=${encodeURIComponent(s)}`}
                   className="rounded border border-border px-1.5 py-0.5 font-mono text-xs text-muted-foreground transition-colors hover:text-primary hover:border-primary/30"
                 >
                   {s}

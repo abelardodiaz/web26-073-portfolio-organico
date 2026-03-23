@@ -64,8 +64,6 @@ export function getAllTils(): TilEntry[] {
 export type TilTagSets = {
   categories: string[];
   projects: string[];
-  stacks: string[];
-  stackCounts: Record<string, number>;
 };
 
 export function getTilTagSets(tils: TilEntry[]): TilTagSets {
@@ -73,23 +71,11 @@ export function getTilTagSets(tils: TilEntry[]): TilTagSets {
   const projects = [
     ...new Set(tils.map((t) => t.project).filter(Boolean) as string[]),
   ].sort();
-  const allStacks = tils.flatMap((t) => t.stack).filter(Boolean);
-  const stackCounts: Record<string, number> = {};
-  for (const s of allStacks) {
-    stackCounts[s] = (stackCounts[s] ?? 0) + 1;
-  }
-  const stacks = [...new Set(allStacks)].sort((a, b) => stackCounts[b] - stackCounts[a]);
-  return { categories, projects, stacks, stackCounts };
+  return { categories, projects };
 }
 
 export function getAllTilCategories(): string[] {
   return [...new Set(getAllTils().map((t) => t.category))].sort();
-}
-
-export function getAllTilStacks(): string[] {
-  return [
-    ...new Set(getAllTils().flatMap((t) => t.stack).filter(Boolean)),
-  ].sort();
 }
 
 export function getAllTilProjects(): string[] {
