@@ -227,6 +227,15 @@
   animation: blink 1s infinite;
 }
 
+/* ── Step number spin (editorial hover) ── */
+@keyframes spin360 {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+.group:hover .animate-spin360 {
+  animation: spin360 0.5s ease-in-out;
+}
+
 /* ── Prose / MDX typography ── */
 .prose {
   color: var(--foreground);

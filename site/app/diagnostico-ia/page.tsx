@@ -35,16 +35,19 @@ function WhatsAppIcon({ className }: { className?: string }) {
 const steps = [
   {
     num: "01",
+    bin: "0001",
     title: "Platicamos sobre tu negocio",
     desc: "Una entrevista de 1-2 horas donde entiendo como opera tu empresa, que tareas consumen mas tiempo y donde esta el cuello de botella.",
   },
   {
     num: "02",
+    bin: "0010",
     title: "Identifico 3-5 oportunidades",
     desc: "Analizo tus procesos y detecto las tareas que una maquina podria hacer por ti: respuestas a clientes, reportes, cotizaciones, seguimiento.",
   },
   {
     num: "03",
+    bin: "0011",
     title: "Te entrego un reporte con numeros",
     desc: "Recibes un documento con cada oportunidad, cuantas horas te ahorraria por semana, y los pasos concretos para implementarlo.",
   },
@@ -122,8 +125,8 @@ export default function DiagnosticoIAPage() {
           </h2>
           <div className="grid gap-6 sm:grid-cols-3">
             {steps.map((step) => (
-              <div key={step.num}>
-                <span className="mb-2 block text-2xl font-bold text-primary">
+              <div key={step.num} className="group">
+                <span className="animate-spin360 mb-2 block text-2xl font-bold text-primary">
                   {step.num}
                 </span>
                 <h3 className="mb-2 font-semibold">{step.title}</h3>
@@ -309,13 +312,18 @@ export default function DiagnosticoIAPage() {
             {steps.map((step) => (
               <div
                 key={step.num}
-                className="grid grid-cols-[4px_1fr] overflow-hidden rounded-md border border-border bg-card"
+                className="group grid grid-cols-[4px_1fr] overflow-hidden rounded-md border border-border bg-card"
               >
                 <div className="bg-primary/30" />
                 <div className="p-5 pl-4">
-                  <span className="mb-1 block font-mono text-lg font-bold text-primary">
-                    {step.num}
-                  </span>
+                  <div className="relative mb-1 h-[28px] min-w-[66px] overflow-hidden">
+                    <span className="block font-mono text-lg font-bold leading-[28px] text-primary transition-all duration-400 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:-translate-y-full group-hover:opacity-0">
+                      {step.num}
+                    </span>
+                    <span className="absolute left-0 top-full font-mono text-lg font-bold leading-[28px] tracking-wider text-primary transition-all duration-400 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:-translate-y-full group-hover:opacity-100" style={{ opacity: 0 }}>
+                      {step.bin}
+                    </span>
+                  </div>
                   <h3 className="mb-1.5 text-[15px] font-semibold">
                     {step.title}
                   </h3>

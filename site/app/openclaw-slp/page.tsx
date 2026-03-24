@@ -61,21 +61,25 @@ const capabilities = [
 const processSteps = [
   {
     num: "01",
+    bin: "0001",
     title: "Diagnostico",
     desc: "Entiendo tu negocio y detecto donde OpenClaw te ayuda mas.",
   },
   {
     num: "02",
+    bin: "0010",
     title: "Configuracion segura",
     desc: "Instalo y conecto todo con las protecciones adecuadas para tus datos.",
   },
   {
     num: "03",
+    bin: "0011",
     title: "Entrenamiento",
     desc: "Ajusto las respuestas y acciones al contexto especifico de tu negocio.",
   },
   {
     num: "04",
+    bin: "0100",
     title: "Soporte local",
     desc: "Si algo falla o necesitas cambios, estoy en la ciudad. Sin tickets ni esperas.",
   },
@@ -228,8 +232,8 @@ export default function OpenClawSLPPage() {
           </h2>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {processSteps.map((step) => (
-              <div key={step.num}>
-                <span className="mb-2 block text-2xl font-bold text-primary">
+              <div key={step.num} className="group">
+                <span className="animate-spin360 mb-2 block text-2xl font-bold text-primary">
                   {step.num}
                 </span>
                 <h3 className="mb-2 font-semibold">{step.title}</h3>
@@ -435,13 +439,18 @@ export default function OpenClawSLPPage() {
             {processSteps.map((step) => (
               <div
                 key={step.num}
-                className="grid grid-cols-[4px_1fr] overflow-hidden rounded-md border border-border bg-card"
+                className="group grid grid-cols-[4px_1fr] overflow-hidden rounded-md border border-border bg-card"
               >
                 <div className="bg-primary/30" />
                 <div className="p-5 pl-4">
-                  <span className="mb-1 block font-mono text-lg font-bold text-primary">
-                    {step.num}
-                  </span>
+                  <div className="relative mb-1 h-[28px] min-w-[66px] overflow-hidden">
+                    <span className="block font-mono text-lg font-bold leading-[28px] text-primary transition-all duration-400 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:-translate-y-full group-hover:opacity-0">
+                      {step.num}
+                    </span>
+                    <span className="absolute left-0 top-full font-mono text-lg font-bold leading-[28px] tracking-wider text-primary transition-all duration-400 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:-translate-y-full group-hover:opacity-100" style={{ opacity: 0 }}>
+                      {step.bin}
+                    </span>
+                  </div>
                   <h3 className="mb-1.5 text-[15px] font-semibold">
                     {step.title}
                   </h3>
