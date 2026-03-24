@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useCallback } from "react";
 
 /**
  * Wraps children and adds `in-view` class when element enters viewport.
+ * Touch devices only (pointer: coarse). Desktop keeps hover.
  * Uses Intersection Observer (zero scroll listeners, zero dependencies).
- * On desktop, hover animations still work alongside scroll trigger.
  */
 export function ScrollReveal({
   children,
@@ -17,30 +17,43 @@ export function ScrollReveal({
   threshold?: number;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  const [inView, setInView] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleIntersect = useCallback(
+    ([entry]: IntersectionObserverEntry[]) => {
+      const el = ref.current;
+      if (!el || !entry.isIntersecting) return;
+      if (el.classList.contains("in-view")) return;
+
+      el.classList.add("in-view");
+
+      if (timerRef.current) clearTimeout(timerRef.current);
+      timerRef.current = setTimeout(() => {
+        el.classList.remove("in-view");
+      }, 2000);
+    },
+    []
+  );
 
   useEffect(() => {
     const el = ref.current;
-    // Only scroll-trigger on touch devices; desktop keeps hover only
     const isTouch = window.matchMedia("(pointer: coarse)").matches;
     if (!isTouch || !el) return;
 
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting && !inView) {
-          setInView(true);
-          setTimeout(() => setInView(false), 2000);
-        }
-      },
-      { threshold, rootMargin: "0px 0px -50px 0px" }
-    );
+    const observer = new IntersectionObserver(handleIntersect, {
+      threshold,
+      rootMargin: "0px 0px -50px 0px",
+    });
 
     observer.observe(el);
-    return () => observer.disconnect();
-  }, [threshold, inView]);
+    return () => {
+      observer.disconnect();
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, [threshold, handleIntersect]);
 
   return (
-    <div ref={ref} className={`${className} ${inView ? "in-view" : ""}`}>
+    <div ref={ref} className={className}>
       {children}
     </div>
   );
