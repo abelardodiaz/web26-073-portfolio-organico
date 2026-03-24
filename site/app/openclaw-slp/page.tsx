@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   },
 };
 
-const WHATSAPP_NUMBER = "524441234567"; // TODO: reemplazar con numero real
+const WHATSAPP_NUMBER = "524441741629";
 const WHATSAPP_MSG = encodeURIComponent(
   "Hola, quiero saber si OpenClaw sirve para mi negocio"
 );
@@ -227,9 +227,12 @@ export default function OpenClawSLPPage() {
 
         {/* Comparison Table */}
         <section className="mb-16">
-          <h2 className="mb-8 text-sm font-semibold uppercase tracking-widest text-[var(--fg-subtle)]">
-            Comparacion
-          </h2>
+          <div className="mb-8 flex items-center gap-2">
+            <h2 className="text-sm font-semibold uppercase tracking-widest text-[var(--fg-subtle)]">
+              Comparacion
+            </h2>
+            <span className="text-muted-foreground/50 sm:hidden">&rarr;</span>
+          </div>
           <div className="-mx-4 overflow-x-auto px-4">
             <table className="min-w-[600px] w-full border-collapse text-sm">
               <thead>
@@ -431,6 +434,7 @@ export default function OpenClawSLPPage() {
               // comparacion
             </h2>
             <span className="h-px flex-1 bg-border" />
+            <span className="font-mono text-xs text-muted-foreground/50 sm:hidden">&rarr;</span>
           </div>
           <div className="-mx-4 overflow-x-auto px-4">
             <table className="min-w-[600px] w-full border-collapse font-mono text-[13px]">

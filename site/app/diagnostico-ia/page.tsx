@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   },
 };
 
-const WHATSAPP_NUMBER = "524441234567"; // TODO: reemplazar con numero real
+const WHATSAPP_NUMBER = "524441741629";
 const WHATSAPP_MSG = encodeURIComponent(
   "Hola, me interesa el diagnostico de IA para mi negocio"
 );
