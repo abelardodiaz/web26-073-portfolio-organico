@@ -48,6 +48,11 @@
     position: relative; height: 4px; border-radius: 2px;
     background: #27272a;
   }
+  /* Invisible hit zone for mouse/touch on the bar area */
+  .meter-hit {
+    position: absolute; top: -14px; left: 0; right: 0; height: 32px;
+    cursor: pointer; z-index: 2;
+  }
   body.light .meter-track { background: #e7e5e4; }
 
   .meter-fill {
@@ -216,7 +221,7 @@
 
   <!-- Meter -->
   <div class="meter" id="meter-wrap">
-    <div class="meter-track">
+    <div class="meter-track" id="meter-track">
       <div class="meter-fill" id="meter-fill"></div>
       <div class="meter-dots">
         <div class="meter-dot editorial-dot" data-level="0"></div>
@@ -224,6 +229,7 @@
         <div class="meter-dot editorial-dot" data-level="2"></div>
         <div class="meter-dot editorial-dot" data-level="3"></div>
       </div>
+      <div class="meter-hit" id="meter-hit"></div>
     </div>
     <div class="meter-pointer" id="meter-pointer">Aqui empezamos</div>
   </div>
@@ -233,28 +239,28 @@
     <div class="level active" data-idx="0"
          onmouseenter="hoverLevel(0)" onmouseleave="unhoverLevel()">
       <div class="level-num">01</div>
-      <div class="level-title" id="t0">Output asistido</div>
-      <div class="level-desc">El agente genera borradores y resumenes. Tu revisas antes de actuar.</div>
-      <div class="level-badge" id="b0">Aqui empezamos</div>
+      <div class="level-title" id="t0">Te sugiere, tu decides</div>
+      <div class="level-desc">El asistente prepara borradores o resumenes, analiza fuentes, metricas, datos complejos. Tu revisas antes de enviar.</div>
+      <div class="level-badge" id="b0">Aqui empezamos contigo</div>
     </div>
     <div class="level active" data-idx="1"
          onmouseenter="hoverLevel(1)" onmouseleave="unhoverLevel()">
       <div class="level-num">02</div>
-      <div class="level-title" id="t1">Consulta con guardrails</div>
-      <div class="level-desc">Responde con informacion verificada de tu negocio. Fuentes controladas.</div>
-      <div class="level-badge" id="b1">Aqui empezamos</div>
+      <div class="level-title" id="t1">Responde con validaciones</div>
+      <div class="level-desc">Contesta a los usuarios con datos verificados de tu negocio y fuentes controladas.</div>
+      <div class="level-badge" id="b1">Aqui empezamos contigo</div>
     </div>
     <div class="level dimmed" data-idx="2"
          onmouseenter="hoverLevel(2)" onmouseleave="unhoverLevel()">
       <div class="level-num">03</div>
-      <div class="level-title" id="t2">Acciones supervisadas</div>
-      <div class="level-desc">Propone acciones (cotizacion, cita) pero tu confirmas antes de ejecutar.</div>
+      <div class="level-title" id="t2">Actua, pero te pide permiso</div>
+      <div class="level-desc">Agenda citas, produce cotizaciones, genera reportes -- pero tu confirmas antes.</div>
     </div>
     <div class="level dimmed" data-idx="3"
          onmouseenter="hoverLevel(3)" onmouseleave="unhoverLevel()">
       <div class="level-num">04</div>
-      <div class="level-title" id="t3">Autonomia acotada</div>
-      <div class="level-desc">Ejecuta solo, dentro de limites claros que tu defines.</div>
+      <div class="level-title" id="t3">Trabaja solo dentro de reglas</div>
+      <div class="level-desc">Ejecuta tareas automaticamente dentro de limites que tu defines.</div>
     </div>
   </div>
 </div>
@@ -264,7 +270,7 @@
 <script>
 var currentTheme = 'editorial';
 var fillTargets = [12, 37, 62, 87]; // % positions for each dot
-var defaultFill = 37; // stop at level 2
+var defaultFill = 37; // stop at level 2 (niveles 1+2 desde dia 1)
 var animated = false;
 
 // ── Theme switching ──
@@ -283,15 +289,15 @@ function setTheme(theme) {
     document.getElementById('lbl-title').textContent = 'Escalera de Autonomia';
     document.getElementById('lbl-sub').textContent = 'Los agentes de IA se implementan gradualmente. Empezamos en el nivel que tu negocio necesita.';
     document.getElementById('meter-pointer').textContent = 'Aqui empezamos';
-    var titles = ['Output asistido', 'Consulta con guardrails', 'Acciones supervisadas', 'Autonomia acotada'];
-    var badges = ['Aqui empezamos', 'Aqui empezamos'];
+    var titles = ['Te sugiere, tu decides', 'Responde con validaciones', 'Actua, pero te pide permiso', 'Trabaja solo dentro de reglas'];
+    var badges = ['Aqui empezamos contigo', 'Aqui empezamos contigo'];
   } else {
     btnEd.className = ''; btnTm.className = 'tm';
     document.getElementById('lbl-source').textContent = '// fuente: hbr.org (2026)';
     document.getElementById('lbl-title').textContent = 'autonomy_ladder';
     document.getElementById('lbl-sub').textContent = 'Implementacion gradual. Empezamos donde tu negocio lo necesita.';
     document.getElementById('meter-pointer').textContent = '$ start_here';
-    var titles = ['assistive_output', 'retrieval_guardrails', 'supervised_actions', 'bounded_autonomy'];
+    var titles = ['sugiere_tu_decides', 'responde_validado', 'actua_con_permiso', 'autonomia_acotada'];
     var badges = ['$ start_here', '$ start_here'];
   }
 
@@ -373,14 +379,14 @@ function animateMeter() {
   var levels = document.querySelectorAll('.level');
   var cls = currentTheme === 'editorial' ? 'editorial-dot' : 'terminal-dot';
 
-  // Step 1: fill to level 1 (12%) + light dot 1
+  // Step 1: fill to level 1 + light dot 1
   fill.style.width = fillTargets[0] + '%';
   setTimeout(function() {
     dots[0].classList.add('lit');
     levels[0].classList.add('visible');
   }, 400);
 
-  // Step 2: fill to level 2 (37%) + light dot 2
+  // Step 2: fill to level 2 + light dot 2
   setTimeout(function() {
     fill.style.width = fillTargets[1] + '%';
     setTimeout(function() {
@@ -397,7 +403,7 @@ function animateMeter() {
     levels[3].classList.add('visible');
   }, 1600);
 
-  // Step 4: show pointer
+  // Step 4: show pointer at level 2
   setTimeout(function() {
     pointer.classList.add('show');
     pointer.style.left = fillTargets[1] + '%';
@@ -415,6 +421,51 @@ var obs = new IntersectionObserver(function(entries) {
 }, { threshold: 0.3 });
 
 obs.observe(document.getElementById('meter-wrap'));
+
+// ── Bar interaction: mouse move + touch on the track ──
+var hitZone = document.getElementById('meter-hit');
+var track = document.getElementById('meter-track');
+
+function getClosestLevel(clientX) {
+  var rect = track.getBoundingClientRect();
+  var pct = ((clientX - rect.left) / rect.width) * 100;
+  // Snap to closest dot position
+  var closest = 0;
+  var minDist = Infinity;
+  for (var i = 0; i < fillTargets.length; i++) {
+    var dist = Math.abs(pct - fillTargets[i]);
+    if (dist < minDist) { minDist = dist; closest = i; }
+  }
+  return closest;
+}
+
+hitZone.addEventListener('mousemove', function(e) {
+  if (!animated) return;
+  hoverLevel(getClosestLevel(e.clientX));
+});
+hitZone.addEventListener('mouseleave', function() {
+  if (!animated) return;
+  unhoverLevel();
+});
+hitZone.addEventListener('touchmove', function(e) {
+  if (!animated) return;
+  e.preventDefault();
+  var touch = e.touches[0];
+  hoverLevel(getClosestLevel(touch.clientX));
+}, { passive: false });
+hitZone.addEventListener('touchend', function() {
+  setTimeout(unhoverLevel, 1500);
+});
+
+// Also allow clicking/tapping individual dots
+document.querySelectorAll('.meter-dot').forEach(function(dot) {
+  dot.addEventListener('click', function() {
+    if (!animated) return;
+    var idx = parseInt(dot.getAttribute('data-level'));
+    hoverLevel(idx);
+    setTimeout(unhoverLevel, 2000);
+  });
+});
 
 // ── Touch: tap on level cards for mobile ──
 document.querySelectorAll('.level').forEach(function(el) {
