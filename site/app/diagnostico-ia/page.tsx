@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ScrollReveal } from "@/components/shared/ScrollReveal";
+import { AnimatedBars } from "@/components/shared/AnimatedBars";
 import { SocialProof } from "@/components/shared/SocialProof";
 import { Timeline } from "@/components/shared/Timeline";
 
@@ -180,6 +181,22 @@ export default function DiagnosticoIAPage() {
           </div>
         </section>
 
+        {/* Impact Data */}
+        <section className="mb-16">
+          <h2 className="mb-8 text-sm font-semibold uppercase tracking-widest text-[var(--fg-subtle)]">
+            Datos de impacto
+          </h2>
+          <div className="max-w-lg">
+            <AnimatedBars
+              bars={[
+                { label: "Mensajes automatizables en retail", value: 75, color: "primary", source: "Promedio sector comercio" },
+                { label: "Menos cancelaciones con recordatorios", value: 25, color: "green", source: "Consultorios con agendamiento automatico" },
+                { label: "Reduccion tiempo de cotizacion", value: 95, color: "blue", source: "2 hrs manual vs 90 seg automatico" },
+              ]}
+            />
+          </div>
+        </section>
+
         {/* Price */}
         <section className="mb-16">
           <h2 className="mb-8 text-sm font-semibold uppercase tracking-widest text-[var(--fg-subtle)]">
@@ -352,6 +369,25 @@ export default function DiagnosticoIAPage() {
                 </div>
               </div>
             ))}
+          </div>
+        </section>
+
+        {/* Impact Data */}
+        <section className="mb-14">
+          <div className="mb-6 flex items-center gap-3">
+            <h2 className="font-mono text-xs font-semibold uppercase tracking-widest text-[var(--fg-subtle)]">
+              // datos_impacto
+            </h2>
+            <span className="h-px flex-1 bg-border" />
+          </div>
+          <div className="max-w-lg">
+            <AnimatedBars
+              bars={[
+                { label: "mensajes_automatizables_retail", value: 75, color: "primary", source: "// promedio sector comercio" },
+                { label: "reduccion_cancelaciones", value: 25, color: "green", source: "// consultorios con agendamiento auto" },
+                { label: "reduccion_tiempo_cotizacion", value: 95, color: "blue", source: "// 2h manual vs 90s auto" },
+              ]}
+            />
           </div>
         </section>
 

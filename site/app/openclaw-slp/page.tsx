@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ButtonLink } from "@/components/shared/ButtonLink";
 import { FaqAccordion } from "@/components/shared/FaqAccordion";
+import { ComparisonTable } from "@/components/shared/ComparisonTable";
 import { SocialProof } from "@/components/shared/SocialProof";
 import { ScrollReveal } from "@/components/shared/ScrollReveal";
 import { Timeline } from "@/components/shared/Timeline";
@@ -266,57 +267,16 @@ export default function OpenClawSLPPage() {
             </h2>
             <span className="text-muted-foreground/50 sm:hidden">&rarr;</span>
           </div>
-          <div className="-mx-4 overflow-x-auto px-4">
-            <table className="min-w-[600px] w-full border-collapse text-sm">
-              <thead>
-                <tr className="border-b border-border">
-                  <th className="py-3 pr-4 text-left font-medium text-muted-foreground" />
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                    Contratar empleado
-                  </th>
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                    ChatGPT solo
-                  </th>
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                    Consultora grande
-                  </th>
-                  <th className="px-4 py-3 text-left font-semibold text-primary bg-primary/5 rounded-t-md">
-                    OpenClaw configurado
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr className="border-b border-border">
-                  <td className="py-3 pr-4 font-medium">Costo mensual</td>
-                  <td className="px-4 py-3 text-muted-foreground">$8,000-15,000 MXN</td>
-                  <td className="px-4 py-3 text-muted-foreground">$0-400 MXN</td>
-                  <td className="px-4 py-3 text-muted-foreground">$50,000+ USD</td>
-                  <td className="px-4 py-3 font-medium text-primary bg-primary/5">$200-1,000 MXN en API</td>
-                </tr>
-                <tr className="border-b border-border">
-                  <td className="py-3 pr-4 font-medium">Disponibilidad</td>
-                  <td className="px-4 py-3 text-muted-foreground">8 hrs/dia, L-V</td>
-                  <td className="px-4 py-3 text-muted-foreground">Cuando tu lo abres</td>
-                  <td className="px-4 py-3 text-muted-foreground">Horario oficina</td>
-                  <td className="px-4 py-3 font-medium text-primary bg-primary/5">24/7 automatico</td>
-                </tr>
-                <tr className="border-b border-border">
-                  <td className="py-3 pr-4 font-medium">Se conecta a tus sistemas</td>
-                  <td className="px-4 py-3 text-muted-foreground">Si (manual)</td>
-                  <td className="px-4 py-3 text-muted-foreground">No</td>
-                  <td className="px-4 py-3 text-muted-foreground">Si</td>
-                  <td className="px-4 py-3 font-medium text-primary bg-primary/5">Si (automatico)</td>
-                </tr>
-                <tr>
-                  <td className="py-3 pr-4 font-medium">Soporte en SLP</td>
-                  <td className="px-4 py-3 text-muted-foreground">N/A</td>
-                  <td className="px-4 py-3 text-muted-foreground">No</td>
-                  <td className="px-4 py-3 text-muted-foreground">No (CDMX/USA)</td>
-                  <td className="px-4 py-3 font-medium text-primary bg-primary/5 rounded-b-md">Si, presencial</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+          <ComparisonTable
+            headers={["Contratar empleado", "ChatGPT solo", "Consultora grande", "OpenClaw configurado"]}
+            winnerIndex={3}
+            rows={[
+              { label: "Costo mensual", cells: [{ text: "$8,000-15,000 MXN", type: "bad" }, { text: "$0-400 MXN", type: "meh" }, { text: "$50,000+ USD", type: "bad" }, { text: "$200-1,000 MXN", type: "good" }] },
+              { label: "Disponibilidad", cells: [{ text: "8 hrs/dia, L-V", type: "meh" }, { text: "Cuando tu lo abres", type: "meh" }, { text: "Horario oficina", type: "meh" }, { text: "24/7 automatico", type: "good" }] },
+              { label: "Conecta sistemas", cells: [{ text: "Manual", type: "dash" }, { text: "No", type: "cross" }, { text: "Si", type: "check" }, { text: "Si, automatico", type: "check" }] },
+              { label: "Soporte en SLP", cells: [{ text: "N/A", type: "dash" }, { text: "No", type: "cross" }, { text: "No (CDMX/USA)", type: "cross" }, { text: "Si, presencial", type: "check" }] },
+            ]}
+          />
         </section>
 
         {/* FAQ */}
@@ -459,57 +419,16 @@ export default function OpenClawSLPPage() {
             <span className="h-px flex-1 bg-border" />
             <span className="font-mono text-xs text-muted-foreground/50 sm:hidden">&rarr;</span>
           </div>
-          <div className="-mx-4 overflow-x-auto px-4">
-            <table className="min-w-[600px] w-full border-collapse font-mono text-[13px]">
-              <thead>
-                <tr className="border-b border-border">
-                  <th className="py-3 pr-4 text-left font-medium text-muted-foreground" />
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                    empleado
-                  </th>
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                    chatgpt_solo
-                  </th>
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                    consultora_grande
-                  </th>
-                  <th className="px-4 py-3 text-left font-semibold text-primary bg-primary/5 rounded-t-md">
-                    openclaw_config
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr className="border-b border-border">
-                  <td className="py-3 pr-4 font-medium">costo_mensual</td>
-                  <td className="px-4 py-3 text-muted-foreground">$8K-15K MXN</td>
-                  <td className="px-4 py-3 text-muted-foreground">$0-400 MXN</td>
-                  <td className="px-4 py-3 text-muted-foreground">$50K+ USD</td>
-                  <td className="px-4 py-3 font-medium text-primary bg-primary/5">$200-1K MXN</td>
-                </tr>
-                <tr className="border-b border-border">
-                  <td className="py-3 pr-4 font-medium">disponibilidad</td>
-                  <td className="px-4 py-3 text-muted-foreground">8h L-V</td>
-                  <td className="px-4 py-3 text-muted-foreground">manual</td>
-                  <td className="px-4 py-3 text-muted-foreground">oficina</td>
-                  <td className="px-4 py-3 font-medium text-primary bg-primary/5">24/7</td>
-                </tr>
-                <tr className="border-b border-border">
-                  <td className="py-3 pr-4 font-medium">conecta_sistemas</td>
-                  <td className="px-4 py-3 text-muted-foreground">manual</td>
-                  <td className="px-4 py-3 text-muted-foreground">no</td>
-                  <td className="px-4 py-3 text-muted-foreground">si</td>
-                  <td className="px-4 py-3 font-medium text-primary bg-primary/5">auto</td>
-                </tr>
-                <tr>
-                  <td className="py-3 pr-4 font-medium">soporte_slp</td>
-                  <td className="px-4 py-3 text-muted-foreground">n/a</td>
-                  <td className="px-4 py-3 text-muted-foreground">no</td>
-                  <td className="px-4 py-3 text-muted-foreground">no</td>
-                  <td className="px-4 py-3 font-medium text-primary bg-primary/5 rounded-b-md">presencial</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+          <ComparisonTable
+            headers={["empleado", "chatgpt_solo", "consultora", "openclaw_config"]}
+            winnerIndex={3}
+            rows={[
+              { label: "costo", cells: [{ text: "$8K-15K", type: "bad" }, { text: "$0-400", type: "meh" }, { text: "$50K+ USD", type: "bad" }, { text: "$200-1K API", type: "good" }] },
+              { label: "uptime", cells: [{ text: "8h L-V", type: "meh" }, { text: "manual", type: "meh" }, { text: "oficina", type: "meh" }, { text: "24/7", type: "good" }] },
+              { label: "integra_sistemas", cells: [{ text: "--", type: "dash" }, { text: "x", type: "cross" }, { text: "ok", type: "check" }, { text: "auto", type: "check" }] },
+              { label: "soporte_slp", cells: [{ text: "--", type: "dash" }, { text: "x", type: "cross" }, { text: "x", type: "cross" }, { text: "presencial", type: "check" }] },
+            ]}
+          />
         </section>
 
         {/* FAQ */}
