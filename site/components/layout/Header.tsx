@@ -19,6 +19,7 @@ const editorialNav = [
   { href: "/projects", label: "Proyectos" },
   { href: "/til", label: "TIL" },
   { href: "/search", label: "Buscar" },
+  { href: "/diagnostico-ia", label: "Servicios" },
   { href: "/about", label: "About" },
   { href: "/contact", label: "Contacto" },
 ];
@@ -27,6 +28,7 @@ const terminalNav = [
   { href: "/projects", label: "/proyectos" },
   { href: "/til", label: "/til" },
   { href: "/search", label: "/buscar" },
+  { href: "/diagnostico-ia", label: "/servicios" },
   { href: "/about", label: "/about" },
   { href: "/contact", label: "/contacto" },
 ];

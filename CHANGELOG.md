@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.8.0] - 2026-03-23
+
+### Added
+- Seccion `/diagnostico-ia` - landing de servicio IA local SLP con hero, 3 pasos, ejemplos por sector, precio, mini bio y CTA WhatsApp
+- Seccion `/openclaw-slp` - pagina educativa OpenClaw para PyMEs con capacidades, proceso, tabla comparativa y CTA WhatsApp
+- Nav item "Servicios" en header (editorial + terminal)
+- CTA WhatsApp con mensaje pre-llenado en ambas paginas
+- Ambas paginas con dual-theme (Editorial + Terminal) y SEO metadata
+
 ## [0.7.3] - 2026-03-20
 
 ### Added
