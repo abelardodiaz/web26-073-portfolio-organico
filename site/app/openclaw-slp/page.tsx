@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { ButtonLink } from "@/components/shared/ButtonLink";
+import { FaqAccordion } from "@/components/shared/FaqAccordion";
 
 export const metadata: Metadata = {
   title: "OpenClaw en San Luis Potosi",
@@ -85,7 +87,7 @@ const whyHelp = [
     desc: "WhatsApp, email, sistemas internos. Una conexion mal hecha expone datos sensibles de tu negocio y tus clientes.",
   },
   {
-    title: "Hay que ensenarlo sobre tu negocio",
+    title: "Hay que entrenarlo con la informacion de tu negocio",
     desc: "Sin configuracion, da respuestas genericas o incorrectas. Necesita saber que responder, que no, y a quien escalar.",
   },
   {
@@ -138,9 +140,18 @@ export default function OpenClawSLPPage() {
       <div className="hidden editorial:block">
         {/* Hero */}
         <section className="mb-16">
-          <span className="mb-4 inline-block rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
-            San Luis Potosi
-          </span>
+          <div className="mb-4 flex items-center gap-3">
+            <Image
+              src="/openclaw-logo.svg"
+              alt="OpenClaw"
+              width={36}
+              height={36}
+              className="shrink-0"
+            />
+            <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+              San Luis Potosi
+            </span>
+          </div>
           <h1 className="mb-4 text-3xl font-bold tracking-tight sm:text-4xl">
             OpenClaw: un asistente de IA
             <br className="hidden sm:block" />
@@ -274,19 +285,7 @@ export default function OpenClawSLPPage() {
 
         {/* FAQ */}
         <section className="mb-16">
-          <h2 className="mb-8 text-sm font-semibold uppercase tracking-widest text-[var(--fg-subtle)]">
-            Preguntas frecuentes
-          </h2>
-          <div className="max-w-2xl space-y-4">
-            {faqs.map((faq) => (
-              <div key={faq.q} className="border-b border-border pb-4 last:border-b-0">
-                <h3 className="mb-2 font-semibold">{faq.q}</h3>
-                <p className="text-sm leading-relaxed text-muted-foreground">
-                  {faq.a}
-                </p>
-              </div>
-            ))}
-          </div>
+          <FaqAccordion faqs={faqs} />
         </section>
 
         {/* CTA */}
@@ -313,6 +312,13 @@ export default function OpenClawSLPPage() {
         {/* Hero */}
         <section className="mb-14">
           <div className="mb-6 flex items-center gap-3">
+            <Image
+              src="/openclaw-logo.svg"
+              alt="OpenClaw"
+              width={24}
+              height={24}
+              className="shrink-0"
+            />
             <h1 className="font-mono text-xs font-semibold uppercase tracking-widest text-[var(--fg-subtle)]">
               // openclaw-slp
             </h1>
@@ -481,25 +487,7 @@ export default function OpenClawSLPPage() {
 
         {/* FAQ */}
         <section className="mb-14">
-          <div className="mb-6 flex items-center gap-3">
-            <h2 className="font-mono text-xs font-semibold uppercase tracking-widest text-[var(--fg-subtle)]">
-              // faq
-            </h2>
-            <span className="h-px flex-1 bg-border" />
-          </div>
-          <div className="max-w-2xl space-y-3">
-            {faqs.map((faq) => (
-              <div
-                key={faq.q}
-                className="border-b border-border pb-3 last:border-b-0"
-              >
-                <h3 className="mb-1.5 text-[15px] font-semibold">{faq.q}</h3>
-                <p className="text-[13px] leading-relaxed text-muted-foreground">
-                  {faq.a}
-                </p>
-              </div>
-            ))}
-          </div>
+          <FaqAccordion faqs={faqs} />
         </section>
 
         {/* CTA */}

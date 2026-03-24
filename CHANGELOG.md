@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.8.1] - 2026-03-23
+
+### Added
+- FAQs expandibles con shadcn/ui Accordion en `/openclaw-slp` (reemplaza texto estatico)
+- Seccion "Servicios IA en San Luis Potosi" en homepage entre hero y proyectos (2 cards dual-theme)
+- Logo OpenClaw (lobster) en hero de `/openclaw-slp` y card del homepage
+- Componente `FaqAccordion` reutilizable (client component)
+
+### Changed
+- Fix texto "ensenarlo" -> "entrenarlo" en `/openclaw-slp`
+
 ## [0.8.0] - 2026-03-23
 
 ### Added

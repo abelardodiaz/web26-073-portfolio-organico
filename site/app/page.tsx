@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { ButtonLink } from "@/components/shared/ButtonLink";
 import { RotatingLabel } from "@/components/shared/RotatingLabel";
@@ -74,6 +75,125 @@ export default function Home() {
               cat README.md
             </ButtonLink>
           </div>
+        </div>
+      </section>
+
+      {/* ── Servicios IA ── */}
+      <section className="py-12">
+        {/* Section header - editorial */}
+        <div className="hidden editorial:flex items-baseline justify-between mb-6">
+          <h2 className="text-sm font-semibold uppercase tracking-widest text-[var(--fg-subtle)]">
+            Servicios IA en San Luis Potosi
+          </h2>
+        </div>
+        {/* Section header - terminal */}
+        <div className="hidden terminal:flex items-center gap-3 mb-5">
+          <h2 className="font-mono text-xs font-semibold uppercase tracking-widest text-[var(--fg-subtle)]">
+            // servicios_ia_slp
+          </h2>
+          <span className="flex-1 h-px bg-border" />
+        </div>
+
+        {/* Editorial cards */}
+        <div className="hidden editorial:grid gap-4 sm:grid-cols-2">
+          <Link
+            href="/diagnostico-ia"
+            className="group block rounded-lg border border-border bg-card p-6 transition-all hover:border-primary hover:shadow-[0_0_0_1px_var(--primary)]"
+          >
+            <div className="flex items-start justify-between mb-2">
+              <h3 className="font-semibold tracking-tight">
+                Diagnostico IA para tu negocio
+              </h3>
+              <span className="text-[var(--fg-subtle)] transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-primary">
+                &#8599;
+              </span>
+            </div>
+            <p className="mb-3 text-sm leading-relaxed text-muted-foreground">
+              Encuentro donde tu empresa pierde tiempo y te muestro como
+              resolverlo con inteligencia artificial. San Luis Potosi.
+            </p>
+            <span className="text-xs font-medium text-primary">
+              $5,000 MXN &middot; Sin compromiso
+            </span>
+          </Link>
+          <Link
+            href="/openclaw-slp"
+            className="group block rounded-lg border border-border bg-card p-6 transition-all hover:border-primary hover:shadow-[0_0_0_1px_var(--primary)]"
+          >
+            <div className="flex items-start justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <Image
+                  src="/openclaw-logo.svg"
+                  alt="OpenClaw"
+                  width={20}
+                  height={20}
+                  className="shrink-0"
+                />
+                <h3 className="font-semibold tracking-tight">
+                  OpenClaw en San Luis Potosi
+                </h3>
+              </div>
+              <span className="text-[var(--fg-subtle)] transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-primary">
+                &#8599;
+              </span>
+            </div>
+            <p className="mb-3 text-sm leading-relaxed text-muted-foreground">
+              Un asistente inteligente que trabaja por tu negocio 24/7. Te lo
+              configuro y te doy soporte local.
+            </p>
+            <span className="text-xs font-medium text-primary">
+              Configuracion profesional
+            </span>
+          </Link>
+        </div>
+
+        {/* Terminal cards */}
+        <div className="hidden terminal:grid gap-3 sm:grid-cols-2">
+          <Link
+            href="/diagnostico-ia"
+            className="group grid grid-cols-[4px_1fr] overflow-hidden rounded-md border border-border bg-card transition-all hover:border-primary hover:shadow-[0_0_0_3px_var(--accent-glow)]"
+          >
+            <div className="bg-transparent transition-colors group-hover:bg-primary" />
+            <div className="p-5 pl-4">
+              <h3 className="text-[15px] font-semibold tracking-tight mb-1.5">
+                diagnostico-ia
+              </h3>
+              <p className="mb-2 text-[13px] leading-relaxed text-muted-foreground">
+                Encuentro donde tu empresa pierde tiempo y te muestro como
+                resolverlo con IA. San Luis Potosi.
+              </p>
+              <span className="font-mono text-[10px] font-medium text-primary tracking-wide">
+                $5,000 MXN
+              </span>
+            </div>
+          </Link>
+          <Link
+            href="/openclaw-slp"
+            className="group grid grid-cols-[4px_1fr] overflow-hidden rounded-md border border-border bg-card transition-all hover:border-primary hover:shadow-[0_0_0_3px_var(--accent-glow)]"
+          >
+            <div className="bg-transparent transition-colors group-hover:bg-primary" />
+            <div className="p-5 pl-4">
+              <div className="flex items-center gap-2 mb-1.5">
+                <Image
+                  src="/openclaw-logo.svg"
+                  alt="OpenClaw"
+                  width={16}
+                  height={16}
+                  className="shrink-0"
+                />
+                <h3 className="text-[15px] font-semibold tracking-tight">
+                  openclaw-slp
+                </h3>
+              </div>
+              <p className="mb-2 text-[13px] leading-relaxed text-muted-foreground">
+                Asistente inteligente 24/7. Configuracion profesional y
+                soporte local.
+              </p>
+              <span className="font-mono text-[10px] font-medium text-primary tracking-wide">
+                config + soporte
+              </span>
+            </div>
+          </Link>
         </div>
       </section>
 
