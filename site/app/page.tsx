@@ -78,6 +78,18 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ── Bridge line ── */}
+      <p className="hidden editorial:block py-6 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+        Todo esto tambien lo pongo a trabajar para negocios locales. Si
+        tienes una empresa en San Luis Potosi y quieres que la inteligencia
+        artificial haga parte del trabajo por ti, esto es para ti:
+      </p>
+      <p className="hidden terminal:block py-4 max-w-2xl text-[13px] leading-relaxed text-muted-foreground">
+        Todo esto tambien lo pongo a trabajar para negocios locales. Si
+        tienes una empresa en San Luis Potosi y quieres que la inteligencia
+        artificial haga parte del trabajo por ti, esto es para ti:
+      </p>
+
       {/* ── Servicios IA ── */}
       <section className="py-12">
         {/* Section header - editorial */}
@@ -196,6 +208,24 @@ export default function Home() {
           </Link>
         </div>
       </section>
+
+      {/* ── Social proof ── */}
+      <div className="hidden editorial:block pb-8 max-w-2xl">
+        <blockquote className="border-l-4 border-primary/20 pl-5 text-sm leading-relaxed text-muted-foreground/80">
+          Las empresas que implementan agentes de IA correctamente logran entre
+          20% y 60% mas productividad, segun McKinsey. Pero el 40% de los
+          proyectos de IA se cancelan por mala implementacion (Harvard Business
+          Review / Gartner, 2025). La diferencia esta en como se hace.{" "}
+          <span className="font-medium text-foreground">Yo lo hago bien.</span>
+        </blockquote>
+      </div>
+      <div className="hidden terminal:block pb-6 max-w-2xl">
+        <div className="border-l-2 border-primary/20 pl-4 font-mono text-[11px] leading-relaxed text-muted-foreground/70">
+          <p>+20-60% productividad con agentes IA bien implementados — McKinsey, 2025</p>
+          <p>40%+ de proyectos de IA agentica cancelados por mala ejecucion — HBR/Gartner, 2025</p>
+          <p className="mt-1 text-foreground">La diferencia esta en como se hace. Yo lo hago bien.</p>
+        </div>
+      </div>
 
       {/* ── Divider (editorial only) ── */}
       <hr className="hidden editorial:block border-border" />

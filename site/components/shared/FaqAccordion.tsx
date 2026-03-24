@@ -10,7 +10,13 @@ import { useTheme } from "@/components/shared/ThemeProvider";
 
 type FaqItem = { q: string; a: string };
 
-export function FaqAccordion({ faqs }: { faqs: FaqItem[] }) {
+export function FaqAccordion({
+  faqs,
+  defaultOpen = [],
+}: {
+  faqs: FaqItem[];
+  defaultOpen?: number[];
+}) {
   const { theme } = useTheme();
 
   return (
@@ -20,9 +26,9 @@ export function FaqAccordion({ faqs }: { faqs: FaqItem[] }) {
         <h2 className="mb-8 text-sm font-semibold uppercase tracking-widest text-[var(--fg-subtle)]">
           Preguntas frecuentes
         </h2>
-        <Accordion className="max-w-2xl">
+        <Accordion className="max-w-2xl" defaultValue={defaultOpen}>
           {faqs.map((faq, i) => (
-            <AccordionItem key={i} className="border-b border-border">
+            <AccordionItem key={i} value={i} className="border-b border-border">
               <AccordionTrigger className="py-4 text-left font-semibold hover:no-underline">
                 {faq.q}
               </AccordionTrigger>
@@ -44,9 +50,9 @@ export function FaqAccordion({ faqs }: { faqs: FaqItem[] }) {
           </h2>
           <span className="h-px flex-1 bg-border" />
         </div>
-        <Accordion className="max-w-2xl">
+        <Accordion className="max-w-2xl" defaultValue={defaultOpen}>
           {faqs.map((faq, i) => (
-            <AccordionItem key={i} className="border-b border-border">
+            <AccordionItem key={i} value={i} className="border-b border-border">
               <AccordionTrigger className="py-3 text-left text-[15px] font-semibold hover:no-underline">
                 {faq.q}
               </AccordionTrigger>

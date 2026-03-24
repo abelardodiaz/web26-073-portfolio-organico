@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.8.2] - 2026-03-23
+
+### Added
+- Social proof block (McKinsey/HBR) on homepage after services section
+- Bridge paragraph on homepage connecting developer work to local services
+- Microsoft LATAM data point (94% efficiency) on /diagnostico-ia hero
+- Urgency block ("maximo 4 diagnosticos/mes") on /diagnostico-ia
+- HBR reference blockquote on /openclaw-slp
+- Highlight on "OpenClaw configurado" column in comparison table (bg-primary/5)
+- 2 FAQs open by default on /openclaw-slp (security + shadow AI)
+- SLP paragraph with /diagnostico-ia link on /about
+
+### Changed
+- Rewrite sector savings with specific data points on /diagnostico-ia
+- Rewrite "Quien lo hace" bio with consulting/distribuidora examples on /diagnostico-ia
+- Expand /about bio: telecom background, 10+ years tech, business experience
+- Add 135K exposed instances data to "why help" on /openclaw-slp
+
 ## [0.8.1] - 2026-03-23
 
 ### Added

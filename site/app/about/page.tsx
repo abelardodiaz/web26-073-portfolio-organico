@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "About",
@@ -13,19 +14,49 @@ export default function AboutPage() {
         <h1 className="mb-6 text-3xl font-bold tracking-tight">About</h1>
         <div className="max-w-2xl space-y-4 text-muted-foreground leading-relaxed">
           <p>
-            Soy Abelardo Diaz. Construyo y opero +40 proyectos en mi propia
-            infraestructura — CRMs, gateways multi-IA, e-commerce bridges,
-            chatbots automatizados para doctores, y las herramientas para
-            monitorearlos todos.
+            Soy Abelardo Diaz, ingeniero de telecomunicaciones con mas de 10
+            anos de experiencia en la industria de tecnologia. Empece disenando
+            y analizando redes de datos &mdash; redes inalambricas, enlaces de
+            larga distancia, infraestructura para proveedores de internet.
+            Despues me movi a emprender: administre negocios de bienes raices y
+            aprendi a operar empresas desde cero.
           </p>
           <p>
-            Construyo sistemas full-stack que toman decisiones por si solos.
-            Todo con Python, Next.js, PostgreSQL y Docker en servidores que
-            administro directamente. 7+ providers de IA en produccion.
+            Hace 3 anos empece a construir proyectos de software e inteligencia
+            artificial. Hoy opero +40 proyectos en mi propia infraestructura:
+            CRMs, gateways que conectan 11 proveedores de IA, chatbots
+            automatizados para consultorios medicos, sistemas de e-commerce, y
+            las herramientas para monitorearlos todos. Todo con Python, Next.js,
+            PostgreSQL y Docker en servidores que administro directamente.
+          </p>
+          <p>
+            Esa combinacion de ingenieria, negocios e IA es lo que me permite
+            entender tanto la tecnologia como el problema del negocio. No solo
+            se programar un agente &mdash; se para que lo necesitas y como
+            medir si esta funcionando.
           </p>
           <p>
             Documento en espanol porque la comunidad dev LATAM merece
             contenido real, no tutoriales reciclados.
+          </p>
+          <p>
+            Trabajo desde San Luis Potosi. Ademas de mis{" "}
+            <Link
+              href="/projects"
+              className="font-medium text-primary hover:underline"
+            >
+              proyectos
+            </Link>{" "}
+            open-source, ayudo a negocios locales a implementar inteligencia
+            artificial de forma segura y practica. Si tienes una empresa en SLP
+            y quieres saber como la IA puede ayudarte, empieza con un{" "}
+            <Link
+              href="/diagnostico-ia"
+              className="font-medium text-primary hover:underline"
+            >
+              diagnostico
+            </Link>
+            .
           </p>
         </div>
       </div>
@@ -40,19 +71,49 @@ export default function AboutPage() {
         </div>
         <div className="max-w-2xl space-y-4 text-sm text-muted-foreground leading-relaxed">
           <p>
-            Soy Abelardo Diaz. Construyo y opero +40 proyectos en mi propia
-            infraestructura — CRMs, gateways multi-IA, e-commerce bridges,
-            chatbots automatizados para doctores, y las herramientas para
-            monitorearlos todos.
+            Soy Abelardo Diaz, ingeniero de telecomunicaciones con mas de 10
+            anos de experiencia en la industria de tecnologia. Empece disenando
+            y analizando redes de datos &mdash; redes inalambricas, enlaces de
+            larga distancia, infraestructura para proveedores de internet.
+            Despues me movi a emprender: administre negocios de bienes raices y
+            aprendi a operar empresas desde cero.
           </p>
           <p>
-            Construyo sistemas full-stack que toman decisiones por si solos.
-            Todo con Python, Next.js, PostgreSQL y Docker en servidores que
-            administro directamente. 7+ providers de IA en produccion.
+            Hace 3 anos empece a construir proyectos de software e inteligencia
+            artificial. Hoy opero +40 proyectos en mi propia infraestructura:
+            CRMs, gateways que conectan 11 proveedores de IA, chatbots
+            automatizados para consultorios medicos, sistemas de e-commerce, y
+            las herramientas para monitorearlos todos. Todo con Python, Next.js,
+            PostgreSQL y Docker en servidores que administro directamente.
+          </p>
+          <p>
+            Esa combinacion de ingenieria, negocios e IA es lo que me permite
+            entender tanto la tecnologia como el problema del negocio. No solo
+            se programar un agente &mdash; se para que lo necesitas y como
+            medir si esta funcionando.
           </p>
           <p>
             Documento en espanol porque la comunidad dev LATAM merece
             contenido real, no tutoriales reciclados.
+          </p>
+          <p>
+            Trabajo desde San Luis Potosi. Ademas de mis{" "}
+            <Link
+              href="/projects"
+              className="font-medium text-primary hover:underline"
+            >
+              /proyectos
+            </Link>{" "}
+            open-source, ayudo a negocios locales a implementar inteligencia
+            artificial de forma segura y practica. Si tienes una empresa en SLP
+            y quieres saber como la IA puede ayudarte, empieza con un{" "}
+            <Link
+              href="/diagnostico-ia"
+              className="font-medium text-primary hover:underline"
+            >
+              /diagnostico
+            </Link>
+            .
           </p>
         </div>
       </div>

@@ -92,7 +92,7 @@ const whyHelp = [
   },
   {
     title: "Sin supervision puede causar problemas",
-    desc: "Un asistente mal configurado puede enviar informacion equivocada, perder mensajes o crear conflictos con clientes.",
+    desc: "Un asistente mal configurado puede enviar informacion equivocada, perder mensajes o crear conflictos con clientes. No es teoria: en febrero 2026 se detectaron 135,000 instalaciones de OpenClaw expuestas a internet sin proteccion, y mas de 800 aplicaciones maliciosas en su tienda oficial. El riesgo de una instalacion amateur es real.",
   },
 ];
 
@@ -205,6 +205,17 @@ export default function OpenClawSLPPage() {
           </div>
         </section>
 
+        {/* HBR Reference */}
+        <section className="mb-16">
+          <blockquote className="max-w-2xl border-l-4 border-primary/30 pl-5 text-sm leading-relaxed text-muted-foreground">
+            No solo lo digo yo. Harvard Business Review (marzo 2026) recomienda
+            tratar a los agentes de IA como miembros del equipo: con identidad
+            propia, permisos limitados, fuentes de datos verificadas, y
+            supervision constante. Exactamente como yo lo configuro para tu
+            negocio.
+          </blockquote>
+        </section>
+
         {/* My Process */}
         <section className="mb-16">
           <h2 className="mb-8 text-sm font-semibold uppercase tracking-widest text-[var(--fg-subtle)]">
@@ -247,7 +258,7 @@ export default function OpenClawSLPPage() {
                   <th className="px-4 py-3 text-left font-medium text-muted-foreground">
                     Consultora grande
                   </th>
-                  <th className="px-4 py-3 text-left font-semibold text-primary">
+                  <th className="px-4 py-3 text-left font-semibold text-primary bg-primary/5 rounded-t-md">
                     OpenClaw configurado
                   </th>
                 </tr>
@@ -258,28 +269,28 @@ export default function OpenClawSLPPage() {
                   <td className="px-4 py-3 text-muted-foreground">$8,000-15,000 MXN</td>
                   <td className="px-4 py-3 text-muted-foreground">$0-400 MXN</td>
                   <td className="px-4 py-3 text-muted-foreground">$50,000+ USD</td>
-                  <td className="px-4 py-3 font-medium text-primary">$200-1,000 MXN en API</td>
+                  <td className="px-4 py-3 font-medium text-primary bg-primary/5">$200-1,000 MXN en API</td>
                 </tr>
                 <tr className="border-b border-border">
                   <td className="py-3 pr-4 font-medium">Disponibilidad</td>
                   <td className="px-4 py-3 text-muted-foreground">8 hrs/dia, L-V</td>
                   <td className="px-4 py-3 text-muted-foreground">Cuando tu lo abres</td>
                   <td className="px-4 py-3 text-muted-foreground">Horario oficina</td>
-                  <td className="px-4 py-3 font-medium text-primary">24/7 automatico</td>
+                  <td className="px-4 py-3 font-medium text-primary bg-primary/5">24/7 automatico</td>
                 </tr>
                 <tr className="border-b border-border">
                   <td className="py-3 pr-4 font-medium">Se conecta a tus sistemas</td>
                   <td className="px-4 py-3 text-muted-foreground">Si (manual)</td>
                   <td className="px-4 py-3 text-muted-foreground">No</td>
                   <td className="px-4 py-3 text-muted-foreground">Si</td>
-                  <td className="px-4 py-3 font-medium text-primary">Si (automatico)</td>
+                  <td className="px-4 py-3 font-medium text-primary bg-primary/5">Si (automatico)</td>
                 </tr>
                 <tr>
                   <td className="py-3 pr-4 font-medium">Soporte en SLP</td>
                   <td className="px-4 py-3 text-muted-foreground">N/A</td>
                   <td className="px-4 py-3 text-muted-foreground">No</td>
                   <td className="px-4 py-3 text-muted-foreground">No (CDMX/USA)</td>
-                  <td className="px-4 py-3 font-medium text-primary">Si, presencial</td>
+                  <td className="px-4 py-3 font-medium text-primary bg-primary/5 rounded-b-md">Si, presencial</td>
                 </tr>
               </tbody>
             </table>
@@ -288,7 +299,7 @@ export default function OpenClawSLPPage() {
 
         {/* FAQ */}
         <section className="mb-16">
-          <FaqAccordion faqs={faqs} />
+          <FaqAccordion faqs={faqs} defaultOpen={[6, 7]} />
         </section>
 
         {/* CTA */}
@@ -396,6 +407,21 @@ export default function OpenClawSLPPage() {
           </div>
         </section>
 
+        {/* HBR Reference */}
+        <section className="mb-14">
+          <div className="mb-4 flex items-center gap-3">
+            <span className="font-mono text-xs font-semibold uppercase tracking-widest text-[var(--fg-subtle)]">
+              // segun_hbr
+            </span>
+            <span className="h-px flex-1 bg-border" />
+          </div>
+          <blockquote className="max-w-2xl border-l-2 border-primary/30 pl-4 text-[13px] leading-relaxed text-muted-foreground">
+            Harvard Business Review (marzo 2026): los agentes de IA necesitan
+            identidad, permisos, datos verificados y supervision.
+            Exactamente como yo lo configuro.
+          </blockquote>
+        </section>
+
         {/* My Process */}
         <section className="mb-14">
           <div className="mb-6 flex items-center gap-3">
@@ -450,7 +476,7 @@ export default function OpenClawSLPPage() {
                   <th className="px-4 py-3 text-left font-medium text-muted-foreground">
                     consultora_grande
                   </th>
-                  <th className="px-4 py-3 text-left font-semibold text-primary">
+                  <th className="px-4 py-3 text-left font-semibold text-primary bg-primary/5 rounded-t-md">
                     openclaw_config
                   </th>
                 </tr>
@@ -461,28 +487,28 @@ export default function OpenClawSLPPage() {
                   <td className="px-4 py-3 text-muted-foreground">$8K-15K MXN</td>
                   <td className="px-4 py-3 text-muted-foreground">$0-400 MXN</td>
                   <td className="px-4 py-3 text-muted-foreground">$50K+ USD</td>
-                  <td className="px-4 py-3 font-medium text-primary">$200-1K MXN</td>
+                  <td className="px-4 py-3 font-medium text-primary bg-primary/5">$200-1K MXN</td>
                 </tr>
                 <tr className="border-b border-border">
                   <td className="py-3 pr-4 font-medium">disponibilidad</td>
                   <td className="px-4 py-3 text-muted-foreground">8h L-V</td>
                   <td className="px-4 py-3 text-muted-foreground">manual</td>
                   <td className="px-4 py-3 text-muted-foreground">oficina</td>
-                  <td className="px-4 py-3 font-medium text-primary">24/7</td>
+                  <td className="px-4 py-3 font-medium text-primary bg-primary/5">24/7</td>
                 </tr>
                 <tr className="border-b border-border">
                   <td className="py-3 pr-4 font-medium">conecta_sistemas</td>
                   <td className="px-4 py-3 text-muted-foreground">manual</td>
                   <td className="px-4 py-3 text-muted-foreground">no</td>
                   <td className="px-4 py-3 text-muted-foreground">si</td>
-                  <td className="px-4 py-3 font-medium text-primary">auto</td>
+                  <td className="px-4 py-3 font-medium text-primary bg-primary/5">auto</td>
                 </tr>
                 <tr>
                   <td className="py-3 pr-4 font-medium">soporte_slp</td>
                   <td className="px-4 py-3 text-muted-foreground">n/a</td>
                   <td className="px-4 py-3 text-muted-foreground">no</td>
                   <td className="px-4 py-3 text-muted-foreground">no</td>
-                  <td className="px-4 py-3 font-medium text-primary">presencial</td>
+                  <td className="px-4 py-3 font-medium text-primary bg-primary/5 rounded-b-md">presencial</td>
                 </tr>
               </tbody>
             </table>
@@ -491,7 +517,7 @@ export default function OpenClawSLPPage() {
 
         {/* FAQ */}
         <section className="mb-14">
-          <FaqAccordion faqs={faqs} />
+          <FaqAccordion faqs={faqs} defaultOpen={[6, 7]} />
         </section>
 
         {/* CTA */}

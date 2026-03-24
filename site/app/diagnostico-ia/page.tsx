@@ -56,28 +56,28 @@ const sectors = [
     problem: "Las mismas preguntas por WhatsApp todo el dia: precio, disponibilidad, horarios.",
     solution:
       "Un asistente que responde automaticamente con informacion real de tu inventario y precios.",
-    savings: "~20 hrs/semana en atencion repetitiva",
+    savings: "Si tu equipo contesta mas de 30 mensajes al dia, un asistente puede hacerse cargo del 70-80% sin intervencion humana.",
   },
   {
     title: "Clinicas y Despachos",
     problem: "La secretaria pasa el dia agendando citas por telefono. Los pacientes no llegan.",
     solution:
       "Un asistente que agenda citas, envia recordatorios automaticos y reagenda sin intervencion humana.",
-    savings: "~15 hrs/semana + menos no-shows",
+    savings: "Consultorios que usan recordatorios automaticos reportan entre 20% y 30% menos cancelaciones.",
   },
   {
     title: "Logistica y Distribucion",
     problem: "El vendedor cotiza en Excel, copia y pega, y tarda horas en responder.",
     solution:
       "Un asistente que genera cotizaciones al instante y da seguimiento al status del envio.",
-    savings: "~12 hrs/semana en cotizaciones manuales",
+    savings: "Lo que hoy tarda 2 horas en cotizar, el asistente lo hace en 90 segundos.",
   },
   {
     title: "Manufactura y Automotriz",
     problem: "Los reportes de produccion tardan 2 dias. Las alertas llegan tarde.",
     solution:
       "Un asistente que genera reportes diarios automaticos y envia alertas en tiempo real.",
-    savings: "~10 hrs/semana + deteccion temprana de problemas",
+    savings: "Reportes que tomaban 2 dias ahora se generan solos cada manana antes de que llegues a la planta.",
   },
 ];
 
@@ -102,6 +102,14 @@ export default function DiagnosticoIAPage() {
             Encuentro donde se pierde tiempo y dinero en tu empresa, y te
             muestro exactamente como resolverlo con inteligencia artificial.
             Sin jerga, con numeros claros.
+          </p>
+          <p className="mt-4 max-w-2xl text-sm text-muted-foreground/80">
+            El 94% de las PyMEs mexicanas que implementaron inteligencia
+            artificial reportan mejora en eficiencia operativa, y el 91%
+            incremento sus ingresos.{" "}
+            <span className="text-muted-foreground/60">
+              &mdash; Microsoft LATAM, 2025
+            </span>
           </p>
         </section>
 
@@ -188,16 +196,28 @@ export default function DiagnosticoIAPage() {
           </div>
         </section>
 
+        {/* Urgency */}
+        <section className="mb-16">
+          <p className="max-w-md text-sm leading-relaxed text-muted-foreground">
+            Atiendo maximo 4 diagnosticos por mes para dar atencion
+            personalizada a cada negocio. Si quieres agendar el tuyo, escribe
+            por WhatsApp y lo coordinamos.
+          </p>
+        </section>
+
         {/* Mini Bio */}
         <section className="mb-16">
           <h2 className="mb-4 text-sm font-semibold uppercase tracking-widest text-[var(--fg-subtle)]">
             Quien lo hace
           </h2>
           <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">
-            Soy Abelardo Diaz. Tengo +40 proyectos en produccion, trabajo con
-            7+ proveedores de inteligencia artificial, y opero agentes que
-            corren 24/7 en mi propia infraestructura. Puedes ver mi trabajo
-            real en{" "}
+            Soy Abelardo Diaz. He construido asistentes automaticos para
+            consultorios medicos, sistemas de cotizacion para distribuidoras, y
+            plataformas que conectan 11 proveedores de inteligencia artificial al
+            mismo tiempo. Todo funciona en servidores que yo mismo administro,
+            24 horas al dia, 7 dias a la semana. Llevo 3 anos construyendo
+            proyectos con IA y mas de 10 en la industria de tecnologia. Puedes
+            ver mi trabajo real en{" "}
             <Link
               href="/projects"
               className="font-medium text-primary hover:underline"
@@ -263,6 +283,10 @@ export default function DiagnosticoIAPage() {
             Encuentro donde se pierde tiempo y dinero en tu empresa, y te
             muestro exactamente como resolverlo con inteligencia artificial.
             Sin jerga, con numeros claros.
+          </p>
+          <p className="mt-3 max-w-2xl font-mono text-xs text-muted-foreground/70">
+            94% PyMEs MX con IA mejoran eficiencia, 91% incrementan ingresos
+            — Microsoft LATAM, 2025
           </p>
         </section>
 
@@ -373,6 +397,21 @@ export default function DiagnosticoIAPage() {
           </div>
         </section>
 
+        {/* Urgency */}
+        <section className="mb-14">
+          <div className="mb-4 flex items-center gap-3">
+            <span className="font-mono text-xs font-semibold uppercase tracking-widest text-[var(--fg-subtle)]">
+              // disponibilidad
+            </span>
+            <span className="h-px flex-1 bg-border" />
+          </div>
+          <p className="max-w-md text-[13px] leading-relaxed text-muted-foreground">
+            Atiendo maximo 4 diagnosticos por mes para dar atencion
+            personalizada a cada negocio. Si quieres agendar el tuyo, escribe
+            por WhatsApp y lo coordinamos.
+          </p>
+        </section>
+
         {/* Mini Bio */}
         <section className="mb-14">
           <div className="mb-4 flex items-center gap-3">
@@ -382,10 +421,13 @@ export default function DiagnosticoIAPage() {
             <span className="h-px flex-1 bg-border" />
           </div>
           <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">
-            Soy Abelardo Diaz. Tengo +40 proyectos en produccion, trabajo con
-            7+ proveedores de inteligencia artificial, y opero agentes que
-            corren 24/7 en mi propia infraestructura. Puedes ver mi trabajo
-            real en{" "}
+            Soy Abelardo Diaz. He construido asistentes automaticos para
+            consultorios medicos, sistemas de cotizacion para distribuidoras, y
+            plataformas que conectan 11 proveedores de inteligencia artificial al
+            mismo tiempo. Todo funciona en servidores que yo mismo administro,
+            24 horas al dia, 7 dias a la semana. Llevo 3 anos construyendo
+            proyectos con IA y mas de 10 en la industria de tecnologia. Puedes
+            ver mi trabajo real en{" "}
             <Link
               href="/projects"
               className="font-medium text-primary hover:underline"
