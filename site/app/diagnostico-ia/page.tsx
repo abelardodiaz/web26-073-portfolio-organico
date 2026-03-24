@@ -6,9 +6,9 @@ import { SocialProof } from "@/components/shared/SocialProof";
 import { Timeline } from "@/components/shared/Timeline";
 
 export const metadata: Metadata = {
-  title: "Diagnostico IA para tu Negocio",
+  title: "Diagnostico IA para tu Negocio | San Luis Potosi",
   description:
-    "Consultoria de inteligencia artificial en San Luis Potosi. Diagnostico express para identificar donde tu negocio puede automatizar con IA. $5,000 MXN, sin compromiso.",
+    "Encuentro donde tu empresa pierde tiempo y te muestro como resolverlo con inteligencia artificial. Diagnostico express $5,000 MXN en San Luis Potosi.",
   alternates: { canonical: "https://abelardodiaz.dev/diagnostico-ia" },
   openGraph: {
     title: "Diagnostico IA para tu Negocio | Abelardo Diaz",
@@ -225,6 +225,15 @@ export default function DiagnosticoIAPage() {
                 Sin compromiso de continuidad
               </li>
             </ul>
+            <p className="mt-4 text-xs leading-relaxed text-muted-foreground border-t border-border pt-4">
+              Si decides implementar alguna de las oportunidades del
+              diagnostico, los{" "}
+              <strong className="font-medium text-foreground">
+                $5,000 MXN se descuentan del costo del proyecto
+              </strong>
+              . El diagnostico no es un gasto &mdash; es el primer paso de la
+              solucion.
+            </p>
           </div>
         </section>
 
@@ -246,13 +255,12 @@ export default function DiagnosticoIAPage() {
             Quien lo hace
           </h2>
           <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">
-            Soy Abelardo Diaz. He construido asistentes automaticos para
-            consultorios medicos, sistemas de cotizacion para distribuidoras, y
-            plataformas que conectan 11 proveedores de inteligencia artificial al
-            mismo tiempo. Todo funciona en servidores que yo mismo administro,
-            24 horas al dia, 7 dias a la semana. Llevo 3 anos construyendo
-            proyectos con IA y mas de 10 en la industria de tecnologia. Puedes
-            ver mi trabajo real en{" "}
+            Soy Abelardo Diaz, ingeniero de automatizacion B2B. No vendo
+            chatbots ni consultoria generica. Implemento procesos automaticos
+            con inteligencia artificial: integracion con tus sistemas, seguridad
+            de datos, y resultados medibles. Llevo 3 anos construyendo proyectos
+            con IA y mas de 10 en la industria de tecnologia. Puedes ver mi
+            trabajo real en{" "}
             <Link
               href="/projects"
               className="font-medium text-primary hover:underline"
@@ -424,6 +432,19 @@ export default function DiagnosticoIAPage() {
                 Sin compromiso de continuidad
               </li>
             </ul>
+            <div className="mt-4 border-t border-border pt-4 font-mono text-[11px] leading-relaxed text-muted-foreground">
+              <p className="text-primary/60">// bonificable</p>
+              <p>
+                Si implementas, los{" "}
+                <span className="font-medium text-foreground">
+                  $5,000 se descuentan del proyecto
+                </span>
+                .
+              </p>
+              <p className="text-primary/60">
+                diagnostico != gasto. diagnostico == paso_1.
+              </p>
+            </div>
           </div>
         </section>
 
@@ -448,13 +469,12 @@ export default function DiagnosticoIAPage() {
             <span className="h-px flex-1 bg-border" />
           </div>
           <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">
-            Soy Abelardo Diaz. He construido asistentes automaticos para
-            consultorios medicos, sistemas de cotizacion para distribuidoras, y
-            plataformas que conectan 11 proveedores de inteligencia artificial al
-            mismo tiempo. Todo funciona en servidores que yo mismo administro,
-            24 horas al dia, 7 dias a la semana. Llevo 3 anos construyendo
-            proyectos con IA y mas de 10 en la industria de tecnologia. Puedes
-            ver mi trabajo real en{" "}
+            Soy Abelardo Diaz, ingeniero de automatizacion B2B. No vendo
+            chatbots ni consultoria generica. Implemento procesos automaticos
+            con inteligencia artificial: integracion con tus sistemas, seguridad
+            de datos, y resultados medibles. Llevo 3 anos construyendo proyectos
+            con IA y mas de 10 en la industria de tecnologia. Puedes ver mi
+            trabajo real en{" "}
             <Link
               href="/projects"
               className="font-medium text-primary hover:underline"

@@ -225,6 +225,25 @@ export default function OpenClawSLPPage() {
           </div>
         </section>
 
+        {/* Autonomia supervisada (HITL) */}
+        <section className="mb-16">
+          <h2 className="mb-8 text-sm font-semibold uppercase tracking-widest text-[var(--fg-subtle)]">
+            Autonomia supervisada
+          </h2>
+          <div className="max-w-2xl rounded-lg border border-border bg-card p-6">
+            <p className="text-sm leading-relaxed text-muted-foreground">
+              Todo asistente arranca con aprobacion humana para acciones
+              criticas. Enviar correos a clientes, modificar datos, procesar
+              pagos &mdash; siempre pasa por tu equipo antes de ejecutarse. Con
+              el tiempo y la confianza, vas soltando control. Pero{" "}
+              <strong className="font-medium text-foreground">
+                tu decides cuando
+              </strong>
+              . Esa supervision es parte de mi servicio mensual.
+            </p>
+          </div>
+        </section>
+
         {/* HBR Reference */}
         <section className="mb-16">
           <SocialProof
@@ -396,6 +415,41 @@ export default function OpenClawSLPPage() {
                 </p>
               </div>
             ))}
+          </div>
+        </section>
+
+        {/* Autonomia supervisada (HITL) */}
+        <section className="mb-14">
+          <div className="mb-6 flex items-center gap-3">
+            <h2 className="font-mono text-xs font-semibold uppercase tracking-widest text-[var(--fg-subtle)]">
+              // autonomia_supervisada
+            </h2>
+            <span className="h-px flex-1 bg-border" />
+          </div>
+          <div className="max-w-2xl rounded-md border border-border bg-card p-5 font-mono text-[12px] leading-relaxed text-muted-foreground">
+            <p className="text-primary/60">// config</p>
+            <p>
+              acciones_criticas:{" "}
+              <span className="text-foreground">require_approval = true</span>
+            </p>
+            <p>
+              enviar_correos:{" "}
+              <span className="text-foreground">human_confirms_first</span>
+            </p>
+            <p>
+              modificar_datos:{" "}
+              <span className="text-foreground">human_confirms_first</span>
+            </p>
+            <p>
+              procesar_pagos:{" "}
+              <span className="text-foreground">human_confirms_first</span>
+            </p>
+            <p className="mt-2 text-primary/60">
+              // timeline: tu decides cuando soltar control
+            </p>
+            <p className="text-primary/60">
+              // supervision: incluida en retainer mensual
+            </p>
           </div>
         </section>
 
