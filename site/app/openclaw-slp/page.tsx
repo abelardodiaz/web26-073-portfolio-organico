@@ -145,7 +145,10 @@ export default function OpenClawSLPPage() {
       <div className="hidden editorial:block">
         {/* Hero */}
         <section className="mb-16">
-          <div className="mb-4 flex items-center gap-3">
+          <span className="mb-4 inline-block rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+            San Luis Potosi
+          </span>
+          <div className="mb-2 flex items-center gap-3">
             <Image
               src="/openclaw-logo.svg"
               alt="OpenClaw"
@@ -153,15 +156,20 @@ export default function OpenClawSLPPage() {
               height={36}
               className="shrink-0"
             />
-            <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
-              San Luis Potosi
-            </span>
+            <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
+              OpenClaw: un asistente de IA
+              <br className="hidden sm:block" />
+              que trabaja por ti, 24/7
+            </h1>
           </div>
-          <h1 className="mb-4 text-3xl font-bold tracking-tight sm:text-4xl">
-            OpenClaw: un asistente de IA
-            <br className="hidden sm:block" />
-            que trabaja por ti, 24/7
-          </h1>
+          <a
+            href="https://github.com/openclaw/openclaw"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mb-4 inline-block text-xs text-muted-foreground/60 transition-colors hover:text-primary"
+          >
+            github.com/openclaw/openclaw
+          </a>
           <p className="max-w-2xl text-lg leading-relaxed text-muted-foreground">
             Es como tener un empleado digital que nunca duerme. Contesta
             mensajes, busca informacion, hace reportes y organiza tareas
@@ -336,13 +344,6 @@ export default function OpenClawSLPPage() {
         {/* Hero */}
         <section className="mb-14">
           <div className="mb-6 flex items-center gap-3">
-            <Image
-              src="/openclaw-logo.svg"
-              alt="OpenClaw"
-              width={24}
-              height={24}
-              className="shrink-0"
-            />
             <h1 className="font-mono text-xs font-semibold uppercase tracking-widest text-[var(--fg-subtle)]">
               // openclaw-slp
             </h1>
@@ -351,11 +352,28 @@ export default function OpenClawSLPPage() {
               SLP
             </span>
           </div>
-          <p className="mb-3 text-xl font-bold tracking-tight sm:text-2xl">
-            OpenClaw: un asistente de IA
-            <br className="hidden sm:block" />
-            que trabaja por ti, 24/7
-          </p>
+          <div className="mb-1 flex items-center gap-2">
+            <Image
+              src="/openclaw-logo.svg"
+              alt="OpenClaw"
+              width={24}
+              height={24}
+              className="shrink-0"
+            />
+            <p className="text-xl font-bold tracking-tight sm:text-2xl">
+              OpenClaw: un asistente de IA
+              <br className="hidden sm:block" />
+              que trabaja por ti, 24/7
+            </p>
+          </div>
+          <a
+            href="https://github.com/openclaw/openclaw"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mb-3 inline-block font-mono text-[10px] text-muted-foreground/50 transition-colors hover:text-primary"
+          >
+            github.com/openclaw/openclaw
+          </a>
           <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">
             Es como tener un empleado digital que nunca duerme. Contesta
             mensajes, busca informacion, hace reportes y organiza tareas
