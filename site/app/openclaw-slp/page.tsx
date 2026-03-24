@@ -154,7 +154,7 @@ export default function OpenClawSLPPage() {
               alt="OpenClaw"
               width={36}
               height={36}
-              className="shrink-0"
+              className="animate-wiggle shrink-0"
             />
             <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
               OpenClaw: un asistente de IA
@@ -358,7 +358,7 @@ export default function OpenClawSLPPage() {
               alt="OpenClaw"
               width={24}
               height={24}
-              className="shrink-0"
+              className="animate-wiggle shrink-0"
             />
             <p className="text-xl font-bold tracking-tight sm:text-2xl">
               OpenClaw: un asistente de IA

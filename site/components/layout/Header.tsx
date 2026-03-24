@@ -39,7 +39,7 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background">
       <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
-        <Link href="/" className="shrink-0">
+        <Link href="/" className="animate-wiggle inline-block shrink-0">
           {theme === "editorial" ? (
             <span className="text-base font-bold tracking-tight">
               abelardodiaz<span className="text-primary">.dev</span>

@@ -139,7 +139,7 @@ export default function Home() {
                   alt="OpenClaw"
                   width={20}
                   height={20}
-                  className="shrink-0"
+                  className="animate-wiggle shrink-0"
                 />
                 <h3 className="font-semibold tracking-tight">
                   OpenClaw en San Luis Potosi
