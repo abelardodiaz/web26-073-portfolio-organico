@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.9.0] - 2026-03-24
+
+### Added
+- AutonomyMeter component: interactive meter/gauge with 4 HBR autonomy levels on /openclaw-slp
+  - Bar + dots + cards synchronized, always progressive (can't light 4 without 3)
+  - Hover/touch interaction on bar and cards
+  - Pointer "Aqui empezamos" fixed at level 02
+  - Dual-theme (Editorial/Terminal)
+- HITL "autonomia supervisada" section on /openclaw-slp (sug 15)
+- "Diagnostico bonificable" block in price card on /diagnostico-ia (sug 14)
+- Archived 11 preview HTMLs in previews/ (muestras graficas + autonomy variants)
+
+### Changed
+- "Quien lo hace" on /diagnostico-ia rewritten as "ingeniero de automatizacion B2B" (sug 5 adjusted)
+- /diagnostico-ia SEO: title includes "| San Luis Potosi", description updated
+- Copy rewritten for business audience: "guardrails" -> "validaciones", "output asistido" -> "te sugiere, tu decides"
+
 ## [0.8.2] - 2026-03-23
 
 ### Added
