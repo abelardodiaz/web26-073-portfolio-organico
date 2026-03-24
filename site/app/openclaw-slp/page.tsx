@@ -94,6 +94,41 @@ const whyHelp = [
   },
 ];
 
+const faqs = [
+  {
+    q: "Puede tener mas de un asistente? Como conviven?",
+    a: "Puedes tener un asistente para ventas que conteste precios y disponibilidad, otro para soporte que resuelva quejas, y otro interno que te haga reportes diarios. Cada uno con su personalidad y conocimiento separado.",
+  },
+  {
+    q: "Hay que construirlo desde cero?",
+    a: "No se construye de cero. Ya viene con 53 funciones listas y hay miles mas disponibles. Conectar tu Google Calendar, resumir correos, buscar informacion -- todo son funciones que se agregan en minutos.",
+  },
+  {
+    q: "Le puedo dar mi catalogo de productos y precios?",
+    a: "Le puedes dar tu catalogo de productos, lista de precios, horarios, politicas de devolucion -- y el asistente los usa para contestar con informacion real de tu negocio, no inventada.",
+  },
+  {
+    q: "Entiende audios de WhatsApp o Telegram?",
+    a: "Tu cliente manda un audio de 2 minutos por WhatsApp o Telegram, el asistente lo escucha, lo entiende y le contesta. Sin que nadie de tu equipo tenga que escuchar el audio.",
+  },
+  {
+    q: "Que pasa si se traba o deja de responder?",
+    a: "Si el asistente se atora (pasa rara vez), se reinicia en segundos. Y como estoy en San Luis Potosi, si necesitas ayuda la tienes el mismo dia.",
+  },
+  {
+    q: "Funciona las 24 horas sin caerse?",
+    a: "Por esto necesitas a alguien que sepa configurarlo bien. Con la configuracion correcta funciona 24/7 sin interrupciones.",
+  },
+  {
+    q: "Mi informacion esta segura?",
+    a: "Tu informacion esta protegida. El asistente corre en un servidor privado, no en la nube publica. Nadie mas tiene acceso.",
+  },
+  {
+    q: "Por que no dejar que mis empleados lo instalen solos?",
+    a: "Esta es la pregunta mas importante. No es si tus empleados van a usar IA -- es cuando. Mejor que tu lo ofrezcas bien hecho a que ellos lo instalen mal. El costo de una implementacion profesional es una fraccion del costo de un incidente de seguridad.",
+  },
+];
+
 export default function OpenClawSLPPage() {
   const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${WHATSAPP_MSG}`;
 
@@ -234,6 +269,23 @@ export default function OpenClawSLPPage() {
                 </tr>
               </tbody>
             </table>
+          </div>
+        </section>
+
+        {/* FAQ */}
+        <section className="mb-16">
+          <h2 className="mb-8 text-sm font-semibold uppercase tracking-widest text-[var(--fg-subtle)]">
+            Preguntas frecuentes
+          </h2>
+          <div className="max-w-2xl space-y-4">
+            {faqs.map((faq) => (
+              <div key={faq.q} className="border-b border-border pb-4 last:border-b-0">
+                <h3 className="mb-2 font-semibold">{faq.q}</h3>
+                <p className="text-sm leading-relaxed text-muted-foreground">
+                  {faq.a}
+                </p>
+              </div>
+            ))}
           </div>
         </section>
 
@@ -424,6 +476,29 @@ export default function OpenClawSLPPage() {
                 </tr>
               </tbody>
             </table>
+          </div>
+        </section>
+
+        {/* FAQ */}
+        <section className="mb-14">
+          <div className="mb-6 flex items-center gap-3">
+            <h2 className="font-mono text-xs font-semibold uppercase tracking-widest text-[var(--fg-subtle)]">
+              // faq
+            </h2>
+            <span className="h-px flex-1 bg-border" />
+          </div>
+          <div className="max-w-2xl space-y-3">
+            {faqs.map((faq) => (
+              <div
+                key={faq.q}
+                className="border-b border-border pb-3 last:border-b-0"
+              >
+                <h3 className="mb-1.5 text-[15px] font-semibold">{faq.q}</h3>
+                <p className="text-[13px] leading-relaxed text-muted-foreground">
+                  {faq.a}
+                </p>
+              </div>
+            ))}
           </div>
         </section>
 

@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file.
 - Seccion `/openclaw-slp` - pagina educativa OpenClaw para PyMEs con capacidades, proceso, tabla comparativa y CTA WhatsApp
 - Nav item "Servicios" en header (editorial + terminal)
 - CTA WhatsApp con mensaje pre-llenado en ambas paginas
+- Seccion FAQ con 8 preguntas de negocio en `/openclaw-slp` (fuente: 850 via 993)
 - Ambas paginas con dual-theme (Editorial + Terminal) y SEO metadata
 
 ## [0.7.3] - 2026-03-20
