@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ScrollReveal } from "@/components/shared/ScrollReveal";
+import { Timeline } from "@/components/shared/Timeline";
 
 export const metadata: Metadata = {
   title: "Diagnostico IA para tu Negocio",
@@ -39,18 +40,21 @@ const steps = [
     bin: "0001",
     title: "Platicamos sobre tu negocio",
     desc: "Una entrevista de 1-2 horas donde entiendo como opera tu empresa, que tareas consumen mas tiempo y donde esta el cuello de botella.",
+    tag: "Presencial o remota",
   },
   {
     num: "02",
     bin: "0010",
     title: "Identifico 3-5 oportunidades",
     desc: "Analizo tus procesos y detecto las tareas que una maquina podria hacer por ti: respuestas a clientes, reportes, cotizaciones, seguimiento.",
+    tag: "Analisis personalizado",
   },
   {
     num: "03",
     bin: "0011",
     title: "Te entrego un reporte con numeros",
     desc: "Recibes un documento con cada oportunidad, cuantas horas te ahorraria por semana, y los pasos concretos para implementarlo.",
+    tag: "Sin compromiso",
   },
 ];
 
@@ -124,19 +128,7 @@ export default function DiagnosticoIAPage() {
           <h2 className="mb-8 text-sm font-semibold uppercase tracking-widest text-[var(--fg-subtle)]">
             Como funciona
           </h2>
-          <div className="grid gap-6 sm:grid-cols-3">
-            {steps.map((step) => (
-              <ScrollReveal key={step.num} className="group">
-                <span className="animate-spin360 mb-2 inline-block text-2xl font-bold text-primary">
-                  {step.num}
-                </span>
-                <h3 className="mb-2 font-semibold">{step.title}</h3>
-                <p className="text-sm leading-relaxed text-muted-foreground">
-                  {step.desc}
-                </p>
-              </ScrollReveal>
-            ))}
-          </div>
+          <Timeline steps={steps} />
         </section>
 
         {/* Sector Examples */}
@@ -309,32 +301,7 @@ export default function DiagnosticoIAPage() {
             </h2>
             <span className="h-px flex-1 bg-border" />
           </div>
-          <div className="grid gap-4 sm:grid-cols-3">
-            {steps.map((step) => (
-              <ScrollReveal
-                key={step.num}
-                className="group grid grid-cols-[4px_1fr] overflow-hidden rounded-md border border-border bg-card"
-              >
-                <div className="bg-primary/30" />
-                <div className="p-5 pl-4">
-                  <div className="relative mb-1 h-[28px] min-w-[66px] overflow-hidden">
-                    <span className="num-decimal-scroll block font-mono text-lg font-bold leading-[28px] text-primary transition-all duration-400 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:-translate-y-full group-hover:opacity-0">
-                      {step.num}
-                    </span>
-                    <span className="num-binary-scroll absolute left-0 top-full font-mono text-lg font-bold leading-[28px] tracking-wider text-primary opacity-0 transition-all duration-400 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:-translate-y-full group-hover:opacity-100">
-                      {step.bin}
-                    </span>
-                  </div>
-                  <h3 className="mb-1.5 text-[15px] font-semibold">
-                    {step.title}
-                  </h3>
-                  <p className="text-[13px] leading-relaxed text-muted-foreground">
-                    {step.desc}
-                  </p>
-                </div>
-              </ScrollReveal>
-            ))}
-          </div>
+          <Timeline steps={steps} />
         </section>
 
         {/* Sector Examples */}

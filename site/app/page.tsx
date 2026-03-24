@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ButtonLink } from "@/components/shared/ButtonLink";
 import { RotatingLabel } from "@/components/shared/RotatingLabel";
+import { SocialProof } from "@/components/shared/SocialProof";
 import { getAllTils, getAllProjects } from "@/lib/content";
 
 export default function Home() {
@@ -210,36 +211,8 @@ export default function Home() {
       </section>
 
       {/* ── Social proof ── */}
-      <div className="hidden editorial:block pb-8 max-w-2xl">
-        <div className="rounded-r-md border-l-2 border-primary/30 bg-primary/5 py-3 pl-4 pr-4">
-          <p className="text-xs italic leading-relaxed text-muted-foreground">
-            Las empresas que implementan agentes de IA correctamente logran
-            entre 20% y 60% mas productividad, segun McKinsey. Pero el 40% de
-            los proyectos de IA se cancelan por mala implementacion.
-            La diferencia esta en como se hace.{" "}
-            <span className="not-italic font-medium text-foreground">
-              Yo lo hago bien.
-            </span>
-          </p>
-          <p className="mt-1 text-[10px] italic text-muted-foreground/60">
-            Harvard Business Review / Gartner, 2025
-          </p>
-        </div>
-      </div>
-      <div className="hidden terminal:block pb-6 max-w-2xl">
-        <div className="rounded-r-md border-l-2 border-primary/30 bg-primary/5 py-3 pl-4 pr-4">
-          <p className="font-mono text-[11px] italic leading-relaxed text-muted-foreground">
-            +20-60% productividad con agentes IA bien implementados
-            &mdash; McKinsey, 2025
-          </p>
-          <p className="font-mono text-[11px] italic leading-relaxed text-muted-foreground">
-            40%+ proyectos IA cancelados por mala ejecucion
-            &mdash; HBR/Gartner, 2025
-          </p>
-          <p className="mt-1 font-mono text-[11px] not-italic text-foreground">
-            La diferencia esta en como se hace. Yo lo hago bien.
-          </p>
-        </div>
+      <div className="pb-8">
+        <SocialProof />
       </div>
 
       {/* ── Divider (editorial only) ── */}

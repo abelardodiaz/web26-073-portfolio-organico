@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ButtonLink } from "@/components/shared/ButtonLink";
 import { FaqAccordion } from "@/components/shared/FaqAccordion";
 import { ScrollReveal } from "@/components/shared/ScrollReveal";
+import { Timeline } from "@/components/shared/Timeline";
 
 export const metadata: Metadata = {
   title: "OpenClaw en San Luis Potosi",
@@ -65,24 +66,28 @@ const processSteps = [
     bin: "0001",
     title: "Diagnostico",
     desc: "Entiendo tu negocio y detecto donde OpenClaw te ayuda mas.",
+    tag: "Presencial o remota",
   },
   {
     num: "02",
     bin: "0010",
     title: "Configuracion segura",
     desc: "Instalo y conecto todo con las protecciones adecuadas para tus datos.",
+    tag: "Docker + VPN",
   },
   {
     num: "03",
     bin: "0011",
     title: "Entrenamiento",
     desc: "Ajusto las respuestas y acciones al contexto especifico de tu negocio.",
+    tag: "Skills personalizados",
   },
   {
     num: "04",
     bin: "0100",
     title: "Soporte local",
     desc: "Si algo falla o necesitas cambios, estoy en la ciudad. Sin tickets ni esperas.",
+    tag: "San Luis Potosi",
   },
 ];
 
@@ -239,19 +244,7 @@ export default function OpenClawSLPPage() {
           <h2 className="mb-8 text-sm font-semibold uppercase tracking-widest text-[var(--fg-subtle)]">
             Como trabajo con OpenClaw
           </h2>
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {processSteps.map((step) => (
-              <ScrollReveal key={step.num} className="group">
-                <span className="animate-spin360 mb-2 inline-block text-2xl font-bold text-primary">
-                  {step.num}
-                </span>
-                <h3 className="mb-2 font-semibold">{step.title}</h3>
-                <p className="text-sm leading-relaxed text-muted-foreground">
-                  {step.desc}
-                </p>
-              </ScrollReveal>
-            ))}
-          </div>
+          <Timeline steps={processSteps} />
         </section>
 
         {/* Comparison Table */}
@@ -454,32 +447,7 @@ export default function OpenClawSLPPage() {
             </h2>
             <span className="h-px flex-1 bg-border" />
           </div>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {processSteps.map((step) => (
-              <ScrollReveal
-                key={step.num}
-                className="group grid grid-cols-[4px_1fr] overflow-hidden rounded-md border border-border bg-card"
-              >
-                <div className="bg-primary/30" />
-                <div className="p-5 pl-4">
-                  <div className="relative mb-1 h-[28px] min-w-[66px] overflow-hidden">
-                    <span className="num-decimal-scroll block font-mono text-lg font-bold leading-[28px] text-primary transition-all duration-400 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:-translate-y-full group-hover:opacity-0">
-                      {step.num}
-                    </span>
-                    <span className="num-binary-scroll absolute left-0 top-full font-mono text-lg font-bold leading-[28px] tracking-wider text-primary opacity-0 transition-all duration-400 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:-translate-y-full group-hover:opacity-100">
-                      {step.bin}
-                    </span>
-                  </div>
-                  <h3 className="mb-1.5 text-[15px] font-semibold">
-                    {step.title}
-                  </h3>
-                  <p className="text-[13px] leading-relaxed text-muted-foreground">
-                    {step.desc}
-                  </p>
-                </div>
-              </ScrollReveal>
-            ))}
-          </div>
+          <Timeline steps={processSteps} />
         </section>
 
         {/* Comparison Table */}
