@@ -73,7 +73,14 @@ export function ComparisonTable({
                   isTerminal ? "text-[11px] uppercase tracking-wider" : "text-[13px]"
                 }`}
                 style={{ width: 160 }}
-              />
+              >
+                <span
+                  className="sm:hidden text-muted-foreground/40 text-[11px]"
+                  style={{ animation: "swipeHint 5s ease-in-out forwards" }}
+                >
+                  desliza &rarr;
+                </span>
+              </th>
               {headers.map((h, i) => (
                 <th
                   key={h}
