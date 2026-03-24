@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ButtonLink } from "@/components/shared/ButtonLink";
 import { FaqAccordion } from "@/components/shared/FaqAccordion";
+import { SocialProof } from "@/components/shared/SocialProof";
 import { ScrollReveal } from "@/components/shared/ScrollReveal";
 import { Timeline } from "@/components/shared/Timeline";
 
@@ -225,18 +226,28 @@ export default function OpenClawSLPPage() {
 
         {/* HBR Reference */}
         <section className="mb-16">
-          <div className="max-w-2xl rounded-r-md border-l-2 border-primary/30 bg-primary/5 py-3 pl-4 pr-4">
-            <p className="text-xs italic leading-relaxed text-muted-foreground">
-              No solo lo digo yo. Harvard Business Review (marzo 2026)
-              recomienda tratar a los agentes de IA como miembros del equipo:
-              con identidad propia, permisos limitados, fuentes de datos
-              verificadas, y supervision constante. Exactamente como yo lo
-              configuro para tu negocio.
-            </p>
-            <p className="mt-1 text-[10px] italic text-muted-foreground/60">
-              &mdash; Harvard Business Review, marzo 2026
-            </p>
-          </div>
+          <SocialProof
+            editorialQuote={
+              <p>
+                No solo lo digo yo. Harvard Business Review recomienda tratar a
+                los agentes de IA como{" "}
+                <strong className="font-semibold text-primary">
+                  miembros del equipo
+                </strong>
+                : con identidad propia, permisos limitados, fuentes de datos
+                verificadas, y supervision constante. Exactamente como yo lo
+                configuro para tu negocio.
+              </p>
+            }
+            sources={[
+              { abbr: "HBR", name: "Harvard Business Review", year: "2026" },
+            ]}
+            terminalLines={[
+              { type: "comment", text: "# fuentes verificadas" },
+              { type: "data", key: "agentes_ia", highlight: "miembros del equipo", text: "con identidad, permisos, datos verificados", src: "// HBR marzo 2026" },
+              { type: "closing", key: "implementacion", text: "exactamente como yo lo configuro", cursor: true },
+            ]}
+          />
         </section>
 
         {/* My Process */}
@@ -425,17 +436,6 @@ export default function OpenClawSLPPage() {
                 </p>
               </div>
             ))}
-          </div>
-        </section>
-
-        {/* HBR Reference */}
-        <section className="mb-14">
-          <div className="max-w-2xl rounded-r-md border-l-2 border-primary/30 bg-primary/5 py-3 pl-4 pr-4">
-            <p className="font-mono text-[11px] italic leading-relaxed text-muted-foreground">
-              Harvard Business Review (marzo 2026): los agentes de IA
-              necesitan identidad, permisos, datos verificados y supervision.
-              Exactamente como yo lo configuro.
-            </p>
           </div>
         </section>
 

@@ -212,7 +212,34 @@ export default function Home() {
 
       {/* ── Social proof ── */}
       <div className="pb-8">
-        <SocialProof />
+        <SocialProof
+          editorialQuote={
+            <p>
+              Las empresas que implementan agentes de IA correctamente logran
+              entre{" "}
+              <strong className="font-semibold text-primary">
+                20% y 60% mas productividad
+              </strong>
+              . Pero el{" "}
+              <strong className="font-semibold text-primary">
+                40% de los proyectos se cancelan
+              </strong>{" "}
+              por mala implementacion. La diferencia esta en como se hace. Yo
+              lo hago bien.
+            </p>
+          }
+          sources={[
+            { abbr: "MK", name: "McKinsey", year: "2025" },
+            { abbr: "HBR", name: "Harvard Business Review", year: "2025" },
+          ]}
+          terminalLines={[
+            { type: "comment", text: "# fuentes verificadas" },
+            { type: "data", key: "productividad", highlight: "+20-60%", text: "con agentes IA bien implementados", src: "// McKinsey 2025" },
+            { type: "data", key: "cancelados", highlight: "40%+", text: "de proyectos IA por mala ejecucion", src: "// HBR/Gartner 2025" },
+            { type: "comment", text: "# la diferencia esta en como se hace" },
+            { type: "closing", key: "implementacion", text: "profesional, local, en SLP", cursor: true },
+          ]}
+        />
       </div>
 
       {/* ── Divider (editorial only) ── */}

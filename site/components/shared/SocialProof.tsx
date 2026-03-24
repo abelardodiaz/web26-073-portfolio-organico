@@ -1,15 +1,25 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { useTheme } from "@/components/shared/ThemeProvider";
 
-const sources = [
-  { abbr: "MK", name: "McKinsey", year: "2025" },
-  { abbr: "HBR", name: "Harvard Business Review", year: "2025" },
-];
+type Source = { abbr: string; name: string; year: string };
 
-export function SocialProof() {
-  const { theme } = useTheme();
+type TerminalLine =
+  | { type: "comment"; text: string }
+  | { type: "data"; key: string; highlight: string; text: string; src: string }
+  | { type: "closing"; key: string; text: string; cursor?: boolean };
+
+type SocialProofProps = {
+  editorialQuote: React.ReactNode;
+  sources: Source[];
+  terminalLines: TerminalLine[];
+};
+
+export function SocialProof({
+  editorialQuote,
+  sources,
+  terminalLines,
+}: SocialProofProps) {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -41,20 +51,13 @@ export function SocialProof() {
           <span className="mb-2 block text-5xl leading-none text-primary/60">
             &ldquo;
           </span>
-          <p className="mb-5 text-base leading-relaxed text-muted-foreground sm:text-[17px]">
-            Las empresas que implementan agentes de IA correctamente logran
-            entre{" "}
-            <strong className="font-semibold text-primary">
-              20% y 60% mas productividad
-            </strong>
-            . Pero el{" "}
-            <strong className="font-semibold text-primary">
-              40% de los proyectos se cancelan
-            </strong>{" "}
-            por mala implementacion. La diferencia esta en como se hace. Yo lo
-            hago bien.
-          </p>
-          <div className="flex flex-wrap gap-5 border-t border-border pt-5">
+          <div className="mb-5 text-base leading-relaxed text-muted-foreground sm:text-[17px]">
+            {editorialQuote}
+          </div>
+          <div className="flex flex-wrap items-center gap-5 border-t border-border pt-5">
+            <span className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground/40">
+              fuentes verificadas
+            </span>
             {sources.map((s) => (
               <div key={s.abbr} className="flex items-center gap-2">
                 <div className="flex size-8 items-center justify-center rounded-md bg-secondary text-[10px] font-extrabold text-muted-foreground">
@@ -75,37 +78,39 @@ export function SocialProof() {
       {/* Terminal */}
       <div className="hidden terminal:block">
         <div className="max-w-2xl rounded-lg border border-border bg-card p-6 font-mono sm:p-8">
-          <p className="text-[13px] leading-[2] text-muted-foreground/50">
-            # fuentes verificadas
-          </p>
-          <p className="text-[13px] leading-[2]">
-            <span className="text-primary">productividad:</span>{" "}
-            <span className="font-bold text-primary">+20-60%</span>{" "}
-            <span className="text-muted-foreground">
-              con agentes IA bien implementados
-            </span>{" "}
-            <span className="text-muted-foreground/40">// McKinsey 2025</span>
-          </p>
-          <p className="text-[13px] leading-[2]">
-            <span className="text-primary">cancelados:</span>{" "}
-            <span className="font-bold text-primary">40%+</span>{" "}
-            <span className="text-muted-foreground">
-              de proyectos IA por mala ejecucion
-            </span>{" "}
-            <span className="text-muted-foreground/40">
-              // HBR/Gartner 2025
-            </span>
-          </p>
-          <p className="text-[13px] leading-[2] text-muted-foreground/50">
-            # la diferencia esta en como se hace
-          </p>
-          <p className="text-[13px] leading-[2]">
-            <span className="text-primary">implementacion:</span>{" "}
-            <span className="text-muted-foreground">
-              profesional, local, en SLP
-            </span>{" "}
-            <span className="animate-blink text-primary">_</span>
-          </p>
+          {terminalLines.map((line, i) => {
+            if (line.type === "comment") {
+              return (
+                <p
+                  key={i}
+                  className="text-[13px] leading-[2] text-muted-foreground/50"
+                >
+                  {line.text}
+                </p>
+              );
+            }
+            if (line.type === "data") {
+              return (
+                <p key={i} className="text-[13px] leading-[2]">
+                  <span className="text-primary">{line.key}:</span>{" "}
+                  <span className="font-bold text-primary">
+                    {line.highlight}
+                  </span>{" "}
+                  <span className="text-muted-foreground">{line.text}</span>{" "}
+                  <span className="text-muted-foreground/40">{line.src}</span>
+                </p>
+              );
+            }
+            return (
+              <p key={i} className="text-[13px] leading-[2]">
+                <span className="text-primary">{line.key}:</span>{" "}
+                <span className="text-muted-foreground">{line.text}</span>{" "}
+                {line.cursor && (
+                  <span className="animate-blink text-primary">_</span>
+                )}
+              </p>
+            );
+          })}
         </div>
       </div>
     </div>

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ScrollReveal } from "@/components/shared/ScrollReveal";
+import { SocialProof } from "@/components/shared/SocialProof";
 import { Timeline } from "@/components/shared/Timeline";
 
 export const metadata: Metadata = {
@@ -111,15 +112,31 @@ export default function DiagnosticoIAPage() {
             muestro exactamente como resolverlo con inteligencia artificial.
             Sin jerga, con numeros claros.
           </p>
-          <div className="mt-5 max-w-2xl rounded-r-md border-l-2 border-primary/30 bg-primary/5 py-3 pl-4 pr-4">
-            <p className="text-xs italic leading-relaxed text-muted-foreground">
-              El 94% de las PyMEs mexicanas que implementaron inteligencia
-              artificial reportan mejora en eficiencia operativa, y el 91%
-              incremento sus ingresos.
-            </p>
-            <p className="mt-1 text-[10px] italic text-muted-foreground/60">
-              &mdash; Microsoft LATAM, 2025
-            </p>
+          <div className="mt-6">
+            <SocialProof
+              editorialQuote={
+                <p>
+                  El{" "}
+                  <strong className="font-semibold text-primary">
+                    94% de las PyMEs mexicanas
+                  </strong>{" "}
+                  que implementaron inteligencia artificial reportan mejora en
+                  eficiencia operativa, y el{" "}
+                  <strong className="font-semibold text-primary">
+                    91% incremento sus ingresos
+                  </strong>
+                  .
+                </p>
+              }
+              sources={[
+                { abbr: "MS", name: "Microsoft LATAM", year: "2025" },
+              ]}
+              terminalLines={[
+                { type: "comment", text: "# fuentes verificadas" },
+                { type: "data", key: "eficiencia", highlight: "94%", text: "PyMEs MX con IA mejoran eficiencia", src: "// Microsoft LATAM 2025" },
+                { type: "data", key: "ingresos", highlight: "91%", text: "incrementaron ingresos con IA", src: "// Microsoft LATAM 2025" },
+              ]}
+            />
           </div>
         </section>
 
@@ -285,12 +302,6 @@ export default function DiagnosticoIAPage() {
             muestro exactamente como resolverlo con inteligencia artificial.
             Sin jerga, con numeros claros.
           </p>
-          <div className="mt-4 max-w-2xl rounded-r-md border-l-2 border-primary/30 bg-primary/5 py-3 pl-4 pr-4">
-            <p className="font-mono text-[11px] italic leading-relaxed text-muted-foreground">
-              94% PyMEs MX con IA mejoran eficiencia, 91% incrementan ingresos
-              &mdash; Microsoft LATAM, 2025
-            </p>
-          </div>
         </section>
 
         {/* 3 Steps */}
