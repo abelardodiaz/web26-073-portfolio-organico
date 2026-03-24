@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useTheme } from "@/components/shared/ThemeProvider";
 
 const levels = [
@@ -32,16 +32,35 @@ const DEFAULT_LEVEL = 1; // 0-indexed: levels 0+1 active
 export function AutonomyMeter() {
   const { theme } = useTheme();
   const trackRef = useRef<HTMLDivElement>(null);
+  const resetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [activeIdx, setActiveIdx] = useState(DEFAULT_LEVEL);
   const isTerminal = theme === "terminal";
 
-  const activate = useCallback((idx: number) => {
-    setActiveIdx(idx);
+  // Clear any pending reset when unmounting
+  useEffect(() => {
+    return () => { if (resetTimer.current) clearTimeout(resetTimer.current); };
   }, []);
+
+  const cancelPendingReset = useCallback(() => {
+    if (resetTimer.current) {
+      clearTimeout(resetTimer.current);
+      resetTimer.current = null;
+    }
+  }, []);
+
+  const activate = useCallback((idx: number) => {
+    cancelPendingReset();
+    setActiveIdx(idx);
+  }, [cancelPendingReset]);
 
   const reset = useCallback(() => {
     setActiveIdx(DEFAULT_LEVEL);
   }, []);
+
+  const scheduleReset = useCallback((ms: number) => {
+    cancelPendingReset();
+    resetTimer.current = setTimeout(reset, ms);
+  }, [cancelPendingReset, reset]);
 
   // Bar: find closest dot from pointer position
   const barInteraction = useCallback(
@@ -97,8 +116,8 @@ export function AutonomyMeter() {
                 role="button"
                 tabIndex={0}
                 aria-label={`Nivel ${i + 1}`}
-                onClick={() => { activate(i); setTimeout(reset, 2000); }}
-                onKeyDown={(e) => { if (e.key === "Enter") { activate(i); setTimeout(reset, 2000); } }}
+                onClick={() => { activate(i); scheduleReset(2000); }}
+                onKeyDown={(e) => { if (e.key === "Enter") { activate(i); scheduleReset(2000); } }}
                 className={`size-4 rounded-full border-2 transition-all duration-500 cursor-pointer ${
                   i <= activeIdx ? dotLitClass : "border-border bg-background"
                 }`}
@@ -115,17 +134,15 @@ export function AutonomyMeter() {
               e.preventDefault();
               barInteraction(e.touches[0].clientX);
             }}
-            onTouchEnd={() => setTimeout(reset, 1500)}
+            onTouchEnd={() => scheduleReset(1500)}
           />
         </div>
 
-        {/* Pointer */}
+        {/* Pointer (fixed at default level) */}
         <div
-          className={`absolute -top-7 transition-all duration-500 ${
-            isTerminal ? "font-mono" : ""
-          }`}
+          className={`absolute -top-7 ${isTerminal ? "font-mono" : ""}`}
           style={{
-            left: `${DOT_POSITIONS[activeIdx]}%`,
+            left: `${DOT_POSITIONS[DEFAULT_LEVEL]}%`,
             transform: "translateX(-50%)",
           }}
         >
@@ -148,7 +165,7 @@ export function AutonomyMeter() {
               onMouseEnter={() => activate(i)}
               onMouseLeave={reset}
               onTouchStart={() => activate(i)}
-              onTouchEnd={() => setTimeout(reset, 1500)}
+              onTouchEnd={() => scheduleReset(1500)}
               className={`rounded-lg border p-3.5 transition-all duration-300 cursor-pointer ${
                 isLit
                   ? "border-primary/25 bg-primary/[0.04]"
@@ -176,7 +193,7 @@ export function AutonomyMeter() {
               >
                 {level.desc}
               </p>
-              {i <= DEFAULT_LEVEL && (
+              {i === DEFAULT_LEVEL && (
                 <span
                   className={`mt-1.5 inline-block rounded-full border border-primary px-2 py-0.5 text-[9px] font-bold text-primary ${
                     isTerminal ? "font-mono" : ""
