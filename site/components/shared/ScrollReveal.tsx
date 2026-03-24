@@ -21,7 +21,9 @@ export function ScrollReveal({
 
   useEffect(() => {
     const el = ref.current;
-    if (!el) return;
+    // Only scroll-trigger on touch devices; desktop keeps hover only
+    const isTouch = window.matchMedia("(pointer: coarse)").matches;
+    if (!isTouch || !el) return;
 
     const observer = new IntersectionObserver(
       ([entry]) => {
