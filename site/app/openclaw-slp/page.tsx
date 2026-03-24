@@ -7,6 +7,7 @@ import { ComparisonTable } from "@/components/shared/ComparisonTable";
 import { SocialProof } from "@/components/shared/SocialProof";
 import { ScrollReveal } from "@/components/shared/ScrollReveal";
 import { Timeline } from "@/components/shared/Timeline";
+import { AutonomyMeter } from "@/components/shared/AutonomyMeter";
 
 export const metadata: Metadata = {
   title: "OpenClaw en San Luis Potosi",
@@ -244,6 +245,14 @@ export default function OpenClawSLPPage() {
           </div>
         </section>
 
+        {/* Autonomy Meter */}
+        <section className="mb-16">
+          <h2 className="mb-4 text-[11px] font-semibold uppercase tracking-widest text-[var(--fg-subtle)]">
+            Segun Harvard Business Review (2026)
+          </h2>
+          <AutonomyMeter />
+        </section>
+
         {/* HBR Reference */}
         <section className="mb-16">
           <SocialProof
@@ -451,6 +460,17 @@ export default function OpenClawSLPPage() {
               // supervision: incluida en retainer mensual
             </p>
           </div>
+        </section>
+
+        {/* Autonomy Meter */}
+        <section className="mb-14">
+          <div className="mb-6 flex items-center gap-3">
+            <h2 className="font-mono text-xs font-semibold uppercase tracking-widest text-[var(--fg-subtle)]">
+              // autonomy_ladder
+            </h2>
+            <span className="h-px flex-1 bg-border" />
+          </div>
+          <AutonomyMeter />
         </section>
 
         {/* My Process */}
