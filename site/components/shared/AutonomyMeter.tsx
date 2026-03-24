@@ -1,15 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useTheme } from "@/components/shared/ThemeProvider";
 
-type Level = {
-  title: string;
-  terminalTitle: string;
-  desc: string;
-};
-
-const levels: Level[] = [
+const levels = [
   {
     title: "Te sugiere, tu decides",
     terminalTitle: "sugiere_tu_decides",
@@ -33,76 +27,26 @@ const levels: Level[] = [
 ];
 
 const DOT_POSITIONS = [12, 37, 62, 87];
-const DEFAULT_LEVEL = 1; // 0-indexed, levels 0+1 active by default
+const DEFAULT_LEVEL = 1; // 0-indexed: levels 0+1 active
 
 export function AutonomyMeter() {
   const { theme } = useTheme();
-  const wrapRef = useRef<HTMLDivElement>(null);
-  const [animated, setAnimated] = useState(false);
-  const [fillWidth, setFillWidth] = useState(0);
-  const [litCount, setLitCount] = useState(0);
-  const [visibleCards, setVisibleCards] = useState<boolean[]>([false, false, false, false]);
-  const [hoverIdx, setHoverIdx] = useState<number | null>(null);
-  const [showPointer, setShowPointer] = useState(false);
-
+  const trackRef = useRef<HTMLDivElement>(null);
+  const [activeIdx, setActiveIdx] = useState(DEFAULT_LEVEL);
   const isTerminal = theme === "terminal";
 
-  // Scroll-triggered entrance animation
-  useEffect(() => {
-    const el = wrapRef.current;
-    if (!el || animated) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry.isIntersecting) return;
-        setAnimated(true);
-        observer.unobserve(el);
-
-        // Staggered animation
-        setTimeout(() => {
-          setFillWidth(DOT_POSITIONS[0]);
-          setLitCount(1);
-          setVisibleCards((p) => { const n = [...p]; n[0] = true; return n; });
-        }, 400);
-
-        setTimeout(() => {
-          setFillWidth(DOT_POSITIONS[1]);
-          setTimeout(() => {
-            setLitCount(2);
-            setVisibleCards((p) => { const n = [...p]; n[1] = true; return n; });
-          }, 300);
-        }, 800);
-
-        setTimeout(() => setShowPointer(true), 1200);
-        setTimeout(() => setVisibleCards((p) => { const n = [...p]; n[2] = true; return n; }), 1400);
-        setTimeout(() => setVisibleCards((p) => { const n = [...p]; n[3] = true; return n; }), 1600);
-      },
-      { threshold: 0.3 }
-    );
-
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [animated]);
-
-  const activateLevel = useCallback((idx: number) => {
-    if (!animated) return;
-    setHoverIdx(idx);
-    setFillWidth(DOT_POSITIONS[idx]);
-    setLitCount(idx + 1);
-  }, [animated]);
-
-  const resetLevel = useCallback(() => {
-    setHoverIdx(null);
-    setFillWidth(DOT_POSITIONS[DEFAULT_LEVEL]);
-    setLitCount(DEFAULT_LEVEL + 1);
+  const activate = useCallback((idx: number) => {
+    setActiveIdx(idx);
   }, []);
 
-  // Bar interaction: find closest dot from mouse/touch position
-  const handleBarInteraction = useCallback(
+  const reset = useCallback(() => {
+    setActiveIdx(DEFAULT_LEVEL);
+  }, []);
+
+  // Bar: find closest dot from pointer position
+  const barInteraction = useCallback(
     (clientX: number) => {
-      const el = wrapRef.current;
-      if (!el || !animated) return;
-      const track = el.querySelector("[data-track]") as HTMLElement;
+      const track = trackRef.current;
       if (!track) return;
       const rect = track.getBoundingClientRect();
       const pct = ((clientX - rect.left) / rect.width) * 100;
@@ -115,9 +59,9 @@ export function AutonomyMeter() {
           closest = i;
         }
       }
-      activateLevel(closest);
+      activate(closest);
     },
-    [animated, activateLevel]
+    [activate]
   );
 
   const gradientClass = isTerminal
@@ -135,56 +79,53 @@ export function AutonomyMeter() {
   const badgeText = isTerminal ? "$ start_here" : "Aqui empezamos contigo";
 
   return (
-    <div ref={wrapRef}>
+    <div>
       {/* Meter track */}
       <div className="relative mb-8 px-[7px]">
-        <div data-track className="relative h-1 rounded-full bg-border">
+        <div ref={trackRef} className="relative h-1 rounded-full bg-border">
           {/* Fill */}
           <div
-            className={`absolute left-0 top-0 h-full rounded-full transition-[width] duration-[1.5s] ease-[cubic-bezier(0.22,1,0.36,1)] ${gradientClass} ${glowClass}`}
-            style={{ width: `${fillWidth}%` }}
+            className={`absolute left-0 top-0 h-full rounded-full transition-[width] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] ${gradientClass} ${glowClass}`}
+            style={{ width: `${DOT_POSITIONS[activeIdx]}%` }}
           />
 
           {/* Dots */}
           <div className="absolute inset-x-0 top-1/2 flex -translate-y-1/2 justify-between">
             {DOT_POSITIONS.map((_, i) => (
-              <button
+              <div
                 key={i}
-                type="button"
+                role="button"
+                tabIndex={0}
                 aria-label={`Nivel ${i + 1}`}
-                onClick={() => {
-                  activateLevel(i);
-                  setTimeout(resetLevel, 2000);
-                }}
+                onClick={() => { activate(i); setTimeout(reset, 2000); }}
+                onKeyDown={(e) => { if (e.key === "Enter") { activate(i); setTimeout(reset, 2000); } }}
                 className={`size-4 rounded-full border-2 transition-all duration-500 cursor-pointer ${
-                  i < litCount
-                    ? dotLitClass
-                    : "border-border bg-background"
+                  i <= activeIdx ? dotLitClass : "border-border bg-background"
                 }`}
               />
             ))}
           </div>
 
-          {/* Invisible hit zone */}
+          {/* Hit zone for bar interaction */}
           <div
             className="absolute -top-3 left-0 right-0 h-8 z-10 cursor-pointer"
-            onMouseMove={(e) => handleBarInteraction(e.clientX)}
-            onMouseLeave={resetLevel}
+            onMouseMove={(e) => barInteraction(e.clientX)}
+            onMouseLeave={reset}
             onTouchMove={(e) => {
               e.preventDefault();
-              handleBarInteraction(e.touches[0].clientX);
+              barInteraction(e.touches[0].clientX);
             }}
-            onTouchEnd={() => setTimeout(resetLevel, 1500)}
+            onTouchEnd={() => setTimeout(reset, 1500)}
           />
         </div>
 
         {/* Pointer */}
         <div
-          className={`absolute -top-7 transition-all duration-400 ${
-            showPointer ? "opacity-100" : "opacity-0"
-          } ${isTerminal ? "font-mono" : ""}`}
+          className={`absolute -top-7 transition-all duration-500 ${
+            isTerminal ? "font-mono" : ""
+          }`}
           style={{
-            left: `${hoverIdx !== null ? DOT_POSITIONS[hoverIdx] : DOT_POSITIONS[DEFAULT_LEVEL]}%`,
+            left: `${DOT_POSITIONS[activeIdx]}%`,
             transform: "translateX(-50%)",
           }}
         >
@@ -198,29 +139,21 @@ export function AutonomyMeter() {
       {/* Level cards */}
       <div className="grid gap-2.5 sm:grid-cols-4">
         {levels.map((level, i) => {
-          const isActive = i <= DEFAULT_LEVEL;
-          const isHighlighted = hoverIdx !== null && i <= hoverIdx;
-          const isDimmed = !isActive && hoverIdx === null;
+          const isLit = i <= activeIdx;
+          const isDimmed = i > DEFAULT_LEVEL && i > activeIdx;
 
           return (
             <div
               key={i}
-              onMouseEnter={() => activateLevel(i)}
-              onMouseLeave={resetLevel}
-              onTouchStart={() => activateLevel(i)}
-              onTouchEnd={() => setTimeout(resetLevel, 1500)}
+              onMouseEnter={() => activate(i)}
+              onMouseLeave={reset}
+              onTouchStart={() => activate(i)}
+              onTouchEnd={() => setTimeout(reset, 1500)}
               className={`rounded-lg border p-3.5 transition-all duration-300 cursor-pointer ${
-                isHighlighted
-                  ? "border-primary/25 bg-primary/[0.04] opacity-100"
-                  : isActive
-                    ? "border-primary/20 bg-primary/[0.03] opacity-100"
-                    : "border-transparent opacity-100"
-              } ${isDimmed ? "!opacity-40" : ""} ${
-                visibleCards[i]
-                  ? "translate-y-0 opacity-100"
-                  : "translate-y-2.5 !opacity-0"
-              } hover:!opacity-100 hover:border-primary/30 hover:bg-primary/[0.05]`}
-              style={{ transitionDelay: visibleCards[i] ? "0ms" : `${i * 100}ms` }}
+                isLit
+                  ? "border-primary/25 bg-primary/[0.04]"
+                  : "border-transparent"
+              } ${isDimmed ? "opacity-40" : "opacity-100"} hover:opacity-100 hover:border-primary/30 hover:bg-primary/[0.05]`}
             >
               <p
                 className={`mb-1 text-[10px] font-bold tracking-wider text-primary ${
