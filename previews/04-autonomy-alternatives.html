@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Preview: 3 Alternativas Escalera de Autonomia</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: #09090b; color: #fafafa; }
+
+  .theme-toggle {
+    position: fixed; top: 12px; right: 16px; z-index: 100;
+    display: flex; gap: 6px;
+  }
+  .theme-toggle button {
+    padding: 5px 12px; border: 1px solid #3f3f46; border-radius: 6px;
+    background: transparent; color: #a1a1aa; font-size: 11px;
+    font-family: system-ui; cursor: pointer; transition: all 0.2s;
+  }
+  .theme-toggle button.on { color: #ea580c; border-color: #ea580c; background: rgba(234,88,12,0.08); }
+  body.light { background: #fafaf9; color: #1c1917; }
+  body.light .theme-toggle button { border-color: #d6d3d1; color: #78716c; }
+  body.light .theme-toggle button.on { color: #ea580c; border-color: #ea580c; }
+
+  /* ── Shared ── */
+  .section { max-width: 740px; margin: 0 auto; padding: 48px 24px; }
+  .section-label {
+    font-size: 11px; font-weight: 700; letter-spacing: 3px;
+    text-transform: uppercase; color: #ea580c; margin-bottom: 8px;
+  }
+  .section h2 { font-size: 14px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: #52525b; margin-bottom: 6px; }
+  .section h3 { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 6px; }
+  .section .sub { font-size: 13px; color: #71717a; margin-bottom: 32px; line-height: 1.5; }
+  body.light .section .sub { color: #78716c; }
+  body.light .section h2 { color: #a8a29e; }
+
+  .divider { height: 1px; background: #27272a; max-width: 740px; margin: 0 auto; }
+  body.light .divider { background: #e7e5e4; }
+
+  .option-tag {
+    display: inline-block; padding: 3px 10px; border-radius: 4px;
+    font-size: 11px; font-weight: 700; letter-spacing: 1px;
+    background: #ea580c; color: #fff; margin-bottom: 20px;
+  }
+
+  /* ══════════════════════════════════════════════════
+     OPCION 2: Horizontal Stepper
+     ══════════════════════════════════════════════════ */
+  .h-stepper {
+    display: flex; gap: 0; position: relative; overflow-x: auto;
+    padding-bottom: 8px;
+  }
+  .h-step {
+    flex: 1; min-width: 150px; position: relative;
+    padding: 0 12px;
+    opacity: 0; transform: translateY(12px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+  }
+  .h-step.visible { opacity: 1; transform: translateY(0); }
+  .h-step:nth-child(2) { transition-delay: 150ms; }
+  .h-step:nth-child(3) { transition-delay: 300ms; }
+  .h-step:nth-child(4) { transition-delay: 450ms; }
+
+  .h-step-top {
+    display: flex; align-items: center; margin-bottom: 12px; height: 20px;
+  }
+  .h-dot {
+    width: 14px; height: 14px; border-radius: 50%; shrink: 0;
+    border: 2px solid #3f3f46; background: #09090b;
+    transition: all 0.4s; flex-shrink: 0;
+  }
+  body.light .h-dot { background: #fafaf9; border-color: #d6d3d1; }
+  .h-step.visible .h-dot { border-color: #ea580c; background: #ea580c; box-shadow: 0 0 8px rgba(234,88,12,0.3); }
+  .h-line {
+    flex: 1; height: 2px; background: #27272a; margin-left: 6px;
+    position: relative; overflow: hidden;
+  }
+  body.light .h-line { background: #e7e5e4; }
+  .h-line::after {
+    content: ''; position: absolute; left: 0; top: 0;
+    height: 100%; width: 0; background: #ea580c;
+    transition: width 1s ease 0.3s;
+  }
+  .h-step.visible .h-line::after { width: 100%; }
+  .h-step:last-child .h-line { display: none; }
+
+  .h-step-num { font-size: 10px; font-weight: 700; color: #ea580c; letter-spacing: 1px; margin-bottom: 3px; }
+  .h-step-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+  .h-step-desc { font-size: 12px; color: #a1a1aa; line-height: 1.5; }
+  body.light .h-step-desc { color: #78716c; }
+
+  .h-badge {
+    display: inline-block; margin-top: 8px; padding: 3px 10px;
+    border: 1px solid #ea580c; border-radius: 14px;
+    font-size: 10px; font-weight: 600; color: #ea580c;
+  }
+
+  /* ══════════════════════════════════════════════════
+     OPCION 3: Meter / Gauge
+     ══════════════════════════════════════════════════ */
+  .meter-wrap { max-width: 560px; }
+  .meter-track {
+    position: relative; height: 6px; background: #27272a;
+    border-radius: 3px; margin-bottom: 32px; overflow: visible;
+  }
+  body.light .meter-track { background: #e7e5e4; }
+  .meter-fill {
+    position: absolute; left: 0; top: 0; height: 100%;
+    width: 0; border-radius: 3px;
+    background: linear-gradient(90deg, #ea580c, #f97316, #fb923c);
+    transition: width 1.5s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .meter-track.visible .meter-fill { width: 37%; }
+
+  .meter-marks {
+    position: absolute; top: -4px; left: 0; right: 0; height: 14px;
+    display: flex; justify-content: space-between;
+  }
+  .meter-mark {
+    width: 14px; height: 14px; border-radius: 50%;
+    border: 2px solid #3f3f46; background: #09090b;
+    transition: all 0.4s;
+    position: relative;
+  }
+  body.light .meter-mark { background: #fafaf9; border-color: #d6d3d1; }
+  .meter-track.visible .meter-mark:nth-child(1),
+  .meter-track.visible .meter-mark:nth-child(2) {
+    border-color: #ea580c; background: #ea580c;
+    box-shadow: 0 0 8px rgba(234,88,12,0.3);
+  }
+
+  .meter-pointer {
+    position: absolute; top: -28px; left: 37%;
+    transform: translateX(-50%);
+    font-size: 10px; font-weight: 700; color: #ea580c;
+    letter-spacing: 0.5px; white-space: nowrap;
+    opacity: 0; transition: opacity 0.5s ease 1s;
+  }
+  .meter-track.visible .meter-pointer { opacity: 1; }
+
+  .meter-levels { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 8px; }
+  .meter-level {
+    opacity: 0; transform: translateY(8px);
+    transition: opacity 0.4s, transform 0.4s;
+  }
+  .meter-level.visible { opacity: 1; transform: translateY(0); }
+  .meter-level:nth-child(2) { transition-delay: 100ms; }
+  .meter-level:nth-child(3) { transition-delay: 200ms; }
+  .meter-level:nth-child(4) { transition-delay: 300ms; }
+
+  .meter-level-num { font-size: 10px; font-weight: 700; color: #ea580c; margin-bottom: 3px; }
+  .meter-level-title { font-size: 13px; font-weight: 600; margin-bottom: 3px; }
+  .meter-level-desc { font-size: 11px; color: #a1a1aa; line-height: 1.4; }
+  body.light .meter-level-desc { color: #78716c; }
+
+  .meter-level.active { padding: 10px; border-radius: 8px; border: 1px solid rgba(234,88,12,0.25); background: rgba(234,88,12,0.04); }
+  .meter-level.inactive { opacity: 0.5; }
+  .meter-level.inactive.visible { opacity: 0.45; }
+
+  /* ══════════════════════════════════════════════════
+     OPCION 4: Integrado en HITL block
+     ══════════════════════════════════════════════════ */
+  .hitl-card {
+    border: 1px solid #27272a; border-radius: 10px;
+    background: #0f0f11; padding: 24px; max-width: 560px;
+  }
+  body.light .hitl-card { border-color: #e7e5e4; background: #fafaf9; }
+
+  .hitl-text { font-size: 14px; color: #a1a1aa; line-height: 1.7; margin-bottom: 20px; }
+  body.light .hitl-text { color: #78716c; }
+  .hitl-text strong { color: #fafafa; font-weight: 600; }
+  body.light .hitl-text strong { color: #1c1917; }
+
+  .hitl-levels { display: flex; flex-direction: column; gap: 0; }
+  .hitl-level {
+    display: grid; grid-template-columns: 32px 1fr; gap: 8px;
+    padding: 10px 0; border-top: 1px solid #1a1a1e;
+    opacity: 0; transform: translateX(-8px);
+    transition: opacity 0.4s, transform 0.4s;
+  }
+  body.light .hitl-level { border-color: #f5f5f4; }
+  .hitl-level.visible { opacity: 1; transform: translateX(0); }
+  .hitl-level:nth-child(2) { transition-delay: 100ms; }
+  .hitl-level:nth-child(3) { transition-delay: 200ms; }
+  .hitl-level:nth-child(4) { transition-delay: 300ms; }
+
+  .hitl-level:first-child { border-top: none; }
+
+  .hitl-num {
+    font-size: 11px; font-weight: 700; color: #ea580c;
+    padding-top: 2px;
+  }
+  .hitl-title { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+  .hitl-desc { font-size: 12px; color: #71717a; line-height: 1.4; }
+  body.light .hitl-desc { color: #a8a29e; }
+
+  .hitl-level.here .hitl-title::after {
+    content: ' <<';
+    font-size: 10px; color: #ea580c; font-weight: 700;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 640px) {
+    .h-stepper { flex-direction: column; gap: 0; }
+    .h-step { min-width: auto; padding: 0 0 16px 32px; }
+    .h-step-top {
+      position: absolute; left: 0; top: 0;
+      flex-direction: column; height: auto; width: 20px;
+    }
+    .h-line { width: 2px !important; height: 100% !important; margin: 6px 0 0 0 !important; min-height: 40px; }
+    .h-line::after { height: 0 !important; width: 100% !important; }
+    .h-step.visible .h-line::after { height: 100% !important; width: 100% !important; }
+    .h-step:last-child .h-line { display: block; }
+
+    .meter-levels { grid-template-columns: 1fr 1fr; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::after { transition: none !important; }
+    .h-step, .meter-level, .hitl-level { opacity: 1; transform: none; }
+    .meter-fill { width: 37% !important; }
+    .meter-pointer { opacity: 1 !important; }
+    .h-line::after { width: 100% !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="theme-toggle">
+  <button class="on" onclick="toggleLight(this)">Light / Dark</button>
+</div>
+
+<!-- ═══════════ OPCION 2: Horizontal Stepper ═══════════ -->
+<div class="section">
+  <div class="option-tag">OPCION 2: HORIZONTAL STEPPER</div>
+  <h2>Autonomia supervisada</h2>
+  <h3>Niveles de autonomia</h3>
+  <div class="sub">Segun Harvard Business Review (2026). Empezamos en el nivel que tu negocio necesita.</div>
+
+  <div class="h-stepper" id="stepper">
+    <div class="h-step">
+      <div class="h-step-top">
+        <div class="h-dot"></div>
+        <div class="h-line"></div>
+      </div>
+      <div class="h-step-num">01</div>
+      <div class="h-step-title">Output asistido</div>
+      <div class="h-step-desc">El agente genera borradores y resumenes. Tu revisas antes de actuar.</div>
+      <div class="h-badge">Aqui empezamos</div>
+    </div>
+    <div class="h-step">
+      <div class="h-step-top">
+        <div class="h-dot"></div>
+        <div class="h-line"></div>
+      </div>
+      <div class="h-step-num">02</div>
+      <div class="h-step-title">Consulta con guardrails</div>
+      <div class="h-step-desc">Responde con informacion verificada de tu negocio.</div>
+      <div class="h-badge">Aqui empezamos</div>
+    </div>
+    <div class="h-step">
+      <div class="h-step-top">
+        <div class="h-dot"></div>
+        <div class="h-line"></div>
+      </div>
+      <div class="h-step-num">03</div>
+      <div class="h-step-title">Acciones supervisadas</div>
+      <div class="h-step-desc">Propone acciones pero tu confirmas antes de ejecutar.</div>
+    </div>
+    <div class="h-step">
+      <div class="h-step-top">
+        <div class="h-dot"></div>
+      </div>
+      <div class="h-step-num">04</div>
+      <div class="h-step-title">Autonomia acotada</div>
+      <div class="h-step-desc">Ejecuta solo, dentro de limites que tu defines.</div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ═══════════ OPCION 3: Meter / Gauge ═══════════ -->
+<div class="section">
+  <div class="option-tag">OPCION 3: METER / GAUGE</div>
+  <h2>Autonomia supervisada</h2>
+  <h3>Donde empezamos</h3>
+  <div class="sub">Tu negocio arranca con supervision humana. Con el tiempo, sueltas control.</div>
+
+  <div class="meter-wrap">
+    <div class="meter-track" id="meter">
+      <div class="meter-fill"></div>
+      <div class="meter-marks">
+        <div class="meter-mark"></div>
+        <div class="meter-mark"></div>
+        <div class="meter-mark"></div>
+        <div class="meter-mark"></div>
+      </div>
+      <div class="meter-pointer">Tu empiezas aqui</div>
+    </div>
+
+    <div class="meter-levels" id="meter-levels">
+      <div class="meter-level active">
+        <div class="meter-level-num">01</div>
+        <div class="meter-level-title">Output asistido</div>
+        <div class="meter-level-desc">Borradores y resumenes. Tu revisas.</div>
+      </div>
+      <div class="meter-level active">
+        <div class="meter-level-num">02</div>
+        <div class="meter-level-title">Consulta con guardrails</div>
+        <div class="meter-level-desc">Responde con datos verificados.</div>
+      </div>
+      <div class="meter-level inactive">
+        <div class="meter-level-num">03</div>
+        <div class="meter-level-title">Acciones supervisadas</div>
+        <div class="meter-level-desc">Propone, tu confirmas.</div>
+      </div>
+      <div class="meter-level inactive">
+        <div class="meter-level-num">04</div>
+        <div class="meter-level-title">Autonomia acotada</div>
+        <div class="meter-level-desc">Ejecuta dentro de limites.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ═══════════ OPCION 4: Integrado en HITL block ═══════════ -->
+<div class="section">
+  <div class="option-tag">OPCION 4: INTEGRADO EN HITL BLOCK</div>
+  <h2>Autonomia supervisada</h2>
+  <h3>Tu decides el ritmo</h3>
+  <div class="sub">En vez de seccion separada, los niveles viven dentro del bloque HITL que ya existe.</div>
+
+  <div class="hitl-card" id="hitl">
+    <div class="hitl-text">
+      Todo asistente arranca con aprobacion humana para acciones criticas.
+      Enviar correos, modificar datos, procesar pagos &mdash; siempre pasa
+      por tu equipo antes de ejecutarse. Con el tiempo y la confianza, vas
+      soltando control. Pero <strong>tu decides cuando</strong>.
+    </div>
+
+    <div class="hitl-levels">
+      <div class="hitl-level here">
+        <div class="hitl-num">01</div>
+        <div>
+          <div class="hitl-title">Output asistido</div>
+          <div class="hitl-desc">Genera borradores y resumenes. Tu revisas.</div>
+        </div>
+      </div>
+      <div class="hitl-level here">
+        <div class="hitl-num">02</div>
+        <div>
+          <div class="hitl-title">Consulta con guardrails</div>
+          <div class="hitl-desc">Responde con datos verificados de tu negocio.</div>
+        </div>
+      </div>
+      <div class="hitl-level">
+        <div class="hitl-num">03</div>
+        <div>
+          <div class="hitl-title">Acciones supervisadas</div>
+          <div class="hitl-desc">Propone acciones. Tu confirmas antes de ejecutar.</div>
+        </div>
+      </div>
+      <div class="hitl-level">
+        <div class="hitl-num">04</div>
+        <div>
+          <div class="hitl-title">Autonomia acotada</div>
+          <div class="hitl-desc">Ejecuta solo, dentro de limites que tu defines.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div style="height: 80px;"></div>
+
+<script>
+function toggleLight(btn) {
+  document.body.classList.toggle('light');
+  btn.classList.toggle('on');
+}
+
+// Intersection observer
+var observer = new IntersectionObserver(function(entries) {
+  entries.forEach(function(e) {
+    if (e.isIntersecting) {
+      // H-stepper steps
+      e.target.querySelectorAll('.h-step').forEach(function(s) { s.classList.add('visible'); });
+      // Meter
+      if (e.target.classList.contains('meter-track')) e.target.classList.add('visible');
+      // Meter levels
+      e.target.querySelectorAll('.meter-level').forEach(function(s) { s.classList.add('visible'); });
+      // HITL levels
+      e.target.querySelectorAll('.hitl-level').forEach(function(s) { s.classList.add('visible'); });
+    }
+  });
+}, { threshold: 0.15 });
+
+observer.observe(document.getElementById('stepper'));
+observer.observe(document.getElementById('meter'));
+observer.observe(document.getElementById('meter-levels'));
+observer.observe(document.getElementById('hitl'));
+</script>
+</body>
+</html>

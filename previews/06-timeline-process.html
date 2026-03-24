@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Muestra: Timeline de Proceso (Diagnostico)</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #09090b; color: #fafafa; }
+
+  .spacer { height: 50vh; display: flex; align-items: center; justify-content: center; }
+  .spacer p { color: #52525b; font-size: 14px; letter-spacing: 2px; text-transform: uppercase; }
+
+  .section { padding: 60px 40px; max-width: 700px; margin: 0 auto; }
+  .section-label {
+    font-size: 11px; font-weight: 600; letter-spacing: 3px;
+    text-transform: uppercase; color: #52525b; margin-bottom: 32px;
+  }
+  .section h2 { font-size: 24px; font-weight: 700; margin-bottom: 32px; letter-spacing: -0.5px; }
+
+  /* Timeline */
+  .timeline { position: relative; padding-left: 56px; }
+  .timeline-line {
+    position: absolute; left: 23px; top: 24px; width: 2px; bottom: 24px;
+    background: #27272a;
+  }
+  .timeline-line-fill {
+    position: absolute; left: 23px; top: 24px; width: 2px; height: 0;
+    background: linear-gradient(180deg, #ea580c, #f97316);
+    transition: height 2s cubic-bezier(0.22, 1, 0.36, 1);
+    border-radius: 1px;
+    z-index: 1;
+  }
+
+  .tl-step { position: relative; padding-bottom: 48px; }
+  .tl-step:last-child { padding-bottom: 0; }
+
+  .tl-dot {
+    position: absolute; left: -41px; top: 0;
+    width: 24px; height: 24px; border-radius: 50%;
+    background: #18181b; border: 2px solid #3f3f46;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; color: #52525b;
+    transition: all 0.6s ease; z-index: 2;
+  }
+  .tl-step.active .tl-dot {
+    border-color: #ea580c; color: #ea580c;
+    box-shadow: 0 0 16px rgba(234, 88, 12, 0.3);
+    background: #09090b;
+  }
+
+  .tl-content {
+    opacity: 0; transform: translateY(12px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+  .tl-step.active .tl-content { opacity: 1; transform: translateY(0); }
+
+  .tl-title { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+  .tl-desc { font-size: 13px; color: #a1a1aa; line-height: 1.7; }
+  .tl-tag {
+    display: inline-block; margin-top: 10px; padding: 3px 10px;
+    border-radius: 6px; background: rgba(234, 88, 12, 0.08);
+    font-size: 11px; color: #ea580c; font-weight: 600;
+  }
+
+  /* Pulse on active dot */
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(234, 88, 12, 0.4); }
+    70% { box-shadow: 0 0 0 12px rgba(234, 88, 12, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(234, 88, 12, 0); }
+  }
+  .tl-step.active .tl-dot { animation: pulse 2s ease-in-out infinite; }
+
+  /* Terminal variant */
+  .terminal .tl-dot { font-family: 'Courier New', monospace; }
+  .terminal .tl-step.active .tl-dot {
+    border-color: #10b981; color: #10b981;
+    box-shadow: 0 0 16px rgba(16, 185, 129, 0.3);
+    animation-name: pulse-green;
+  }
+  @keyframes pulse-green {
+    0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+    70% { box-shadow: 0 0 0 12px rgba(16, 185, 129, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+  }
+  .terminal .timeline-line-fill {
+    background: linear-gradient(180deg, #10b981, #34d399);
+  }
+  .terminal .tl-title { font-family: 'Courier New', monospace; font-size: 14px; }
+  .terminal .tl-desc { font-family: 'Courier New', monospace; font-size: 12px; }
+  .terminal .tl-tag {
+    background: rgba(16, 185, 129, 0.08); color: #10b981;
+    font-family: 'Courier New', monospace; border-radius: 3px;
+  }
+
+  .divider { height: 1px; background: #27272a; margin: 60px auto; max-width: 620px; }
+</style>
+</head>
+<body>
+
+<div class="spacer"><p>Scroll hacia abajo</p></div>
+
+<!-- Editorial -->
+<div class="section">
+  <div class="section-label">Editorial Theme</div>
+  <h2>Como funciona el diagnostico</h2>
+
+  <div class="timeline" id="timeline-ed">
+    <div class="timeline-line"></div>
+    <div class="timeline-line-fill" id="line-fill-ed"></div>
+
+    <div class="tl-step">
+      <div class="tl-dot">01</div>
+      <div class="tl-content">
+        <div class="tl-title">Platicamos sobre tu negocio</div>
+        <div class="tl-desc">Una entrevista de 1-2 horas donde entiendo como opera tu empresa, que tareas consumen mas tiempo y donde esta el cuello de botella.</div>
+        <div class="tl-tag">Presencial o remota</div>
+      </div>
+    </div>
+
+    <div class="tl-step">
+      <div class="tl-dot">02</div>
+      <div class="tl-content">
+        <div class="tl-title">Identifico 3-5 oportunidades</div>
+        <div class="tl-desc">Analizo tus procesos y detecto las tareas que una maquina podria hacer por ti: respuestas a clientes, reportes, cotizaciones, seguimiento.</div>
+        <div class="tl-tag">Analisis personalizado</div>
+      </div>
+    </div>
+
+    <div class="tl-step">
+      <div class="tl-dot">03</div>
+      <div class="tl-content">
+        <div class="tl-title">Te entrego un reporte con numeros</div>
+        <div class="tl-desc">Recibes un documento con cada oportunidad, cuantas horas te ahorraria por semana, y los pasos concretos para implementarlo.</div>
+        <div class="tl-tag">Sin compromiso de continuidad</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- Terminal -->
+<div class="section terminal">
+  <div class="section-label" style="font-family: 'Courier New', monospace;">// como_funciona</div>
+  <h2 style="font-family: 'Courier New', monospace; font-size: 20px;">diagnostico_ia.process()</h2>
+
+  <div class="timeline" id="timeline-tm">
+    <div class="timeline-line"></div>
+    <div class="timeline-line-fill" id="line-fill-tm"></div>
+
+    <div class="tl-step">
+      <div class="tl-dot">01</div>
+      <div class="tl-content">
+        <div class="tl-title">$ interview --duration 1-2h</div>
+        <div class="tl-desc">Entiendo como opera tu empresa. Que tareas consumen mas tiempo. Donde esta el cuello de botella.</div>
+        <div class="tl-tag">presencial || remoto</div>
+      </div>
+    </div>
+
+    <div class="tl-step">
+      <div class="tl-dot">02</div>
+      <div class="tl-content">
+        <div class="tl-title">$ analyze --find-opportunities 3-5</div>
+        <div class="tl-desc">Detecto tareas automatizables: respuestas, reportes, cotizaciones, seguimiento.</div>
+        <div class="tl-tag">custom_analysis</div>
+      </div>
+    </div>
+
+    <div class="tl-step">
+      <div class="tl-dot">03</div>
+      <div class="tl-content">
+        <div class="tl-title">$ deliver --report --with-numbers</div>
+        <div class="tl-desc">Documento con cada oportunidad, ahorro estimado/semana, pasos de implementacion.</div>
+        <div class="tl-tag">--no-commitment</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="spacer"><p>Fin de la muestra</p></div>
+
+<script>
+const tlObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      // Animate steps
+      const steps = entry.target.querySelectorAll('.tl-step');
+      steps.forEach((step, i) => {
+        setTimeout(() => step.classList.add('active'), i * 500);
+      });
+
+      // Animate line fill
+      const lineFill = entry.target.querySelector('.timeline-line-fill');
+      const lastDot = steps[steps.length - 1]?.querySelector('.tl-dot');
+      if (lineFill && lastDot) {
+        setTimeout(() => {
+          lineFill.style.height = (lastDot.offsetTop - steps[0].querySelector('.tl-dot').offsetTop) + 'px';
+        }, 200);
+      }
+
+      tlObserver.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.15 });
+
+document.querySelectorAll('.timeline').forEach(el => tlObserver.observe(el));
+</script>
+</body>
+</html>

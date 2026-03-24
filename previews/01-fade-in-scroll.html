@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Muestra: Fade-in on Scroll</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #09090b; color: #fafafa; }
+
+  .spacer { height: 60vh; display: flex; align-items: center; justify-content: center; }
+  .spacer p { color: #52525b; font-size: 14px; letter-spacing: 2px; text-transform: uppercase; }
+
+  .section { padding: 80px 40px; max-width: 900px; margin: 0 auto; }
+  .section h2 { font-size: 28px; font-weight: 700; margin-bottom: 12px; letter-spacing: -0.5px; }
+  .section p { color: #a1a1aa; line-height: 1.7; font-size: 16px; }
+
+  /* Fade-in animation */
+  .fade-in {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+  }
+  .fade-in.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Stagger children */
+  .stagger .fade-in:nth-child(1) { transition-delay: 0ms; }
+  .stagger .fade-in:nth-child(2) { transition-delay: 120ms; }
+  .stagger .fade-in:nth-child(3) { transition-delay: 240ms; }
+  .stagger .fade-in:nth-child(4) { transition-delay: 360ms; }
+
+  .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 32px; }
+  .card {
+    border: 1px solid #27272a;
+    border-radius: 12px;
+    padding: 28px;
+    background: #18181b;
+    transition: border-color 0.3s, box-shadow 0.3s;
+  }
+  .card:hover {
+    border-color: #ea580c;
+    box-shadow: 0 0 20px rgba(234, 88, 12, 0.08);
+  }
+  .card h3 { font-size: 15px; font-weight: 600; margin-bottom: 8px; }
+  .card p { font-size: 13px; color: #71717a; line-height: 1.6; }
+  .card .tag { display: inline-block; margin-top: 12px; font-size: 11px; color: #ea580c; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+
+  @media (max-width: 600px) { .cards { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<div class="spacer"><p>Scroll hacia abajo</p></div>
+
+<div class="section">
+  <div class="fade-in">
+    <h2>Servicios IA en San Luis Potosi</h2>
+    <p>Encuentro donde tu empresa pierde tiempo y te muestro como resolverlo con inteligencia artificial.</p>
+  </div>
+
+  <div class="cards stagger">
+    <div class="card fade-in">
+      <h3>Comercio y Retail</h3>
+      <p>Un asistente que responde WhatsApp automaticamente con informacion real de tu inventario y precios.</p>
+      <span class="tag">~70-80% menos carga manual</span>
+    </div>
+    <div class="card fade-in">
+      <h3>Clinicas y Despachos</h3>
+      <p>Agenda citas, envia recordatorios automaticos y reagenda sin intervencion humana.</p>
+      <span class="tag">20-30% menos cancelaciones</span>
+    </div>
+    <div class="card fade-in">
+      <h3>Logistica y Distribucion</h3>
+      <p>Cotizaciones al instante y seguimiento de envios en tiempo real.</p>
+      <span class="tag">De 2 hrs a 90 seg por cotizacion</span>
+    </div>
+    <div class="card fade-in">
+      <h3>Manufactura y Automotriz</h3>
+      <p>Reportes diarios automaticos y alertas en tiempo real de anomalias.</p>
+      <span class="tag">Reportes listos antes de llegar</span>
+    </div>
+  </div>
+</div>
+
+<div class="spacer"><p>Fin de la muestra</p></div>
+
+<script>
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+    }
+  });
+}, { threshold: 0.15 });
+
+document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>

@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Muestra: Barras Animadas + Donut Chart</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #09090b; color: #fafafa; }
+
+  .spacer { height: 50vh; display: flex; align-items: center; justify-content: center; }
+  .spacer p { color: #52525b; font-size: 14px; letter-spacing: 2px; text-transform: uppercase; }
+
+  .section { padding: 60px 40px; max-width: 800px; margin: 0 auto; }
+  .section-label {
+    font-size: 11px; font-weight: 600; letter-spacing: 3px;
+    text-transform: uppercase; color: #52525b; margin-bottom: 40px;
+  }
+
+  /* Barras horizontales */
+  .bar-group { margin-bottom: 28px; }
+  .bar-label { display: flex; justify-content: space-between; margin-bottom: 8px; }
+  .bar-label span:first-child { font-size: 14px; font-weight: 500; }
+  .bar-label span:last-child { font-size: 14px; font-weight: 700; color: #ea580c; }
+  .bar-track { height: 8px; background: #27272a; border-radius: 4px; overflow: hidden; }
+  .bar-fill {
+    height: 100%; border-radius: 4px; width: 0;
+    transition: width 1.5s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .bar-fill.orange { background: linear-gradient(90deg, #ea580c, #f97316); }
+  .bar-fill.red { background: linear-gradient(90deg, #dc2626, #ef4444); }
+  .bar-fill.green { background: linear-gradient(90deg, #059669, #10b981); }
+  .bar-fill.blue { background: linear-gradient(90deg, #2563eb, #3b82f6); }
+
+  .bar-source { font-size: 11px; color: #3f3f46; margin-top: 4px; }
+
+  /* Donut chart */
+  .donut-container { display: flex; gap: 60px; align-items: center; margin-top: 60px; }
+  .donut-wrap { position: relative; width: 160px; height: 160px; flex-shrink: 0; }
+  .donut-svg { transform: rotate(-90deg); }
+  .donut-bg { fill: none; stroke: #27272a; stroke-width: 10; }
+  .donut-fill {
+    fill: none; stroke-width: 10; stroke-linecap: round;
+    stroke-dasharray: 408; stroke-dashoffset: 408;
+    transition: stroke-dashoffset 2s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .donut-fill.active-orange { stroke: #ea580c; }
+  .donut-fill.active-green { stroke: #10b981; }
+  .donut-center {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    text-align: center;
+  }
+  .donut-center .value { font-size: 36px; font-weight: 800; letter-spacing: -1px; }
+  .donut-center .unit { font-size: 12px; color: #71717a; margin-top: 2px; }
+  .donut-text h3 { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+  .donut-text p { font-size: 13px; color: #a1a1aa; line-height: 1.6; }
+  .donut-text .source { font-size: 11px; color: #3f3f46; margin-top: 8px; }
+
+  .divider { height: 1px; background: #27272a; margin: 60px 0; }
+
+  @media (max-width: 600px) { .donut-container { flex-direction: column; align-items: flex-start; } }
+</style>
+</head>
+<body>
+
+<div class="spacer"><p>Scroll hacia abajo</p></div>
+
+<div class="section">
+  <div class="section-label">Barras animadas - Datos de impacto</div>
+
+  <div class="bar-group" data-animate>
+    <div class="bar-label">
+      <span>PyMEs con IA mejoran eficiencia</span>
+      <span>94%</span>
+    </div>
+    <div class="bar-track">
+      <div class="bar-fill orange" data-width="94"></div>
+    </div>
+    <div class="bar-source">Microsoft LATAM, 2025</div>
+  </div>
+
+  <div class="bar-group" data-animate>
+    <div class="bar-label">
+      <span>Incrementaron ingresos con IA</span>
+      <span>91%</span>
+    </div>
+    <div class="bar-track">
+      <div class="bar-fill green" data-width="91"></div>
+    </div>
+    <div class="bar-source">Microsoft LATAM, 2025</div>
+  </div>
+
+  <div class="bar-group" data-animate>
+    <div class="bar-label">
+      <span>Usan IA pero sin impacto medible</span>
+      <span>80%</span>
+    </div>
+    <div class="bar-track">
+      <div class="bar-fill red" data-width="80"></div>
+    </div>
+    <div class="bar-source">McKinsey, 2025</div>
+  </div>
+
+  <div class="bar-group" data-animate>
+    <div class="bar-label">
+      <span>Empresas ya desplegaron agentes IA</span>
+      <span>35%</span>
+    </div>
+    <div class="bar-track">
+      <div class="bar-fill blue" data-width="35"></div>
+    </div>
+    <div class="bar-source">MIT Sloan / BCG, 2025</div>
+  </div>
+
+  <div class="divider"></div>
+  <div class="section-label">Donut charts - Contraste visual</div>
+
+  <div class="donut-container" data-animate-donut>
+    <div class="donut-wrap">
+      <svg class="donut-svg" width="160" height="160" viewBox="0 0 160 160">
+        <circle class="donut-bg" cx="80" cy="80" r="65" />
+        <circle class="donut-fill active-orange" cx="80" cy="80" r="65" data-percent="40" />
+      </svg>
+      <div class="donut-center">
+        <div class="value" style="color: #ea580c;">40%</div>
+        <div class="unit">cancelados</div>
+      </div>
+    </div>
+    <div class="donut-text">
+      <h3>Proyectos de IA que se cancelan</h3>
+      <p>El 40% de los proyectos de IA agentica se cancelaran para 2027 por mala implementacion, costos escalados y falta de controles de riesgo.</p>
+      <div class="source">Harvard Business Review / Gartner, 2025</div>
+    </div>
+  </div>
+
+  <div style="height: 48px;"></div>
+
+  <div class="donut-container" data-animate-donut>
+    <div class="donut-wrap">
+      <svg class="donut-svg" width="160" height="160" viewBox="0 0 160 160">
+        <circle class="donut-bg" cx="80" cy="80" r="65" />
+        <circle class="donut-fill active-green" cx="80" cy="80" r="65" data-percent="60" />
+      </svg>
+      <div class="donut-center">
+        <div class="value" style="color: #10b981;">60%</div>
+        <div class="unit">reduccion</div>
+      </div>
+    </div>
+    <div class="donut-text">
+      <h3>Tiempo de resolucion con agentes</h3>
+      <p>Una telecom europea redujo el tiempo de resolucion de problemas un 60% y ahorro mas de un millon de euros al ano con agentes IA bien implementados.</p>
+      <div class="source">Harvard Business Review, 2025</div>
+    </div>
+  </div>
+</div>
+
+<div class="spacer"><p>Fin de la muestra</p></div>
+
+<script>
+// Barras
+const barObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const fill = entry.target.querySelector('.bar-fill');
+      if (fill) fill.style.width = fill.dataset.width + '%';
+      barObserver.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.3 });
+
+document.querySelectorAll('[data-animate]').forEach(el => barObserver.observe(el));
+
+// Donuts
+const donutObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const circle = entry.target.querySelector('.donut-fill');
+      if (circle) {
+        const pct = parseInt(circle.dataset.percent);
+        const circumference = 2 * Math.PI * 65; // ~408
+        const offset = circumference - (circumference * pct / 100);
+        circle.style.strokeDashoffset = offset;
+      }
+      donutObserver.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.3 });
+
+document.querySelectorAll('[data-animate-donut]').forEach(el => donutObserver.observe(el));
+</script>
+</body>
+</html>

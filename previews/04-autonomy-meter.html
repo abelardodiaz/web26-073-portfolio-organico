@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Preview: Autonomy Meter/Gauge - Mejorado</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: #09090b; color: #fafafa; }
+  body.light { background: #fafaf9; color: #1c1917; }
+
+  .toggle-bar {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; justify-content: center; gap: 8px;
+    padding: 10px; background: rgba(9,9,11,0.85); backdrop-filter: blur(8px);
+    border-bottom: 1px solid #27272a;
+  }
+  body.light .toggle-bar { background: rgba(250,250,249,0.85); border-color: #e7e5e4; }
+  .toggle-bar button {
+    padding: 5px 14px; border: 1px solid #3f3f46; border-radius: 6px;
+    background: transparent; color: #a1a1aa; font-size: 11px;
+    font-family: system-ui; cursor: pointer; transition: all 0.2s;
+  }
+  .toggle-bar button.ed { color: #ea580c; border-color: #ea580c; background: rgba(234,88,12,0.08); }
+  .toggle-bar button.tm { color: #10b981; border-color: #10b981; background: rgba(16,185,129,0.08); }
+
+  .container { max-width: 640px; margin: 0 auto; padding: 80px 24px 60px; }
+
+  .label-tag {
+    font-size: 11px; font-weight: 700; letter-spacing: 2px;
+    text-transform: uppercase; margin-bottom: 6px;
+  }
+  .editorial .label-tag { color: #ea580c; }
+  .terminal .label-tag { color: #10b981; font-family: 'Courier New', monospace; }
+
+  h2 { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 4px; }
+  .terminal h2 { font-family: 'Courier New', monospace; font-size: 18px; }
+  .sub { font-size: 13px; color: #71717a; line-height: 1.5; margin-bottom: 36px; }
+  body.light .sub { color: #78716c; }
+  .terminal .sub { font-family: 'Courier New', monospace; font-size: 12px; }
+
+  /* ═══════════════════════════════════
+     METER TRACK
+     ═══════════════════════════════════ */
+  .meter { position: relative; margin-bottom: 36px; padding: 0 7px; }
+
+  .meter-track {
+    position: relative; height: 4px; border-radius: 2px;
+    background: #27272a;
+  }
+  body.light .meter-track { background: #e7e5e4; }
+
+  .meter-fill {
+    position: absolute; left: 0; top: 0; height: 100%;
+    width: 0; border-radius: 2px;
+    transition: width 2s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .editorial .meter-fill {
+    background: linear-gradient(90deg, #ea580c, #f97316, #fb923c);
+    box-shadow: 0 0 12px rgba(234,88,12,0.3);
+  }
+  .terminal .meter-fill {
+    background: linear-gradient(90deg, #059669, #10b981, #34d399);
+    box-shadow: 0 0 12px rgba(16,185,129,0.3);
+  }
+
+  /* Dots on the track */
+  .meter-dots {
+    position: absolute; top: 50%; left: 0; right: 0;
+    transform: translateY(-50%);
+    display: flex; justify-content: space-between;
+    pointer-events: none;
+  }
+  .meter-dot {
+    width: 16px; height: 16px; border-radius: 50%;
+    border: 2.5px solid #3f3f46; background: #09090b;
+    transition: all 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+    pointer-events: auto; cursor: pointer;
+    position: relative;
+  }
+  body.light .meter-dot { background: #fafaf9; border-color: #d6d3d1; }
+
+  .meter-dot.lit.editorial-dot {
+    border-color: #ea580c; background: #ea580c;
+    box-shadow: 0 0 12px rgba(234,88,12,0.4), 0 0 4px rgba(234,88,12,0.2);
+  }
+  .meter-dot.lit.terminal-dot {
+    border-color: #10b981; background: #10b981;
+    box-shadow: 0 0 12px rgba(16,185,129,0.4), 0 0 4px rgba(16,185,129,0.2);
+  }
+
+  /* Pointer arrow */
+  .meter-pointer {
+    position: absolute; top: -30px;
+    transform: translateX(-50%);
+    font-size: 10px; font-weight: 700; letter-spacing: 0.5px;
+    white-space: nowrap;
+    opacity: 0; transition: opacity 0.6s ease 1.6s;
+  }
+  .meter-pointer.show { opacity: 1; }
+  .editorial .meter-pointer { color: #ea580c; }
+  .terminal .meter-pointer { color: #10b981; font-family: 'Courier New', monospace; }
+  .meter-pointer::after {
+    content: '';
+    position: absolute; bottom: -5px; left: 50%; transform: translateX(-50%);
+    width: 0; height: 0;
+    border-left: 4px solid transparent; border-right: 4px solid transparent;
+  }
+  .editorial .meter-pointer::after { border-top: 4px solid #ea580c; }
+  .terminal .meter-pointer::after { border-top: 4px solid #10b981; }
+
+  /* ═══════════════════════════════════
+     LEVEL CARDS (Desktop: 4 cols, Mobile: vertical list)
+     ═══════════════════════════════════ */
+  .levels {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+  }
+
+  .level {
+    padding: 14px 12px; border-radius: 8px;
+    border: 1px solid transparent;
+    opacity: 0; transform: translateY(10px);
+    transition: opacity 0.4s ease, transform 0.4s ease, border-color 0.3s, background 0.3s;
+    cursor: pointer;
+  }
+  .level.visible { opacity: 1; transform: translateY(0); }
+  .level:nth-child(2) { transition-delay: 100ms; }
+  .level:nth-child(3) { transition-delay: 200ms; }
+  .level:nth-child(4) { transition-delay: 300ms; }
+
+  /* Active = niveles 1-2 donde empezamos */
+  .level.active { border-color: rgba(234,88,12,0.2); background: rgba(234,88,12,0.03); }
+  .terminal .level.active { border-color: rgba(16,185,129,0.2); background: rgba(16,185,129,0.03); }
+
+  /* Dimmed = niveles 3-4 */
+  .level.dimmed { opacity: 0.4; }
+  .level.dimmed.visible { opacity: 0.4; }
+
+  /* Hover: any level lights up */
+  .level:hover { opacity: 1 !important; }
+  .editorial .level:hover { border-color: rgba(234,88,12,0.35); background: rgba(234,88,12,0.05); }
+  .terminal .level:hover { border-color: rgba(16,185,129,0.35); background: rgba(16,185,129,0.05); }
+
+  .level-num { font-size: 10px; font-weight: 700; letter-spacing: 1px; margin-bottom: 4px; }
+  .editorial .level-num { color: #ea580c; }
+  .terminal .level-num { color: #10b981; font-family: 'Courier New', monospace; }
+
+  .level-title { font-size: 13px; font-weight: 600; margin-bottom: 3px; line-height: 1.3; }
+  .terminal .level-title { font-family: 'Courier New', monospace; font-size: 12px; }
+
+  .level-desc { font-size: 11px; color: #71717a; line-height: 1.4; }
+  body.light .level-desc { color: #a8a29e; }
+  .terminal .level-desc { font-family: 'Courier New', monospace; font-size: 10px; }
+
+  .level-badge {
+    display: inline-block; margin-top: 6px; padding: 2px 8px;
+    border-radius: 10px; font-size: 9px; font-weight: 700; letter-spacing: 0.5px;
+  }
+  .editorial .level-badge { border: 1px solid #ea580c; color: #ea580c; }
+  .terminal .level-badge { border: 1px solid #10b981; color: #10b981; font-family: 'Courier New', monospace; }
+
+  /* ═══════════════════════════════════
+     MOBILE: Vertical compact list
+     ═══════════════════════════════════ */
+  @media (max-width: 600px) {
+    .levels {
+      grid-template-columns: 1fr;
+      gap: 0;
+    }
+    .level {
+      display: grid; grid-template-columns: 36px 1fr; gap: 4px 10px;
+      padding: 12px 10px; border-radius: 0;
+      border-bottom: 1px solid #1a1a1e;
+      border-left: none; border-right: none; border-top: none;
+    }
+    body.light .level { border-bottom-color: #f5f5f4; }
+    .level:last-child { border-bottom: none; }
+    .level.active { border-left: 3px solid; border-radius: 6px; border-bottom: 1px solid transparent; margin-bottom: 2px; }
+    .editorial .level.active { border-left-color: #ea580c; }
+    .terminal .level.active { border-left-color: #10b981; }
+
+    .level-num { grid-row: 1 / 3; align-self: start; padding-top: 2px; font-size: 12px; }
+    .level-title { font-size: 14px; }
+    .level-desc { font-size: 12px; }
+    .level-badge { grid-column: 2; }
+
+    .meter { margin-bottom: 24px; }
+  }
+
+  /* ═══════════════════════════════════ */
+  .spacer { height: 40vh; display: flex; align-items: center; justify-content: center; }
+  .spacer p { color: #3f3f46; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::after, *::before { transition-duration: 0.01ms !important; }
+    .level, .meter-dot { opacity: 1 !important; transform: none !important; }
+    .meter-fill { width: 37% !important; }
+    .meter-pointer { opacity: 1 !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="toggle-bar">
+  <button id="btn-ed" class="ed" onclick="setTheme('editorial')">Editorial</button>
+  <button id="btn-tm" onclick="setTheme('terminal')">Terminal</button>
+  <button onclick="toggleLight()">Light / Dark</button>
+</div>
+
+<div class="spacer"><p>Scroll</p></div>
+
+<div class="container editorial" id="main">
+  <div class="label-tag" id="lbl-source">Segun Harvard Business Review (2026)</div>
+  <h2 id="lbl-title">Escalera de Autonomia</h2>
+  <div class="sub" id="lbl-sub">Los agentes de IA se implementan gradualmente. Empezamos en el nivel que tu negocio necesita.</div>
+
+  <!-- Meter -->
+  <div class="meter" id="meter-wrap">
+    <div class="meter-track">
+      <div class="meter-fill" id="meter-fill"></div>
+      <div class="meter-dots">
+        <div class="meter-dot editorial-dot" data-level="0"></div>
+        <div class="meter-dot editorial-dot" data-level="1"></div>
+        <div class="meter-dot editorial-dot" data-level="2"></div>
+        <div class="meter-dot editorial-dot" data-level="3"></div>
+      </div>
+    </div>
+    <div class="meter-pointer" id="meter-pointer">Aqui empezamos</div>
+  </div>
+
+  <!-- Level cards -->
+  <div class="levels" id="levels">
+    <div class="level active" data-idx="0"
+         onmouseenter="hoverLevel(0)" onmouseleave="unhoverLevel()">
+      <div class="level-num">01</div>
+      <div class="level-title" id="t0">Output asistido</div>
+      <div class="level-desc">El agente genera borradores y resumenes. Tu revisas antes de actuar.</div>
+      <div class="level-badge" id="b0">Aqui empezamos</div>
+    </div>
+    <div class="level active" data-idx="1"
+         onmouseenter="hoverLevel(1)" onmouseleave="unhoverLevel()">
+      <div class="level-num">02</div>
+      <div class="level-title" id="t1">Consulta con guardrails</div>
+      <div class="level-desc">Responde con informacion verificada de tu negocio. Fuentes controladas.</div>
+      <div class="level-badge" id="b1">Aqui empezamos</div>
+    </div>
+    <div class="level dimmed" data-idx="2"
+         onmouseenter="hoverLevel(2)" onmouseleave="unhoverLevel()">
+      <div class="level-num">03</div>
+      <div class="level-title" id="t2">Acciones supervisadas</div>
+      <div class="level-desc">Propone acciones (cotizacion, cita) pero tu confirmas antes de ejecutar.</div>
+    </div>
+    <div class="level dimmed" data-idx="3"
+         onmouseenter="hoverLevel(3)" onmouseleave="unhoverLevel()">
+      <div class="level-num">04</div>
+      <div class="level-title" id="t3">Autonomia acotada</div>
+      <div class="level-desc">Ejecuta solo, dentro de limites claros que tu defines.</div>
+    </div>
+  </div>
+</div>
+
+<div class="spacer"><p>Fin de la muestra</p></div>
+
+<script>
+var currentTheme = 'editorial';
+var fillTargets = [12, 37, 62, 87]; // % positions for each dot
+var defaultFill = 37; // stop at level 2
+var animated = false;
+
+// ── Theme switching ──
+function setTheme(theme) {
+  currentTheme = theme;
+  var main = document.getElementById('main');
+  var dots = document.querySelectorAll('.meter-dot');
+  var btnEd = document.getElementById('btn-ed');
+  var btnTm = document.getElementById('btn-tm');
+
+  main.className = 'container ' + theme;
+
+  if (theme === 'editorial') {
+    btnEd.className = 'ed'; btnTm.className = '';
+    document.getElementById('lbl-source').textContent = 'Segun Harvard Business Review (2026)';
+    document.getElementById('lbl-title').textContent = 'Escalera de Autonomia';
+    document.getElementById('lbl-sub').textContent = 'Los agentes de IA se implementan gradualmente. Empezamos en el nivel que tu negocio necesita.';
+    document.getElementById('meter-pointer').textContent = 'Aqui empezamos';
+    var titles = ['Output asistido', 'Consulta con guardrails', 'Acciones supervisadas', 'Autonomia acotada'];
+    var badges = ['Aqui empezamos', 'Aqui empezamos'];
+  } else {
+    btnEd.className = ''; btnTm.className = 'tm';
+    document.getElementById('lbl-source').textContent = '// fuente: hbr.org (2026)';
+    document.getElementById('lbl-title').textContent = 'autonomy_ladder';
+    document.getElementById('lbl-sub').textContent = 'Implementacion gradual. Empezamos donde tu negocio lo necesita.';
+    document.getElementById('meter-pointer').textContent = '$ start_here';
+    var titles = ['assistive_output', 'retrieval_guardrails', 'supervised_actions', 'bounded_autonomy'];
+    var badges = ['$ start_here', '$ start_here'];
+  }
+
+  for (var i = 0; i < 4; i++) {
+    document.getElementById('t' + i).textContent = titles[i];
+    dots[i].className = 'meter-dot ' + (theme === 'editorial' ? 'editorial-dot' : 'terminal-dot');
+    if (animated && i < 2) dots[i].classList.add('lit');
+  }
+  if (document.getElementById('b0')) document.getElementById('b0').textContent = badges[0];
+  if (document.getElementById('b1')) document.getElementById('b1').textContent = badges[1];
+}
+
+function toggleLight() { document.body.classList.toggle('light'); }
+
+// ── Hover interaction: fill bar to hovered level ──
+function hoverLevel(idx) {
+  var fill = document.getElementById('meter-fill');
+  fill.style.width = fillTargets[idx] + '%';
+
+  var dots = document.querySelectorAll('.meter-dot');
+  var cls = currentTheme === 'editorial' ? 'editorial-dot' : 'terminal-dot';
+  for (var i = 0; i < 4; i++) {
+    dots[i].className = 'meter-dot ' + cls;
+    if (i <= idx) dots[i].classList.add('lit');
+  }
+
+  // Light up all level cards up to hovered one
+  var levels = document.querySelectorAll('.level');
+  for (var i = 0; i < 4; i++) {
+    levels[i].style.opacity = (i <= idx) ? '1' : '';
+    if (i <= idx) {
+      levels[i].style.borderColor = currentTheme === 'editorial'
+        ? 'rgba(234,88,12,0.25)' : 'rgba(16,185,129,0.25)';
+      levels[i].style.background = currentTheme === 'editorial'
+        ? 'rgba(234,88,12,0.04)' : 'rgba(16,185,129,0.04)';
+    } else {
+      levels[i].style.borderColor = '';
+      levels[i].style.background = '';
+    }
+  }
+
+  // Move pointer
+  var pointer = document.getElementById('meter-pointer');
+  pointer.style.left = fillTargets[idx] + '%';
+  pointer.style.transition = 'left 0.4s ease, opacity 0.4s ease';
+}
+
+function unhoverLevel() {
+  var fill = document.getElementById('meter-fill');
+  fill.style.width = defaultFill + '%';
+
+  var dots = document.querySelectorAll('.meter-dot');
+  var cls = currentTheme === 'editorial' ? 'editorial-dot' : 'terminal-dot';
+  for (var i = 0; i < 4; i++) {
+    dots[i].className = 'meter-dot ' + cls;
+    if (i < 2) dots[i].classList.add('lit');
+  }
+
+  // Reset level cards
+  var levels = document.querySelectorAll('.level');
+  for (var i = 0; i < 4; i++) {
+    levels[i].style.opacity = '';
+    levels[i].style.borderColor = '';
+    levels[i].style.background = '';
+  }
+
+  var pointer = document.getElementById('meter-pointer');
+  pointer.style.left = defaultFill + '%';
+}
+
+// ── Scroll-triggered animation ──
+function animateMeter() {
+  if (animated) return;
+  animated = true;
+
+  var fill = document.getElementById('meter-fill');
+  var pointer = document.getElementById('meter-pointer');
+  var dots = document.querySelectorAll('.meter-dot');
+  var levels = document.querySelectorAll('.level');
+  var cls = currentTheme === 'editorial' ? 'editorial-dot' : 'terminal-dot';
+
+  // Step 1: fill to level 1 (12%) + light dot 1
+  fill.style.width = fillTargets[0] + '%';
+  setTimeout(function() {
+    dots[0].classList.add('lit');
+    levels[0].classList.add('visible');
+  }, 400);
+
+  // Step 2: fill to level 2 (37%) + light dot 2
+  setTimeout(function() {
+    fill.style.width = fillTargets[1] + '%';
+    setTimeout(function() {
+      dots[1].classList.add('lit');
+      levels[1].classList.add('visible');
+    }, 300);
+  }, 800);
+
+  // Step 3: show remaining levels (dimmed)
+  setTimeout(function() {
+    levels[2].classList.add('visible');
+  }, 1400);
+  setTimeout(function() {
+    levels[3].classList.add('visible');
+  }, 1600);
+
+  // Step 4: show pointer
+  setTimeout(function() {
+    pointer.classList.add('show');
+    pointer.style.left = fillTargets[1] + '%';
+  }, 1200);
+}
+
+// ── Observer ──
+var obs = new IntersectionObserver(function(entries) {
+  entries.forEach(function(e) {
+    if (e.isIntersecting) {
+      animateMeter();
+      obs.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.3 });
+
+obs.observe(document.getElementById('meter-wrap'));
+
+// ── Touch: tap on level cards for mobile ──
+document.querySelectorAll('.level').forEach(function(el) {
+  el.addEventListener('touchstart', function() {
+    var idx = parseInt(el.getAttribute('data-idx'));
+    hoverLevel(idx);
+  });
+  el.addEventListener('touchend', function() {
+    setTimeout(unhoverLevel, 1500);
+  });
+});
+</script>
+</body>
+</html>

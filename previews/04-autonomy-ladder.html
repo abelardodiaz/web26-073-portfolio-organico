@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Preview: Escalera de Autonomia (HBR) - Dual Theme</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  /* ── Theme toggle ── */
+  .theme-toggle {
+    position: fixed; top: 16px; right: 16px; z-index: 100;
+    display: flex; gap: 8px;
+  }
+  .theme-toggle button {
+    padding: 6px 14px; border: 1px solid #3f3f46; border-radius: 6px;
+    background: transparent; color: #a1a1aa; font-size: 12px;
+    font-family: system-ui, sans-serif; cursor: pointer; transition: all 0.2s;
+  }
+  .theme-toggle button.active { border-color: currentColor; }
+  .theme-toggle button.active-editorial { color: #ea580c; border-color: #ea580c; background: rgba(234,88,12,0.08); }
+  .theme-toggle button.active-terminal { color: #10b981; border-color: #10b981; background: rgba(16,185,129,0.08); }
+
+  /* ── Base ── */
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: #09090b; color: #fafafa;
+    transition: background 0.3s;
+  }
+  body.light { background: #fafaf9; color: #1c1917; }
+
+  .container { max-width: 700px; margin: 0 auto; padding: 80px 24px 60px; }
+  .info-bar {
+    text-align: center; padding: 12px; font-size: 11px;
+    letter-spacing: 2px; text-transform: uppercase; color: #52525b;
+    border-bottom: 1px solid #27272a;
+  }
+  body.light .info-bar { border-color: #e7e5e4; }
+
+  /* ── Shared section styles ── */
+  .source-tag {
+    font-size: 11px; font-weight: 600; letter-spacing: 1px;
+    text-transform: uppercase; margin-bottom: 16px;
+  }
+  .section-title { font-size: 22px; font-weight: 700; margin-bottom: 6px; letter-spacing: -0.5px; }
+  .section-subtitle { font-size: 14px; color: #71717a; margin-bottom: 40px; line-height: 1.5; }
+  body.light .section-subtitle { color: #78716c; }
+
+  /* ── Ladder ── */
+  .ladder { position: relative; padding-left: 48px; }
+  .ladder-line {
+    position: absolute; left: 19px; top: 0; width: 2px; height: 0;
+    border-radius: 1px;
+    transition: height 1.8s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .step {
+    position: relative; padding-bottom: 36px;
+    opacity: 0; transform: translateX(-16px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+  }
+  .step.visible { opacity: 1; transform: translateX(0); }
+  .step:nth-child(3) { transition-delay: 150ms; }
+  .step:nth-child(4) { transition-delay: 300ms; }
+  .step:nth-child(5) { transition-delay: 450ms; }
+
+  .step-dot {
+    position: absolute; left: -37px; top: 4px;
+    width: 14px; height: 14px; border-radius: 50%;
+    border: 2px solid #3f3f46; background: #09090b;
+    transition: all 0.4s;
+  }
+  body.light .step-dot { background: #fafaf9; border-color: #d6d3d1; }
+
+  .step-number { font-size: 11px; font-weight: 700; letter-spacing: 1px; margin-bottom: 4px; }
+  .step-title { font-size: 16px; font-weight: 600; margin-bottom: 5px; }
+  .step-desc { font-size: 13px; color: #a1a1aa; line-height: 1.6; }
+  body.light .step-desc { color: #78716c; }
+
+  .step-badge {
+    display: inline-block; margin-top: 10px; padding: 4px 12px;
+    border-radius: 20px; font-size: 11px; font-weight: 600; letter-spacing: 0.5px;
+  }
+
+  /* ── Editorial theme ── */
+  .editorial .source-tag { color: #ea580c; }
+  .editorial .ladder-line { background: linear-gradient(180deg, #ea580c, #f97316, #fb923c); }
+  .editorial .step.visible .step-dot {
+    border-color: #ea580c; background: #ea580c;
+    box-shadow: 0 0 10px rgba(234, 88, 12, 0.35);
+  }
+  .editorial .step-number { color: #ea580c; }
+  .editorial .step-badge { border: 1px solid #ea580c; color: #ea580c; }
+
+  /* ── Terminal theme ── */
+  .terminal .source-tag { color: #10b981; font-family: 'Courier New', monospace; }
+  .terminal .section-title { font-family: 'Courier New', monospace; font-size: 18px; }
+  .terminal .section-subtitle { font-family: 'Courier New', monospace; font-size: 13px; }
+  .terminal .ladder-line { background: linear-gradient(180deg, #10b981, #34d399, #6ee7b7); }
+  .terminal .step.visible .step-dot {
+    border-color: #10b981; background: #10b981;
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.35);
+  }
+  .terminal .step-number { color: #10b981; font-family: 'Courier New', monospace; }
+  .terminal .step-title { font-family: 'Courier New', monospace; font-size: 15px; }
+  .terminal .step-desc { font-family: 'Courier New', monospace; font-size: 12px; }
+  .terminal .step-badge { border: 1px solid #10b981; color: #10b981; font-family: 'Courier New', monospace; }
+
+  /* ── Divider ── */
+  .divider { height: 1px; background: #27272a; margin: 48px 0; }
+  body.light .divider { background: #e7e5e4; }
+
+  /* ── Reduced motion ── */
+  @media (prefers-reduced-motion: reduce) {
+    .step, .ladder-line, .step-dot { transition: none !important; }
+    .step { opacity: 1; transform: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="info-bar">
+  Preview: Escalera de Autonomia - Dual Theme (scroll para ver animacion)
+</div>
+
+<div class="theme-toggle">
+  <button id="btn-editorial" class="active-editorial" onclick="setTheme('editorial')">Editorial</button>
+  <button id="btn-terminal" onclick="setTheme('terminal')">Terminal</button>
+  <button id="btn-light" onclick="toggleLight()">Light</button>
+</div>
+
+<div class="container" id="theme-container">
+
+  <!-- ═══ Editorial Version ═══ -->
+  <div class="editorial" id="editorial-section">
+    <div class="source-tag">Segun Harvard Business Review (2026)</div>
+    <div class="section-title">Escalera de Autonomia</div>
+    <div class="section-subtitle">
+      Los agentes de IA se implementan gradualmente, no de golpe.
+      Empezamos en el nivel que tu negocio necesita.
+    </div>
+
+    <div class="ladder" id="ladder-editorial">
+      <div class="ladder-line" id="line-editorial"></div>
+
+      <div class="step">
+        <div class="step-dot"></div>
+        <div class="step-number">NIVEL 01</div>
+        <div class="step-title">Output asistido</div>
+        <div class="step-desc">El agente genera borradores, resumenes o recomendaciones. Tu revisas antes de actuar.</div>
+        <div class="step-badge">Aqui empezamos contigo</div>
+      </div>
+
+      <div class="step">
+        <div class="step-dot"></div>
+        <div class="step-number">NIVEL 02</div>
+        <div class="step-title">Consulta con guardrails</div>
+        <div class="step-desc">El agente responde preguntas usando informacion verificada de tu negocio. Fuentes controladas.</div>
+        <div class="step-badge">Aqui empezamos contigo</div>
+      </div>
+
+      <div class="step">
+        <div class="step-dot"></div>
+        <div class="step-number">NIVEL 03</div>
+        <div class="step-title">Acciones supervisadas</div>
+        <div class="step-desc">El agente propone acciones (enviar cotizacion, agendar cita) pero tu confirmas antes de que se ejecuten.</div>
+      </div>
+
+      <div class="step">
+        <div class="step-dot"></div>
+        <div class="step-number">NIVEL 04</div>
+        <div class="step-title">Autonomia acotada</div>
+        <div class="step-desc">El agente ejecuta tareas solo, dentro de limites claros que tu defines. Responde WhatsApp, genera reportes, agenda citas.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ═══ Terminal Version ═══ -->
+  <div class="terminal" id="terminal-section" style="display: none;">
+    <div class="source-tag">// fuente: hbr.org (2026)</div>
+    <div class="section-title">autonomy_ladder</div>
+    <div class="section-subtitle">Implementacion gradual. Empezamos donde tu negocio lo necesita.</div>
+
+    <div class="ladder" id="ladder-terminal">
+      <div class="ladder-line" id="line-terminal"></div>
+
+      <div class="step">
+        <div class="step-dot"></div>
+        <div class="step-number">01</div>
+        <div class="step-title">assistive_output</div>
+        <div class="step-desc">Borradores, resumenes, recomendaciones. Human review required.</div>
+        <div class="step-badge">$ start_here</div>
+      </div>
+
+      <div class="step">
+        <div class="step-dot"></div>
+        <div class="step-number">02</div>
+        <div class="step-title">retrieval_guardrails</div>
+        <div class="step-desc">Responde con datos verificados. Sources: controlled.</div>
+        <div class="step-badge">$ start_here</div>
+      </div>
+
+      <div class="step">
+        <div class="step-dot"></div>
+        <div class="step-number">03</div>
+        <div class="step-title">supervised_actions</div>
+        <div class="step-desc">Propone acciones. Human confirms before exec.</div>
+      </div>
+
+      <div class="step">
+        <div class="step-dot"></div>
+        <div class="step-number">04</div>
+        <div class="step-title">bounded_autonomy</div>
+        <div class="step-desc">Executes within predefined thresholds. WhatsApp, reports, scheduling.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// Theme switching
+let currentTheme = 'editorial';
+
+function setTheme(theme) {
+  currentTheme = theme;
+  const editorial = document.getElementById('editorial-section');
+  const terminal = document.getElementById('terminal-section');
+  const btnE = document.getElementById('btn-editorial');
+  const btnT = document.getElementById('btn-terminal');
+
+  if (theme === 'editorial') {
+    editorial.style.display = '';
+    terminal.style.display = 'none';
+    btnE.className = 'active-editorial';
+    btnT.className = '';
+  } else {
+    editorial.style.display = 'none';
+    terminal.style.display = '';
+    btnE.className = '';
+    btnT.className = 'active-terminal';
+  }
+
+  // Re-trigger animations
+  resetAnimations();
+  setTimeout(triggerAnimations, 100);
+}
+
+function toggleLight() {
+  document.body.classList.toggle('light');
+  const btn = document.getElementById('btn-light');
+  btn.textContent = document.body.classList.contains('light') ? 'Dark' : 'Light';
+}
+
+// Intersection observer for scroll animation
+const stepObserver = new IntersectionObserver(function(entries) {
+  entries.forEach(function(entry) {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+    }
+  });
+}, { threshold: 0.2 });
+
+const ladderObserver = new IntersectionObserver(function(entries) {
+  entries.forEach(function(entry) {
+    if (entry.isIntersecting) {
+      var line = entry.target.querySelector('.ladder-line');
+      if (line) line.style.height = '100%';
+      ladderObserver.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.1 });
+
+function resetAnimations() {
+  document.querySelectorAll('.step').forEach(function(el) {
+    el.classList.remove('visible');
+  });
+  document.querySelectorAll('.ladder-line').forEach(function(el) {
+    el.style.height = '0';
+  });
+}
+
+function triggerAnimations() {
+  document.querySelectorAll('.step').forEach(function(el) {
+    stepObserver.observe(el);
+  });
+  document.querySelectorAll('.ladder').forEach(function(el) {
+    ladderObserver.observe(el);
+  });
+}
+
+// Initial trigger
+triggerAnimations();
+</script>
+</body>
+</html>

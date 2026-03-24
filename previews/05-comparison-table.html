@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Muestra: Tabla Comparacion con Highlight</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #09090b; color: #fafafa; }
+
+  .spacer { height: 40vh; display: flex; align-items: center; justify-content: center; }
+  .spacer p { color: #52525b; font-size: 14px; letter-spacing: 2px; text-transform: uppercase; }
+
+  .section { padding: 60px 24px; max-width: 900px; margin: 0 auto; }
+  .section-label {
+    font-size: 11px; font-weight: 600; letter-spacing: 3px;
+    text-transform: uppercase; color: #52525b; margin-bottom: 32px;
+  }
+
+  /* Table */
+  .table-wrap { overflow-x: auto; border-radius: 12px; border: 1px solid #27272a; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th { padding: 16px 20px; text-align: left; font-weight: 600; font-size: 13px; border-bottom: 1px solid #27272a; color: #a1a1aa; }
+  td { padding: 14px 20px; border-bottom: 1px solid #1c1c1e; }
+  tr:last-child td { border-bottom: none; }
+  .row-label { font-weight: 500; color: #d4d4d8; font-size: 13px; }
+
+  /* Winner column */
+  .winner { background: rgba(234, 88, 12, 0.04); }
+  .winner-header {
+    color: #ea580c !important; font-weight: 700 !important;
+    position: relative;
+  }
+  .winner-header::after {
+    content: 'Recomendado'; display: block;
+    font-size: 9px; letter-spacing: 1px; text-transform: uppercase;
+    color: #ea580c; margin-top: 4px; font-weight: 600;
+  }
+
+  /* Icons */
+  .check { color: #10b981; font-weight: 700; }
+  .cross { color: #ef4444; }
+  .dash { color: #3f3f46; }
+  .value { color: #fafafa; font-weight: 500; }
+  .value-good { color: #10b981; font-weight: 600; }
+  .value-bad { color: #ef4444; }
+  .value-meh { color: #a1a1aa; }
+
+  /* Row reveal animation */
+  tbody tr {
+    opacity: 0; transform: translateY(10px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+  }
+  tbody tr.visible { opacity: 1; transform: translateY(0); }
+  tbody tr:nth-child(1) { transition-delay: 0ms; }
+  tbody tr:nth-child(2) { transition-delay: 100ms; }
+  tbody tr:nth-child(3) { transition-delay: 200ms; }
+  tbody tr:nth-child(4) { transition-delay: 300ms; }
+
+  /* Glow on winner column */
+  .table-wrap { box-shadow: 0 0 30px rgba(234, 88, 12, 0.03); }
+
+  /* Terminal version */
+  .terminal-table th { font-family: 'Courier New', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
+  .terminal-table td { font-family: 'Courier New', monospace; font-size: 12px; }
+  .terminal-table .winner { background: rgba(16, 185, 129, 0.04); }
+  .terminal-table .winner-header { color: #10b981 !important; }
+  .terminal-table .winner-header::after { color: #10b981; }
+  .terminal-table .value-good { color: #10b981; }
+  .terminal-table .check { color: #10b981; }
+  .terminal-table .table-wrap { box-shadow: 0 0 30px rgba(16, 185, 129, 0.03); }
+
+  .divider { height: 1px; background: #27272a; margin: 60px auto; max-width: 852px; }
+</style>
+</head>
+<body>
+
+<div class="spacer"><p>Scroll hacia abajo</p></div>
+
+<!-- Editorial -->
+<div class="section">
+  <div class="section-label">Editorial Theme - Tabla de comparacion</div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 160px;"></th>
+          <th>Empleado</th>
+          <th>ChatGPT solo</th>
+          <th>Consultora grande</th>
+          <th class="winner winner-header">OpenClaw configurado</th>
+        </tr>
+      </thead>
+      <tbody id="rows-editorial">
+        <tr>
+          <td class="row-label">Costo mensual</td>
+          <td class="value-bad">$8,000-15,000 MXN</td>
+          <td class="value-meh">$0-400 MXN</td>
+          <td class="value-bad">$50,000+ USD</td>
+          <td class="winner value-good">$200-1,000 MXN en API</td>
+        </tr>
+        <tr>
+          <td class="row-label">Disponibilidad</td>
+          <td class="value-meh">8 hrs/dia, L-V</td>
+          <td class="value-meh">Cuando tu lo abres</td>
+          <td class="value-meh">Horario oficina</td>
+          <td class="winner value-good">24/7 automatico</td>
+        </tr>
+        <tr>
+          <td class="row-label">Se conecta a tus sistemas</td>
+          <td><span class="dash">Manual</span></td>
+          <td><span class="cross">No</span></td>
+          <td><span class="check">Si</span></td>
+          <td class="winner"><span class="check">Si, automatico</span></td>
+        </tr>
+        <tr>
+          <td class="row-label">Soporte en SLP</td>
+          <td><span class="dash">N/A</span></td>
+          <td><span class="cross">No</span></td>
+          <td><span class="cross">No (CDMX/USA)</span></td>
+          <td class="winner"><span class="check">Si, presencial</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- Terminal -->
+<div class="section terminal-table">
+  <div class="section-label" style="font-family: 'Courier New', monospace;">// comparacion</div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 160px;"></th>
+          <th>empleado</th>
+          <th>chatgpt_solo</th>
+          <th>consultora</th>
+          <th class="winner winner-header">openclaw_config</th>
+        </tr>
+      </thead>
+      <tbody id="rows-terminal">
+        <tr>
+          <td class="row-label">costo</td>
+          <td class="value-bad">$8K-15K</td>
+          <td class="value-meh">$0-400</td>
+          <td class="value-bad">$50K+ USD</td>
+          <td class="winner value-good">$200-1K API</td>
+        </tr>
+        <tr>
+          <td class="row-label">uptime</td>
+          <td class="value-meh">8h L-V</td>
+          <td class="value-meh">manual</td>
+          <td class="value-meh">oficina</td>
+          <td class="winner value-good">24/7</td>
+        </tr>
+        <tr>
+          <td class="row-label">integra_sistemas</td>
+          <td><span class="dash">--</span></td>
+          <td><span class="cross">x</span></td>
+          <td><span class="check">ok</span></td>
+          <td class="winner"><span class="check">auto</span></td>
+        </tr>
+        <tr>
+          <td class="row-label">soporte_slp</td>
+          <td><span class="dash">--</span></td>
+          <td><span class="cross">x</span></td>
+          <td><span class="cross">x</span></td>
+          <td class="winner"><span class="check">presencial</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="spacer"><p>Fin de la muestra</p></div>
+
+<script>
+const rowObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const rows = entry.target.querySelectorAll('tbody tr');
+      rows.forEach(row => row.classList.add('visible'));
+      rowObserver.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.2 });
+
+document.querySelectorAll('.table-wrap').forEach(el => rowObserver.observe(el));
+</script>
+</body>
+</html>
