@@ -63,17 +63,14 @@ export default function Home() {
         <div className="mt-8 flex gap-3">
           <div className="hidden editorial:flex gap-3">
             <ButtonLink href="/projects">Ver proyectos</ButtonLink>
-            <ButtonLink
-              href="https://github.com/abelardodiaz"
-              variant="outline"
-            >
-              GitHub
+            <ButtonLink href="/diagnostico-ia" variant="outline">
+              Ver servicios
             </ButtonLink>
           </div>
           <div className="hidden terminal:flex gap-3">
             <ButtonLink href="/projects">git clone proyectos</ButtonLink>
-            <ButtonLink href="/about" variant="outline">
-              cat README.md
+            <ButtonLink href="/diagnostico-ia" variant="outline">
+              ./ver_servicios.sh
             </ButtonLink>
           </div>
         </div>
