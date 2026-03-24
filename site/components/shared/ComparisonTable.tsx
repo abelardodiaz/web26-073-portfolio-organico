@@ -44,6 +44,10 @@ export function ComparisonTable({
         trs.forEach((tr, i) => {
           setTimeout(() => tr.classList.add("visible"), i * 100);
         });
+        const hint = el.querySelector("[data-swipe-hint]") as HTMLElement;
+        if (hint) {
+          hint.style.animation = "swipeHint 5s ease-in-out forwards";
+        }
         observer.unobserve(el);
       },
       { threshold: 0.2 }
@@ -75,8 +79,8 @@ export function ComparisonTable({
                 style={{ width: 160 }}
               >
                 <span
-                  className="sm:hidden text-muted-foreground/40 text-[11px]"
-                  style={{ animation: "swipeHint 5s ease-in-out forwards" }}
+                  data-swipe-hint
+                  className="sm:hidden text-muted-foreground/40 text-[13px] opacity-0"
                 >
                   desliza &rarr;
                 </span>

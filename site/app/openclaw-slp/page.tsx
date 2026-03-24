@@ -271,7 +271,7 @@ export default function OpenClawSLPPage() {
             headers={["Contratar empleado", "ChatGPT solo", "Consultora grande", "OpenClaw configurado"]}
             winnerIndex={3}
             rows={[
-              { label: "Costo mensual", cells: [{ text: "$8,000-15,000 MXN", type: "bad" }, { text: "$0-400 MXN", type: "meh" }, { text: "$50,000+ USD", type: "bad" }, { text: "$200-1,000 MXN", type: "good" }] },
+              { label: "Costo mensual", cells: [{ text: "$8,000-15,000 MXN", type: "bad" }, { text: "$0-400 MXN", type: "meh" }, { text: "Desde $20,000 MXN", type: "bad" }, { text: "Desde $5,000 MXN", type: "good" }] },
               { label: "Disponibilidad", cells: [{ text: "8 hrs/dia, L-V", type: "meh" }, { text: "Cuando tu lo abres", type: "meh" }, { text: "Horario oficina", type: "meh" }, { text: "24/7 automatico", type: "good" }] },
               { label: "Conecta sistemas", cells: [{ text: "Manual", type: "dash" }, { text: "No", type: "cross" }, { text: "Si", type: "check" }, { text: "Si, automatico", type: "check" }] },
               { label: "Soporte en SLP", cells: [{ text: "N/A", type: "dash" }, { text: "No", type: "cross" }, { text: "No (CDMX/USA)", type: "cross" }, { text: "Si, presencial", type: "check" }] },
@@ -423,7 +423,7 @@ export default function OpenClawSLPPage() {
             headers={["empleado", "chatgpt_solo", "consultora", "openclaw_config"]}
             winnerIndex={3}
             rows={[
-              { label: "costo", cells: [{ text: "$8K-15K", type: "bad" }, { text: "$0-400", type: "meh" }, { text: "$50K+ USD", type: "bad" }, { text: "$200-1K API", type: "good" }] },
+              { label: "costo", cells: [{ text: "$8K-15K MXN", type: "bad" }, { text: "$0-400 MXN", type: "meh" }, { text: "desde $20K MXN", type: "bad" }, { text: "desde $5K MXN", type: "good" }] },
               { label: "uptime", cells: [{ text: "8h L-V", type: "meh" }, { text: "manual", type: "meh" }, { text: "oficina", type: "meh" }, { text: "24/7", type: "good" }] },
               { label: "integra_sistemas", cells: [{ text: "--", type: "dash" }, { text: "x", type: "cross" }, { text: "ok", type: "check" }, { text: "auto", type: "check" }] },
               { label: "soporte_slp", cells: [{ text: "--", type: "dash" }, { text: "x", type: "cross" }, { text: "x", type: "cross" }, { text: "presencial", type: "check" }] },
