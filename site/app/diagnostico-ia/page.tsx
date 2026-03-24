@@ -103,14 +103,16 @@ export default function DiagnosticoIAPage() {
             muestro exactamente como resolverlo con inteligencia artificial.
             Sin jerga, con numeros claros.
           </p>
-          <p className="mt-4 max-w-2xl text-sm text-muted-foreground/80">
-            El 94% de las PyMEs mexicanas que implementaron inteligencia
-            artificial reportan mejora en eficiencia operativa, y el 91%
-            incremento sus ingresos.{" "}
-            <span className="text-muted-foreground/60">
+          <div className="mt-5 max-w-2xl rounded-r-md border-l-2 border-primary/30 bg-primary/5 py-3 pl-4 pr-4">
+            <p className="text-xs italic leading-relaxed text-muted-foreground">
+              El 94% de las PyMEs mexicanas que implementaron inteligencia
+              artificial reportan mejora en eficiencia operativa, y el 91%
+              incremento sus ingresos.
+            </p>
+            <p className="mt-1 text-[10px] italic text-muted-foreground/60">
               &mdash; Microsoft LATAM, 2025
-            </span>
-          </p>
+            </p>
+          </div>
         </section>
 
         {/* 3 Steps */}
@@ -198,11 +200,14 @@ export default function DiagnosticoIAPage() {
 
         {/* Urgency */}
         <section className="mb-16">
-          <p className="max-w-md text-sm leading-relaxed text-muted-foreground">
-            Atiendo maximo 4 diagnosticos por mes para dar atencion
-            personalizada a cada negocio. Si quieres agendar el tuyo, escribe
-            por WhatsApp y lo coordinamos.
-          </p>
+          <div className="flex max-w-md items-start gap-3 rounded-md bg-muted/50 px-4 py-3">
+            <span className="mt-0.5 shrink-0 text-sm text-muted-foreground/50">&#9716;</span>
+            <p className="text-xs leading-relaxed text-muted-foreground">
+              Atiendo maximo 4 diagnosticos por mes para dar atencion
+              personalizada a cada negocio. Si quieres agendar el tuyo,
+              escribe por WhatsApp y lo coordinamos.
+            </p>
+          </div>
         </section>
 
         {/* Mini Bio */}
@@ -284,10 +289,12 @@ export default function DiagnosticoIAPage() {
             muestro exactamente como resolverlo con inteligencia artificial.
             Sin jerga, con numeros claros.
           </p>
-          <p className="mt-3 max-w-2xl font-mono text-xs text-muted-foreground/70">
-            94% PyMEs MX con IA mejoran eficiencia, 91% incrementan ingresos
-            — Microsoft LATAM, 2025
-          </p>
+          <div className="mt-4 max-w-2xl rounded-r-md border-l-2 border-primary/30 bg-primary/5 py-3 pl-4 pr-4">
+            <p className="font-mono text-[11px] italic leading-relaxed text-muted-foreground">
+              94% PyMEs MX con IA mejoran eficiencia, 91% incrementan ingresos
+              &mdash; Microsoft LATAM, 2025
+            </p>
+          </div>
         </section>
 
         {/* 3 Steps */}
@@ -399,17 +406,14 @@ export default function DiagnosticoIAPage() {
 
         {/* Urgency */}
         <section className="mb-14">
-          <div className="mb-4 flex items-center gap-3">
-            <span className="font-mono text-xs font-semibold uppercase tracking-widest text-[var(--fg-subtle)]">
-              // disponibilidad
-            </span>
-            <span className="h-px flex-1 bg-border" />
+          <div className="flex max-w-md items-start gap-3 rounded-md bg-muted/50 px-4 py-3">
+            <span className="mt-0.5 shrink-0 font-mono text-xs text-muted-foreground/50">&#9716;</span>
+            <p className="font-mono text-[11px] leading-relaxed text-muted-foreground">
+              Atiendo maximo 4 diagnosticos por mes para dar atencion
+              personalizada a cada negocio. Si quieres agendar el tuyo,
+              escribe por WhatsApp y lo coordinamos.
+            </p>
           </div>
-          <p className="max-w-md text-[13px] leading-relaxed text-muted-foreground">
-            Atiendo maximo 4 diagnosticos por mes para dar atencion
-            personalizada a cada negocio. Si quieres agendar el tuyo, escribe
-            por WhatsApp y lo coordinamos.
-          </p>
         </section>
 
         {/* Mini Bio */}

@@ -207,13 +207,18 @@ export default function OpenClawSLPPage() {
 
         {/* HBR Reference */}
         <section className="mb-16">
-          <blockquote className="max-w-2xl border-l-4 border-primary/30 pl-5 text-sm leading-relaxed text-muted-foreground">
-            No solo lo digo yo. Harvard Business Review (marzo 2026) recomienda
-            tratar a los agentes de IA como miembros del equipo: con identidad
-            propia, permisos limitados, fuentes de datos verificadas, y
-            supervision constante. Exactamente como yo lo configuro para tu
-            negocio.
-          </blockquote>
+          <div className="max-w-2xl rounded-r-md border-l-2 border-primary/30 bg-primary/5 py-3 pl-4 pr-4">
+            <p className="text-xs italic leading-relaxed text-muted-foreground">
+              No solo lo digo yo. Harvard Business Review (marzo 2026)
+              recomienda tratar a los agentes de IA como miembros del equipo:
+              con identidad propia, permisos limitados, fuentes de datos
+              verificadas, y supervision constante. Exactamente como yo lo
+              configuro para tu negocio.
+            </p>
+            <p className="mt-1 text-[10px] italic text-muted-foreground/60">
+              &mdash; Harvard Business Review, marzo 2026
+            </p>
+          </div>
         </section>
 
         {/* My Process */}
@@ -409,17 +414,13 @@ export default function OpenClawSLPPage() {
 
         {/* HBR Reference */}
         <section className="mb-14">
-          <div className="mb-4 flex items-center gap-3">
-            <span className="font-mono text-xs font-semibold uppercase tracking-widest text-[var(--fg-subtle)]">
-              // segun_hbr
-            </span>
-            <span className="h-px flex-1 bg-border" />
+          <div className="max-w-2xl rounded-r-md border-l-2 border-primary/30 bg-primary/5 py-3 pl-4 pr-4">
+            <p className="font-mono text-[11px] italic leading-relaxed text-muted-foreground">
+              Harvard Business Review (marzo 2026): los agentes de IA
+              necesitan identidad, permisos, datos verificados y supervision.
+              Exactamente como yo lo configuro.
+            </p>
           </div>
-          <blockquote className="max-w-2xl border-l-2 border-primary/30 pl-4 text-[13px] leading-relaxed text-muted-foreground">
-            Harvard Business Review (marzo 2026): los agentes de IA necesitan
-            identidad, permisos, datos verificados y supervision.
-            Exactamente como yo lo configuro.
-          </blockquote>
         </section>
 
         {/* My Process */}

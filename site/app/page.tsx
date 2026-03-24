@@ -211,19 +211,34 @@ export default function Home() {
 
       {/* ── Social proof ── */}
       <div className="hidden editorial:block pb-8 max-w-2xl">
-        <blockquote className="border-l-4 border-primary/20 pl-5 text-sm leading-relaxed text-muted-foreground/80">
-          Las empresas que implementan agentes de IA correctamente logran entre
-          20% y 60% mas productividad, segun McKinsey. Pero el 40% de los
-          proyectos de IA se cancelan por mala implementacion (Harvard Business
-          Review / Gartner, 2025). La diferencia esta en como se hace.{" "}
-          <span className="font-medium text-foreground">Yo lo hago bien.</span>
-        </blockquote>
+        <div className="rounded-r-md border-l-2 border-primary/30 bg-primary/5 py-3 pl-4 pr-4">
+          <p className="text-xs italic leading-relaxed text-muted-foreground">
+            Las empresas que implementan agentes de IA correctamente logran
+            entre 20% y 60% mas productividad, segun McKinsey. Pero el 40% de
+            los proyectos de IA se cancelan por mala implementacion.
+            La diferencia esta en como se hace.{" "}
+            <span className="not-italic font-medium text-foreground">
+              Yo lo hago bien.
+            </span>
+          </p>
+          <p className="mt-1 text-[10px] italic text-muted-foreground/60">
+            Harvard Business Review / Gartner, 2025
+          </p>
+        </div>
       </div>
       <div className="hidden terminal:block pb-6 max-w-2xl">
-        <div className="border-l-2 border-primary/20 pl-4 font-mono text-[11px] leading-relaxed text-muted-foreground/70">
-          <p>+20-60% productividad con agentes IA bien implementados — McKinsey, 2025</p>
-          <p>40%+ de proyectos de IA agentica cancelados por mala ejecucion — HBR/Gartner, 2025</p>
-          <p className="mt-1 text-foreground">La diferencia esta en como se hace. Yo lo hago bien.</p>
+        <div className="rounded-r-md border-l-2 border-primary/30 bg-primary/5 py-3 pl-4 pr-4">
+          <p className="font-mono text-[11px] italic leading-relaxed text-muted-foreground">
+            +20-60% productividad con agentes IA bien implementados
+            &mdash; McKinsey, 2025
+          </p>
+          <p className="font-mono text-[11px] italic leading-relaxed text-muted-foreground">
+            40%+ proyectos IA cancelados por mala ejecucion
+            &mdash; HBR/Gartner, 2025
+          </p>
+          <p className="mt-1 font-mono text-[11px] not-italic text-foreground">
+            La diferencia esta en como se hace. Yo lo hago bien.
+          </p>
         </div>
       </div>
 
