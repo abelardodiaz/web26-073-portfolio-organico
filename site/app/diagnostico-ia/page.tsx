@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ScrollReveal } from "@/components/shared/ScrollReveal";
 
 export const metadata: Metadata = {
   title: "Diagnostico IA para tu Negocio",
@@ -125,7 +126,7 @@ export default function DiagnosticoIAPage() {
           </h2>
           <div className="grid gap-6 sm:grid-cols-3">
             {steps.map((step) => (
-              <div key={step.num} className="group">
+              <ScrollReveal key={step.num} className="group">
                 <span className="animate-spin360 mb-2 inline-block text-2xl font-bold text-primary">
                   {step.num}
                 </span>
@@ -133,7 +134,7 @@ export default function DiagnosticoIAPage() {
                 <p className="text-sm leading-relaxed text-muted-foreground">
                   {step.desc}
                 </p>
-              </div>
+              </ScrollReveal>
             ))}
           </div>
         </section>
@@ -310,17 +311,17 @@ export default function DiagnosticoIAPage() {
           </div>
           <div className="grid gap-4 sm:grid-cols-3">
             {steps.map((step) => (
-              <div
+              <ScrollReveal
                 key={step.num}
                 className="group grid grid-cols-[4px_1fr] overflow-hidden rounded-md border border-border bg-card"
               >
                 <div className="bg-primary/30" />
                 <div className="p-5 pl-4">
                   <div className="relative mb-1 h-[28px] min-w-[66px] overflow-hidden">
-                    <span className="block font-mono text-lg font-bold leading-[28px] text-primary transition-all duration-400 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:-translate-y-full group-hover:opacity-0">
+                    <span className="num-decimal-scroll block font-mono text-lg font-bold leading-[28px] text-primary transition-all duration-400 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:-translate-y-full group-hover:opacity-0">
                       {step.num}
                     </span>
-                    <span className="absolute left-0 top-full font-mono text-lg font-bold leading-[28px] tracking-wider text-primary opacity-0 transition-all duration-400 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:-translate-y-full group-hover:opacity-100">
+                    <span className="num-binary-scroll absolute left-0 top-full font-mono text-lg font-bold leading-[28px] tracking-wider text-primary opacity-0 transition-all duration-400 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:-translate-y-full group-hover:opacity-100">
                       {step.bin}
                     </span>
                   </div>
@@ -331,7 +332,7 @@ export default function DiagnosticoIAPage() {
                     {step.desc}
                   </p>
                 </div>
-              </div>
+              </ScrollReveal>
             ))}
           </div>
         </section>

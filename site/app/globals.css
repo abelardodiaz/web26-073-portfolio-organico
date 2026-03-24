@@ -227,13 +227,26 @@
   animation: blink 1s infinite;
 }
 
-/* ── Step number spin (editorial hover) ── */
+/* ── Step number spin (editorial hover + mobile scroll) ── */
 @keyframes spin360 {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
 .group:hover .animate-spin360 {
   animation: spin360 0.5s ease-in-out;
+}
+.in-view .animate-spin360 {
+  animation: spin360 0.5s ease-in-out;
+}
+
+/* ── Binary roll (terminal mobile scroll) ── */
+.in-view .num-decimal-scroll {
+  transform: translateY(-100%);
+  opacity: 0;
+}
+.in-view .num-binary-scroll {
+  transform: translateY(-100%);
+  opacity: 1;
 }
 
 /* ── Prose / MDX typography ── */
