@@ -123,7 +123,7 @@ export default function Home() {
               resolverlo con inteligencia artificial. San Luis Potosi.
             </p>
             <span className="text-xs font-medium text-primary">
-              $5,000 MXN &middot; Sin compromiso
+              $10,000 MXN &middot; Sin compromiso
             </span>
           </Link>
           <Link
@@ -173,7 +173,7 @@ export default function Home() {
                 resolverlo con IA. San Luis Potosi.
               </p>
               <span className="font-mono text-[10px] font-medium text-primary tracking-wide">
-                $5,000 MXN
+                $10,000 MXN
               </span>
             </div>
           </Link>

@@ -8,7 +8,7 @@ import { Timeline } from "@/components/shared/Timeline";
 export const metadata: Metadata = {
   title: "Diagnostico IA para tu Negocio | San Luis Potosi",
   description:
-    "Encuentro donde tu empresa pierde tiempo y te muestro como resolverlo con inteligencia artificial. Diagnostico express $5,000 MXN en San Luis Potosi.",
+    "Encuentro donde tu empresa pierde tiempo y te muestro como resolverlo con inteligencia artificial. Diagnostico express $10,000 MXN en San Luis Potosi.",
   alternates: { canonical: "https://abelardodiaz.dev/diagnostico-ia" },
   openGraph: {
     title: "Diagnostico IA para tu Negocio | Abelardo Diaz",
@@ -206,7 +206,7 @@ export default function DiagnosticoIAPage() {
             <p className="mb-1 text-sm font-medium text-muted-foreground">
               Diagnostico Express
             </p>
-            <p className="mb-4 text-3xl font-bold text-primary">$5,000 MXN</p>
+            <p className="mb-4 text-3xl font-bold text-primary">$10,000 MXN</p>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li className="flex items-start gap-2">
                 <span className="mt-0.5 text-primary">&#10003;</span>
@@ -229,7 +229,7 @@ export default function DiagnosticoIAPage() {
               Si decides implementar alguna de las oportunidades del
               diagnostico, los{" "}
               <strong className="font-medium text-foreground">
-                $5,000 MXN se descuentan del costo del proyecto
+                $10,000 MXN se descuentan del costo del proyecto
               </strong>
               . El diagnostico no es un gasto &mdash; es el primer paso de la
               solucion.
@@ -412,7 +412,7 @@ export default function DiagnosticoIAPage() {
               diagnostico_express
             </p>
             <p className="mb-4 font-mono text-2xl font-bold text-primary">
-              $5,000 MXN
+              $10,000 MXN
             </p>
             <ul className="space-y-2 text-[13px] text-muted-foreground">
               <li className="flex items-start gap-2">
@@ -437,7 +437,7 @@ export default function DiagnosticoIAPage() {
               <p>
                 Si implementas, los{" "}
                 <span className="font-medium text-foreground">
-                  $5,000 se descuentan del proyecto
+                  $10,000 se descuentan del proyecto
                 </span>
                 .
               </p>

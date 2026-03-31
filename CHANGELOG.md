@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.9.1] - 2026-03-31
+
+### Changed
+- Diagnostico IA price updated from $5,000 MXN to $10,000 MXN across all pages (home, diagnostico-ia, SEO meta)
+- Bonificable copy updated to reflect new price ($10,000 se descuentan del proyecto)
+
 ## [0.9.0] - 2026-03-24
 
 ### Added
