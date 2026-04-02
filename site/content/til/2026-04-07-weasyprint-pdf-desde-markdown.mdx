@@ -1,0 +1,68 @@
+---
+title: "WeasyPrint: generar PDFs profesionales desde Markdown con Python"
+slug: "weasyprint-pdf-desde-markdown"
+category: "python"
+stack: ["python", "weasyprint", "jinja2", "markdown"]
+date: "2026-04-07"
+project: "portfolio-organico"
+---
+
+## Contexto
+
+Necesitaba generar PDFs de diagnosticos para clientes: portada profesional, headers/footers con numeracion, tablas con estilo, y la posibilidad de escribir el contenido en Markdown para editarlo facil. Las opciones comerciales (PDFKit, reportlab) son complicadas o feas. LaTeX es overkill.
+
+## Lo que aprendi
+
+WeasyPrint convierte HTML/CSS a PDF. Combinado con Jinja2 templates y la libreria `markdown` de Python, el flujo es:
+
+```
+Markdown -> markdown lib -> HTML -> Jinja2 template -> WeasyPrint -> PDF
+```
+
+```python
+import markdown
+from weasyprint import HTML
+from jinja2 import Template
+
+# 1. Markdown a HTML
+with open("diagnostico.md") as f:
+    content_html = markdown.markdown(f.read(), extensions=["tables"])
+
+# 2. Inyectar en template Jinja2
+template = Template(open("plantilla.html").read())
+full_html = template.render(
+    content=content_html,
+    cliente="PROMASL",
+    fecha="Marzo 2026",
+    tipo="Diagnostico IA",
+)
+
+# 3. HTML a PDF
+HTML(string=full_html).write_pdf(
+    "diagnostico.pdf",
+    stylesheets=["estilos.css"],
+)
+```
+
+El CSS controla todo: portada con `@page :first`, headers/footers con `@top-left` / `@bottom-right`, saltos de pagina con `page-break-before`, y numeracion con `counter(page)`.
+
+```css
+@page {
+    size: letter;
+    margin: 25mm 20mm;
+    @bottom-right {
+        content: "Pagina " counter(page) " de " counter(pages);
+        font-size: 9pt;
+    }
+}
+@page :first {
+    margin: 0;  /* portada sin margenes */
+    @bottom-right { content: none; }
+}
+```
+
+## Por que importa
+
+El contenido se escribe en Markdown (rapido, git-diffable), los estilos se controlan con CSS (familiar para cualquier dev), y el output es un PDF profesional con portada, numeracion y branding. Sin dependencias pesadas, sin servicios externos.
+
+WeasyPrint necesita `libpango` y `libcairo` instalados (`apt install libpango-1.0-0 libcairo2`), pero despues de eso es `pip install weasyprint` y listo.

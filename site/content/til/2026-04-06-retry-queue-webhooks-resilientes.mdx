@@ -1,0 +1,64 @@
+---
+title: "Retry queue in-memory para webhooks que no puedes perder"
+slug: "retry-queue-webhooks-resilientes"
+category: "python"
+stack: ["python", "asyncio", "webhooks"]
+date: "2026-04-06"
+project: "whatsapp-webhook-patterns"
+---
+
+## Contexto
+
+Un webhook de WhatsApp llega, tu handler intenta procesarlo, pero la base de datos esta temporalmente caida. Si descartas el mensaje, el cliente nunca recibe respuesta. Si retornas error a Meta, te desactivan el webhook (ver TIL sobre siempre retornar 200). Necesitas un buffer intermedio.
+
+## Lo que aprendi
+
+Una cola de reintentos in-memory con `asyncio` y `deque` resuelve el 95% de los casos sin agregar Redis ni RabbitMQ como dependencia.
+
+```python
+from collections import deque
+from dataclasses import dataclass
+
+@dataclass
+class RetryItem:
+    payload: dict
+    attempts: int = 0
+
+class WebhookRetryQueue:
+    def __init__(self, process_fn, max_retries=3, max_size=50):
+        self.process_fn = process_fn
+        self.max_retries = max_retries
+        self._queue: deque[RetryItem] = deque(maxlen=max_size)
+
+    def enqueue(self, payload: dict) -> bool:
+        if len(self._queue) >= self._queue.maxlen:
+            logger.error("Cola llena, descartando")
+            return False
+        self._queue.append(RetryItem(payload=payload))
+        return True
+
+    async def _process_queue(self):
+        items = list(self._queue)
+        self._queue.clear()
+        for item in items:
+            item.attempts += 1
+            try:
+                await self.process_fn(item.payload)
+            except Exception:
+                if item.attempts < self.max_retries:
+                    self._queue.append(item)
+                else:
+                    logger.warning("Dead letter: %s", item.payload)
+```
+
+El loop de reintentos corre cada 3 minutos con `asyncio.sleep`. Si despues de 3 intentos sigue fallando, va a dead-letter log.
+
+## Limites importantes
+
+- `maxlen=50`: si se acumulan mas de 50 mensajes, algo grave esta pasando y no vale la pena seguir encolando
+- `max_retries=3`: despues de 3 intentos (9 minutos), el error probablemente no es transitorio
+- **In-memory**: si el proceso se reinicia, la cola se pierde. Para webhooks de WhatsApp esto es aceptable porque Meta reenvia mensajes que no confirmaste
+
+## Cuando SI necesitas Redis/RabbitMQ
+
+Si tu volumen es mayor a ~500 webhooks/minuto o si no puedes perder NI UN mensaje (transacciones financieras), usa una cola persistente. Para chatbots y notificaciones, in-memory es suficiente.

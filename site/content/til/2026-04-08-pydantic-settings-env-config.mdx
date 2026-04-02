@@ -1,0 +1,60 @@
+---
+title: "pydantic-settings: configuracion tipada desde .env sin boilerplate"
+slug: "pydantic-settings-env-config"
+category: "python"
+stack: ["python", "pydantic", "fastapi"]
+date: "2026-04-08"
+project: "video-frame-analyzer"
+---
+
+## Contexto
+
+En cada proyecto Python terminas con el mismo patron: leer `.env` con `python-dotenv`, castear strings a int/float manualmente, y validar que no falte nada. Si olvidas un `int()`, tu app truena en runtime con un error críptico.
+
+## Lo que aprendi
+
+`pydantic-settings` hace todo eso en una clase:
+
+```python
+from pydantic_settings import BaseSettings
+
+class Settings(BaseSettings):
+    gemini_api_key: str
+    anthropic_api_key: str
+    scene_threshold: float = 0.2
+    frame_batch_size: int = 8
+    frame_max_count: int = 20
+    output_dir: str = "output"
+
+    model_config = {"env_file": ".env"}
+
+settings = Settings()
+# Si GEMINI_API_KEY no esta en .env, truena ANTES de que la app arranque
+# scene_threshold ya es float, no string
+```
+
+Ventajas sobre `os.getenv()` manual:
+- **Validacion al arrancar**: si falta una variable requerida, falla inmediato con mensaje claro
+- **Tipos automaticos**: `int`, `float`, `bool` se castean solos
+- **Defaults tipados**: `frame_batch_size: int = 8` es mas claro que `int(os.getenv("FRAME_BATCH_SIZE", "8"))`
+- **Autocompletado**: tu IDE sabe que `settings.scene_threshold` es `float`
+
+## Tip: nested settings
+
+Para apps mas grandes, puedes anidar:
+
+```python
+class DatabaseSettings(BaseSettings):
+    url: str = "postgresql://localhost/mydb"
+    pool_size: int = 5
+    model_config = {"env_prefix": "DB_"}
+
+class Settings(BaseSettings):
+    db: DatabaseSettings = DatabaseSettings()
+```
+
+Asi `DB_URL` y `DB_POOL_SIZE` en `.env` se mapean automaticamente.
+
+## Por que importa
+
+Es una dependencia pequena (`pip install pydantic-settings`) que elimina una clase entera de bugs. La uso en todos mis proyectos Python desde que la descubri.

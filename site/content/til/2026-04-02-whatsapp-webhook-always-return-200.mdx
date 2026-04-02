@@ -1,0 +1,40 @@
+---
+title: "WhatsApp Cloud API: siempre retorna 200, incluso con firma invalida"
+slug: "whatsapp-webhook-always-return-200"
+category: "whatsapp"
+stack: ["python", "fastapi", "whatsapp-api", "hmac"]
+date: "2026-04-02"
+project: "whatsapp-webhook-patterns"
+---
+
+## Contexto
+
+Estaba implementando validacion HMAC para webhooks de WhatsApp Business Cloud API. El codigo verificaba la firma del header `X-Hub-Signature-256` y retornaba 403 cuando no coincidiia. Todo parecia correcto. Hasta que un dia el webhook dejo de recibir mensajes sin ningun error visible.
+
+## Lo que aprendi
+
+Meta desactiva tu webhook automaticamente si le respondes con muchos 4xx o 5xx. No te avisa. No te manda un email. Simplemente deja de enviarte mensajes. La documentacion oficial no lo explica claramente.
+
+La solucion: **siempre retornar 200 OK**, incluso cuando la firma es invalida. Si la firma no coincide, logueas el error internamente y descartas el mensaje, pero NUNCA le dices a Meta que hubo un error.
+
+```python
+from fastapi import Request, Response
+
+@app.post("/webhook")
+async def receive_webhook(request: Request) -> Response:
+    body = await request.body()
+    signature = request.headers.get("X-Hub-Signature-256")
+
+    if not validate_meta_signature(body, signature, APP_SECRET):
+        logger.warning("Firma HMAC invalida - descartando")
+        return Response(status_code=200)  # SIEMPRE 200
+
+    # Procesar mensaje normalmente...
+    return Response(status_code=200)
+```
+
+## Por que importa
+
+Este quirk aplica a toda la Graph API de Meta (WhatsApp, Messenger, Instagram). Si estas construyendo integraciones con Meta, graba esta regla: **nunca retornes errores HTTP a Meta**. Tu sistema de logging interno es donde van los errores, no la respuesta HTTP.
+
+El patron completo con generacion de firma para testing esta en [whatsapp-webhook-patterns](https://github.com/abelardodiaz/whatsapp-webhook-patterns).

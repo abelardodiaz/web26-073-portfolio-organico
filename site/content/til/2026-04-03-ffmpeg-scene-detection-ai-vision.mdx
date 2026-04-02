@@ -1,0 +1,40 @@
+---
+title: "FFmpeg scene detection + IA de vision: analizar video sin revisar todos los frames"
+slug: "ffmpeg-scene-detection-ai-vision"
+category: "ai"
+stack: ["python", "ffmpeg", "gemini", "computer-vision"]
+date: "2026-04-03"
+project: "video-frame-analyzer"
+---
+
+## Contexto
+
+Necesitaba analizar videos automaticamente con IA de vision. El approach ingenuo es extraer un frame cada N segundos y mandarlo a la API. Para un video de 4 minutos a 1 frame/segundo son 240 llamadas a la API. Caro e inutil: la mayoria de los frames son casi identicos.
+
+## Lo que aprendi
+
+FFmpeg tiene scene detection integrado. El filtro `select='gt(scene,THRESHOLD)'` detecta cambios significativos entre frames consecutivos y solo extrae los frames donde hay un corte o transicion real.
+
+```bash
+ffmpeg -i input.mp4 \
+  -vf "select='gt(scene,0.2)',scale=768:-1" \
+  -vsync vfr \
+  output/frame_%03d.jpg
+```
+
+Con threshold 0.2, un video de 4 minutos tipicamente produce 6-20 frames en vez de 240. Cada frame representa un momento significativo del video.
+
+Despues envias esos 6-20 frames a Gemini Flash (vision) en lotes de 8, y le pides a Claude que genere la narrativa final con los timestamps.
+
+```
+Video (240s) -> FFmpeg scene detect -> 12 frames -> Gemini (vision) -> Claude (narrativa)
+                                       ^                                    ^
+                                 $0.001 (12 imgs)                    $0.007 (texto)
+                                                            Total: ~$0.008
+```
+
+## Por que importa
+
+La combinacion de FFmpeg scene detection con IA de vision es el sweet spot entre costo y calidad. No necesitas analizar todos los frames para entender un video. Los cambios de escena son los momentos que importan.
+
+El pipeline completo esta en [video-frame-analyzer](https://github.com/abelardodiaz/video-frame-analyzer). Incluye `--dry-run` para probar la extraccion sin gastar en APIs.

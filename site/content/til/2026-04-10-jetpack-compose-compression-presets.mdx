@@ -1,0 +1,77 @@
+---
+title: "Jetpack Compose: presets de compresion como sealed class"
+slug: "jetpack-compose-compression-presets"
+category: "android"
+stack: ["kotlin", "jetpack-compose", "android"]
+date: "2026-04-10"
+project: "tinymedia-compress"
+---
+
+## Contexto
+
+En una app de compresion de imagenes necesitaba 3 presets (Alta calidad, Equilibrado, Ahorro maximo) que el usuario selecciona. Cada preset tiene valores diferentes de calidad, escala y formato. El approach tipico es usar enums con propiedades, pero en Kotlin hay algo mejor.
+
+## Lo que aprendi
+
+Sealed classes en Kotlin son enums con superpoderes. Cada variante puede tener propiedades diferentes:
+
+```kotlin
+sealed class CompressionPreset(
+    val label: String,
+    val quality: Int,
+    val maxWidth: Int,
+    val description: String,
+) {
+    data object HighQuality : CompressionPreset(
+        label = "Alta calidad",
+        quality = 90,
+        maxWidth = 4096,
+        description = "Minima perdida, archivo grande",
+    )
+    data object Balanced : CompressionPreset(
+        label = "Equilibrado",
+        quality = 75,
+        maxWidth = 2048,
+        description = "Buen balance calidad/tamano",
+    )
+    data object MaxSaving : CompressionPreset(
+        label = "Ahorro maximo",
+        quality = 50,
+        maxWidth = 1024,
+        description = "Archivo pequeno, calidad aceptable",
+    )
+}
+```
+
+En Compose, iterar sobre ellos es limpio:
+
+```kotlin
+val presets = listOf(
+    CompressionPreset.HighQuality,
+    CompressionPreset.Balanced,
+    CompressionPreset.MaxSaving,
+)
+
+presets.forEach { preset ->
+    PresetCard(
+        label = preset.label,
+        description = preset.description,
+        selected = selectedPreset == preset,
+        onClick = { selectedPreset = preset },
+    )
+}
+```
+
+Y en el use case, el `when` es exhaustivo (el compilador te obliga a cubrir todos los casos):
+
+```kotlin
+fun getOutputQuality(preset: CompressionPreset): Int = when (preset) {
+    is CompressionPreset.HighQuality -> preset.quality
+    is CompressionPreset.Balanced -> preset.quality
+    is CompressionPreset.MaxSaving -> preset.quality
+}
+```
+
+## Por que importa
+
+Sealed classes eliminan bugs de "me falto un caso". Si agregas un nuevo preset, el compilador te marca todos los `when` que necesitas actualizar. Enums no te dan esa garantia con propiedades complejas.

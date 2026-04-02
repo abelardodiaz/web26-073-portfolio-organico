@@ -1,0 +1,64 @@
+---
+title: "Intent router: como enrutar mensajes de WhatsApp a especialistas"
+slug: "intent-router-pattern-chatbot"
+category: "python"
+stack: ["python", "whatsapp-api", "chatbot", "asyncio"]
+date: "2026-04-05"
+project: "whatsapp-webhook-patterns"
+---
+
+## Contexto
+
+Un bot de WhatsApp que contesta todo con el mismo prompt de IA genera respuestas genericas. Un cliente que pregunta precios necesita un tono comercial con datos del catalogo. Un cliente que reporta una falla necesita un flujo de soporte con preguntas de diagnostico. Mezclar ambos en un solo prompt degrada la calidad de ambos.
+
+## Lo que aprendi
+
+El pattern es simple: un router clasifica la intencion del mensaje y lo envia al especialista correcto. Cada especialista tiene su propio system prompt, contexto y handler.
+
+```python
+@dataclass
+class Specialist:
+    name: str
+    keywords: list[str]
+    handler: Callable[[dict], Awaitable[str]]
+
+class IntentRouter:
+    def __init__(self, fallback_handler):
+        self.specialists: list[Specialist] = []
+        self.fallback = fallback_handler
+
+    def classify_intent(self, text: str) -> Specialist | None:
+        text_lower = text.lower()
+        for spec in self.specialists:
+            for kw in spec.keywords:
+                if kw in text_lower:
+                    return spec
+        return None
+
+    async def route(self, message: dict) -> str:
+        spec = self.classify_intent(message.get("text", ""))
+        handler = spec.handler if spec else self.fallback
+        return await handler(message)
+```
+
+Registrar especialistas es declarativo:
+
+```python
+router = IntentRouter(fallback_handler=general)
+router.register(Specialist(
+    name="comercial",
+    keywords=["precio", "costo", "cotizar", "cita", "horario"],
+    handler=comercial_handler,
+))
+router.register(Specialist(
+    name="soporte",
+    keywords=["falla", "error", "no funciona", "ayuda"],
+    handler=soporte_handler,
+))
+```
+
+## Por que importa
+
+Keywords como primer filtro es rapido y predecible (no gasta API). Para casos ambiguos, el fallback puede usar IA para clasificar. Pero en la practica, el 80% de los mensajes de clientes caen en keywords obvios ("cuanto cuesta", "no funciona").
+
+Agregar un nuevo especialista es agregar un `register()`. No tocas el router ni los otros especialistas.

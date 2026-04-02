@@ -1,0 +1,59 @@
+---
+title: "asyncio fire-and-forget: enviar sin esperar respuesta"
+slug: "asyncio-fire-and-forget-pattern"
+category: "python"
+stack: ["python", "asyncio", "httpx"]
+date: "2026-04-09"
+project: "whatsapp-webhook-patterns"
+---
+
+## Contexto
+
+En un webhook handler, despues de procesar el mensaje necesitas reenviarlo a n8n o a otro sistema externo. Pero no puedes esperar a que n8n responda porque Meta espera tu 200 OK rapido. Si tardas mas de unos segundos, Meta asume que tu servidor esta muerto.
+
+## Lo que aprendi
+
+El pattern fire-and-forget con `asyncio` y `httpx` te permite lanzar el request sin bloquear:
+
+```python
+import httpx
+
+async def forward_to_n8n(payload: dict) -> None:
+    """Fire and forget - no esperamos respuesta."""
+    try:
+        async with httpx.AsyncClient() as client:
+            await client.post(
+                "https://n8n.ejemplo.com/webhook/whatsapp",
+                json=payload,
+                timeout=10,
+            )
+    except Exception as e:
+        logger.warning("Forward fallido: %s", e)
+        # No relanzar - es fire and forget
+```
+
+En tu handler:
+
+```python
+@app.post("/webhook")
+async def receive_webhook(request: Request) -> Response:
+    data = await request.json()
+
+    # Procesar localmente (rapido)
+    await process_message(data)
+
+    # Forward sin esperar (asyncio task en background)
+    asyncio.create_task(forward_to_n8n(data))
+
+    return Response(status_code=200)  # responde a Meta inmediato
+```
+
+`asyncio.create_task()` lanza la coroutine en background. El handler retorna 200 al instante y el forward sucede despues.
+
+## Cuidado con errores silenciosos
+
+El problema de fire-and-forget es que si falla, nadie se entera. Por eso el `try/except` con `logger.warning` es obligatorio. Si necesitas garantia de entrega, combina con el retry queue pattern (encolar si falla).
+
+## Por que importa
+
+Es el pattern mas comun en webhooks: recibir rapido, confirmar rapido, procesar despues. FastAPI + asyncio lo hacen natural.

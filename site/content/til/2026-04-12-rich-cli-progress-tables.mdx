@@ -1,0 +1,71 @@
+---
+title: "rich: tablas y progress bars para CLIs que no dan pena"
+slug: "rich-cli-progress-tables"
+category: "python"
+stack: ["python", "rich", "cli"]
+date: "2026-04-12"
+project: "video-frame-analyzer"
+---
+
+## Contexto
+
+Los scripts CLI que solo hacen `print()` son dificiles de leer cuando procesan muchos items. "Procesando frame 1... Procesando frame 2..." se vuelve ruido. Necesitas algo visual sin agregar una dependencia pesada como `curses`.
+
+## Lo que aprendi
+
+`rich` convierte tu terminal en algo presentable con una linea:
+
+```python
+from rich.console import Console
+from rich.table import Table
+from rich.progress import track
+
+console = Console()
+
+# Tabla con resultados
+table = Table(title="Analisis de Frames")
+table.add_column("Frame", style="cyan")
+table.add_column("Timestamp", style="green")
+table.add_column("Descripcion")
+
+for frame in results:
+    table.add_row(frame.name, frame.timestamp, frame.description[:60])
+
+console.print(table)
+
+# Progress bar con ETA
+for frame in track(frames, description="Analizando..."):
+    await analyze_frame(frame)
+```
+
+Output:
+
+```
+        Analisis de Frames
++----------+-----------+---------------------------+
+| Frame    | Timestamp | Descripcion               |
++----------+-----------+---------------------------+
+| frame_01 | 0:05      | Player enters the arena   |
+| frame_02 | 0:32      | First tower attack        |
+| frame_03 | 1:15      | Mid-game clash            |
++----------+-----------+---------------------------+
+
+Analizando... ━━━━━━━━━━━━━━━━━━━━ 100% 0:00:12
+```
+
+## Panels para status
+
+```python
+from rich.panel import Panel
+
+console.print(Panel.fit(
+    f"[bold]Video:[/] {video_name}\n"
+    f"[bold]Frames:[/] {count}\n"
+    f"[bold]Costo:[/] ~${cost:.4f}",
+    title="Resumen",
+))
+```
+
+## Por que importa
+
+`pip install rich` y tu script CLI pasa de "hecho por un junior" a "herramienta profesional". No cambia la funcionalidad pero cambia la percepcion. Y las progress bars con ETA te ahorran el "se habra trabado?" mental.
