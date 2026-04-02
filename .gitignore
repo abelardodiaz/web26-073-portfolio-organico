@@ -54,3 +54,5 @@ web26-073-tools-private/
 *.log
 npm-debug.log*
 pnpm-debug.log*
+
+.vercel

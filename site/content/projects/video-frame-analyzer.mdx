@@ -1,0 +1,31 @@
+---
+title: "Video Frame Analyzer"
+slug: "video-frame-analyzer"
+description: "CLI que extrae frames de video con FFmpeg scene detection, analiza con Gemini Flash (vision) y genera narrativa con Claude. ~$0.008 por video."
+stack: ["python", "ffmpeg", "gemini", "claude", "pydantic"]
+github: "https://github.com/abelardodiaz/video-frame-analyzer"
+category: "ai"
+featured: false
+date: "2026-04-01"
+---
+
+## El Problema
+
+Analizar video manualmente es tedioso. Necesitas ver el video completo, tomar notas, identificar momentos clave. Para un sistema automatizado, enviar todos los frames a una IA de vision es caro e ineficiente.
+
+## La Solucion
+
+Un pipeline de 6 pasos que combina FFmpeg scene detection con IA de vision:
+
+1. **Probe** - ffprobe extrae metadata
+2. **Context** - Gemini Flash identifica tipo de contenido con 3 frames
+3. **Extract** - FFmpeg extrae solo frames donde hay cambio de escena
+4. **Analyze** - Gemini Flash describe cada frame en lotes de 8
+5. **Narrate** - Claude Haiku genera narrativa coherente con timestamps
+6. **Output** - Markdown con metadata + narrativa
+
+El truco: en vez de analizar todos los frames, solo analiza los cambios de escena. Un video de 4 minutos se reduce a 6-20 frames relevantes. Costo total: ~$0.008.
+
+## Contexto
+
+Extraido de un proyecto en produccion. Incluye dry-run para probar sin gastar API, configuracion via .env, reintentos con backoff exponencial, y tests.

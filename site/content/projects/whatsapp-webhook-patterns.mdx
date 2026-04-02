@@ -1,0 +1,29 @@
+---
+title: "WhatsApp Webhook Patterns"
+slug: "whatsapp-webhook-patterns"
+description: "4 patterns de produccion para webhooks de WhatsApp Business Cloud API. Validacion HMAC, retry queue, router de especialistas y forwarding asincrono."
+stack: ["python", "fastapi", "whatsapp-api", "hmac", "asyncio"]
+github: "https://github.com/abelardodiaz/whatsapp-webhook-patterns"
+category: "fullstack"
+featured: false
+date: "2026-04-01"
+---
+
+## El Problema
+
+La WhatsApp Business Cloud API tiene comportamientos no documentados que solo descubres en produccion: Meta desactiva tu webhook si respondes con 4xx/5xx, las firmas HMAC tienen formato inesperado, los mensajes llegan en avalancha despues de caidas, y no hay enrutamiento nativo.
+
+## Los Patterns
+
+4 patterns extraidos de 3 sistemas en produccion:
+
+1. **Validacion HMAC** - Siempre retorna 200 (quirk critico de Meta)
+2. **Retry Queue** - Cola in-memory con max 3 reintentos y dead-letter
+3. **Router de Especialistas** - Clasificacion por intenciones con fallback
+4. **Webhook Forwarding** - Reenvio asincrono a n8n/Zapier/Make
+
+Incluye servidor de ejemplo (FastAPI) que integra los 4 patterns.
+
+## Contexto
+
+Extraidos de un CRM multi-tenant, un chatbot para clinicas y un sistema de notificaciones. El quirk de Meta (#1) es una leccion aprendida a golpes: tu webhook simplemente deja de recibir mensajes sin aviso.

@@ -108,15 +108,20 @@ export function ProjectGrid({ projects, categories, activeCategory }: Props) {
                 <p className="mb-4 text-sm leading-relaxed text-muted-foreground">
                   {project.description}
                 </p>
-                <div className="flex flex-wrap gap-1.5">
-                  {project.stack.map((tech) => (
-                    <span
-                      key={tech}
-                      className="rounded bg-secondary px-2 py-0.5 text-xs font-mono text-secondary-foreground"
-                    >
-                      {tech}
-                    </span>
-                  ))}
+                <div className="flex items-center justify-between">
+                  <div className="flex flex-wrap gap-1.5">
+                    {project.stack.map((tech) => (
+                      <span
+                        key={tech}
+                        className="rounded bg-secondary px-2 py-0.5 text-xs font-mono text-secondary-foreground"
+                      >
+                        {tech}
+                      </span>
+                    ))}
+                  </div>
+                  <span className="shrink-0 font-mono text-xs text-[var(--fg-subtle)]">
+                    {project.date}
+                  </span>
                 </div>
               </Link>
             ))}
@@ -138,15 +143,20 @@ export function ProjectGrid({ projects, categories, activeCategory }: Props) {
                   <p className="mb-3 text-[13px] leading-relaxed text-muted-foreground">
                     {project.description}
                   </p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {project.stack.map((tech) => (
-                      <span
-                        key={tech}
-                        className="rounded bg-secondary px-2 py-0.5 font-mono text-[10px] font-medium text-secondary-foreground tracking-wide"
-                      >
-                        {tech}
-                      </span>
-                    ))}
+                  <div className="flex items-center justify-between">
+                    <div className="flex flex-wrap gap-1.5">
+                      {project.stack.map((tech) => (
+                        <span
+                          key={tech}
+                          className="rounded bg-secondary px-2 py-0.5 font-mono text-[10px] font-medium text-secondary-foreground tracking-wide"
+                        >
+                          {tech}
+                        </span>
+                      ))}
+                    </div>
+                    <span className="shrink-0 font-mono text-[11px] text-[var(--fg-subtle)]">
+                      {project.date}
+                    </span>
                   </div>
                 </div>
               </Link>

@@ -91,6 +91,36 @@ const sectors = [
   },
 ];
 
+const eyCategories = [
+  {
+    area: "Ventas y atencion",
+    cases: [
+      { name: "Asistentes posventa 24/7", tool: "OpenClaw + WhatsApp", benefit: "~70% consultas rutinarias automatizadas" },
+      { name: "Chatbots soporte primer nivel", tool: "OpenClaw + canales", benefit: "-85% costos operativos" },
+      { name: "Automatizacion pedido y cotizacion", tool: "Agente cotizador", benefit: "Ciclos de venta mas rapidos" },
+      { name: "Copiloto para agentes de servicio", tool: "OpenClaw skills", benefit: "-25% tiempo por caso" },
+    ],
+  },
+  {
+    area: "Operaciones y finanzas",
+    cases: [
+      { name: "Cuentas por pagar automatizadas", tool: "Agente + OCR", benefit: "Elimina capturas manuales y errores" },
+      { name: "Reportes financieros automaticos", tool: "Agente reportes", benefit: "Menos tiempo escribiendo, mas analizando" },
+      { name: "Automatizacion procesos admin", tool: "Agente + ERP", benefit: "Libera supervision, mitiga errores" },
+      { name: "Optimizacion rutas de entrega", tool: "GPS + IA", benefit: "-20-30% km recorridos" },
+    ],
+  },
+  {
+    area: "Equipo y sistemas",
+    cases: [
+      { name: "Automatizacion registro en CRM", tool: "Agente custom", benefit: "Vendedores ahorran tiempo admin" },
+      { name: "Help desk interno con IA", tool: "OpenClaw interno", benefit: "Soluciones al instante al colaborador" },
+      { name: "Onboarding automatizado", tool: "n8n + agente", benefit: "Productivo desde dia 1" },
+      { name: "Chatbot RRHH para empleados", tool: "OpenClaw interno", benefit: "Libera tiempo de RRHH" },
+    ],
+  },
+];
+
 export default function DiagnosticoIAPage() {
   const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${WHATSAPP_MSG}`;
 
@@ -104,14 +134,14 @@ export default function DiagnosticoIAPage() {
             San Luis Potosi
           </span>
           <h1 className="mb-4 text-3xl font-bold tracking-tight sm:text-4xl">
-            Tu negocio pierde horas en tareas
+            Tu negocio pierde horas en tareas{" "}
             <br className="hidden sm:block" />
             que una maquina podria hacer sola
           </h1>
           <p className="max-w-2xl text-lg leading-relaxed text-muted-foreground">
             Encuentro donde se pierde tiempo y dinero en tu empresa, y te
             muestro exactamente como resolverlo con inteligencia artificial.
-            Sin jerga, con numeros claros.
+            Sin tecnicismos, con numeros claros.
           </p>
           <div className="mt-6">
             <SocialProof
@@ -181,6 +211,50 @@ export default function DiagnosticoIAPage() {
           </div>
         </section>
 
+        {/* EY Cases */}
+        <section className="mb-16">
+          <h2 className="mb-2 text-sm font-semibold uppercase tracking-widest text-[var(--fg-subtle)]">
+            Mas oportunidades reales
+          </h2>
+          <p className="mb-8 text-xs text-muted-foreground">
+            12 casos seleccionados del reporte{" "}
+            <span className="font-medium text-foreground">
+              &ldquo;100 Casos Rentables de IA en LATAM&rdquo;
+            </span>{" "}
+            de EY Mexico (2026), mapeados a herramientas que implemento
+            directamente.
+          </p>
+          <div className="grid gap-6 sm:grid-cols-3">
+            {eyCategories.map((cat) => (
+              <div key={cat.area}>
+                <h3 className="mb-3 text-xs font-semibold uppercase tracking-widest text-primary">
+                  {cat.area}
+                </h3>
+                <div className="space-y-3">
+                  {cat.cases.map((c) => (
+                    <div
+                      key={c.name}
+                      className="rounded-md border border-border bg-card p-4"
+                    >
+                      <p className="mb-1 text-sm font-medium">{c.name}</p>
+                      <p className="mb-1.5 text-xs text-muted-foreground">
+                        {c.benefit}
+                      </p>
+                      <span className="inline-block rounded bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
+                        {c.tool}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+          <p className="mt-4 text-[11px] text-muted-foreground/60">
+            Fuente: EY Mexico &mdash; Jaume Sues, Socio de Tecnologias
+            Emergentes, EY Latinoamerica
+          </p>
+        </section>
+
         {/* Impact Data */}
         <section className="mb-16">
           <h2 className="mb-8 text-sm font-semibold uppercase tracking-widest text-[var(--fg-subtle)]">
@@ -234,6 +308,27 @@ export default function DiagnosticoIAPage() {
               . El diagnostico no es un gasto &mdash; es el primer paso de la
               solucion.
             </p>
+          </div>
+        </section>
+
+        {/* Sample Download */}
+        <section className="mb-16">
+          <h2 className="mb-4 text-sm font-semibold uppercase tracking-widest text-[var(--fg-subtle)]">
+            Muestra del entregable
+          </h2>
+          <div className="max-w-md rounded-lg border border-border bg-card p-6">
+            <p className="mb-3 text-sm leading-relaxed text-muted-foreground">
+              Quieres ver como es el diagnostico antes de contratarlo? Descarga
+              una muestra real con una empresa ficticia de ejemplo.
+            </p>
+            <a
+              href="/muestra-diagnostico-promasl.pdf"
+              download
+              className="inline-flex items-center gap-2 rounded-lg border border-primary/30 bg-primary/5 px-4 py-2.5 text-sm font-medium text-primary transition-colors hover:bg-primary/10"
+            >
+              <span>&#8595;</span>
+              Descargar muestra (PDF)
+            </a>
           </div>
         </section>
 
@@ -318,14 +413,14 @@ export default function DiagnosticoIAPage() {
             </span>
           </div>
           <p className="mb-3 text-xl font-bold tracking-tight sm:text-2xl">
-            Tu negocio pierde horas en tareas
+            Tu negocio pierde horas en tareas{" "}
             <br className="hidden sm:block" />
             que una maquina podria hacer sola
           </p>
           <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">
             Encuentro donde se pierde tiempo y dinero en tu empresa, y te
             muestro exactamente como resolverlo con inteligencia artificial.
-            Sin jerga, con numeros claros.
+            Sin tecnicismos, con numeros claros.
           </p>
         </section>
 
@@ -378,6 +473,48 @@ export default function DiagnosticoIAPage() {
               </div>
             ))}
           </div>
+        </section>
+
+        {/* EY Cases */}
+        <section className="mb-14">
+          <div className="mb-6 flex items-center gap-3">
+            <h2 className="font-mono text-xs font-semibold uppercase tracking-widest text-[var(--fg-subtle)]">
+              // mas_oportunidades
+            </h2>
+            <span className="h-px flex-1 bg-border" />
+          </div>
+          <p className="mb-6 font-mono text-[11px] text-muted-foreground">
+            <span className="text-primary/60">// fuente:</span> EY Mexico
+            &mdash; &ldquo;100 Casos Rentables de IA en LATAM&rdquo; (2026)
+          </p>
+          <div className="grid gap-6 sm:grid-cols-3">
+            {eyCategories.map((cat) => (
+              <div key={cat.area}>
+                <p className="mb-3 font-mono text-[11px] font-semibold uppercase tracking-widest text-primary">
+                  # {cat.area.toLowerCase().replace(/ /g, "_")}
+                </p>
+                <div className="space-y-2">
+                  {cat.cases.map((c) => (
+                    <div
+                      key={c.name}
+                      className="rounded-md border border-border bg-card p-3"
+                    >
+                      <p className="mb-1 text-[13px] font-medium">{c.name}</p>
+                      <p className="mb-1.5 font-mono text-[11px] text-muted-foreground">
+                        {c.benefit}
+                      </p>
+                      <span className="inline-block rounded bg-primary/10 px-2 py-0.5 font-mono text-[10px] font-medium text-primary">
+                        {c.tool}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+          <p className="mt-4 font-mono text-[10px] text-muted-foreground/50">
+            // EY Mexico, Jaume Sues, Socio Tecnologias Emergentes
+          </p>
         </section>
 
         {/* Impact Data */}
@@ -445,6 +582,30 @@ export default function DiagnosticoIAPage() {
                 diagnostico != gasto. diagnostico == paso_1.
               </p>
             </div>
+          </div>
+        </section>
+
+        {/* Sample Download */}
+        <section className="mb-14">
+          <div className="mb-6 flex items-center gap-3">
+            <h2 className="font-mono text-xs font-semibold uppercase tracking-widest text-[var(--fg-subtle)]">
+              // muestra
+            </h2>
+            <span className="h-px flex-1 bg-border" />
+          </div>
+          <div className="max-w-md rounded-md border border-border bg-card p-5">
+            <p className="mb-3 text-[13px] leading-relaxed text-muted-foreground">
+              Quieres ver como es el diagnostico antes de contratarlo? Descarga
+              una muestra con empresa ficticia de ejemplo.
+            </p>
+            <a
+              href="/muestra-diagnostico-promasl.pdf"
+              download
+              className="inline-flex items-center gap-2 rounded-md border border-primary/40 bg-primary/10 px-4 py-2.5 font-mono text-sm font-medium text-primary transition-all hover:bg-primary/20 hover:shadow-[0_0_0_3px_var(--accent-glow)]"
+            >
+              <span>&#8595;</span>
+              ./descargar_muestra.pdf
+            </a>
           </div>
         </section>
 
