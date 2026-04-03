@@ -105,9 +105,14 @@ export function ProjectGrid({ projects, categories, activeCategory }: Props) {
                     &#8599;
                   </span>
                 </div>
-                <p className="mb-4 text-sm leading-relaxed text-muted-foreground">
+                <p className="mb-3 text-sm leading-relaxed text-muted-foreground">
                   {project.description}
                 </p>
+                <div className="mb-3">
+                  <span className={`inline-block rounded-full px-2.5 py-0.5 text-[10px] font-medium tracking-wide uppercase ${project.github ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : "bg-muted text-muted-foreground"}`}>
+                    {project.github ? "Open Source" : "Repo Privado"}
+                  </span>
+                </div>
                 <div className="flex items-center justify-between">
                   <div className="flex flex-wrap gap-1.5">
                     {project.stack.map((tech) => (
@@ -140,9 +145,14 @@ export function ProjectGrid({ projects, categories, activeCategory }: Props) {
                   <h2 className="text-[15px] font-semibold tracking-tight mb-1.5">
                     {project.title}
                   </h2>
-                  <p className="mb-3 text-[13px] leading-relaxed text-muted-foreground">
+                  <p className="mb-2 text-[13px] leading-relaxed text-muted-foreground">
                     {project.description}
                   </p>
+                  <div className="mb-2">
+                    <span className={`inline-block rounded px-2 py-0.5 font-mono text-[9px] font-medium tracking-wide uppercase ${project.github ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : "bg-muted text-muted-foreground"}`}>
+                      {project.github ? "open-source" : "private"}
+                    </span>
+                  </div>
                   <div className="flex items-center justify-between">
                     <div className="flex flex-wrap gap-1.5">
                       {project.stack.map((tech) => (

@@ -110,6 +110,9 @@ export default async function ProjectPage({ params }: Props) {
           >
             {project.category}
           </Link>
+          <span className={`inline-block rounded-full px-2.5 py-0.5 text-[10px] font-medium tracking-wide uppercase ${project.github ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : "bg-muted text-muted-foreground"}`}>
+            {project.github ? "Open Source" : "Repo Privado"}
+          </span>
           <span className="font-mono text-xs text-[var(--fg-subtle)]">
             {project.date}
           </span>
