@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.9.2] - 2026-04-03
+
+### Added
+- Project page: Hikvision ISAPI Patterns (scheduled 2026-04-07)
+  - 5 production patterns for Hikvision NVR/DVR integration via ISAPI
+  - Public repo: github.com/abelardodiaz/hikvision-isapi-patterns
+
 ## [0.9.1] - 2026-03-31
 
 ### Changed

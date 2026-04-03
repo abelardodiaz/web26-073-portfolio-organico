@@ -1,0 +1,30 @@
+---
+title: "Hikvision ISAPI Patterns"
+slug: "hikvision-isapi-patterns"
+description: "5 patterns de produccion para integracion con NVR/DVR Hikvision via protocolo ISAPI. Circuit breaker, digest auth, XML parsing, event receiver y device discovery."
+stack: ["python", "httpx", "isapi", "circuit-breaker"]
+github: "https://github.com/abelardodiaz/hikvision-isapi-patterns"
+category: "fullstack"
+featured: false
+date: "2026-04-07"
+---
+
+## El Problema
+
+El protocolo ISAPI de Hikvision es el mecanismo de control para NVR y DVR pero no tiene SDK oficial en Python. La documentacion es fragmentaria, la autenticacion usa digest auth con quirks no documentados, las respuestas XML tienen namespaces inconsistentes, y las conexiones se caen sin aviso bajo carga.
+
+## Los Patterns
+
+5 patterns extraidos de un backend de produccion con 19 endpoints:
+
+1. **ISAPIClient + Circuit Breaker** - Cliente HTTP async con digest auth auto-detect, retry exponencial y circuit breaker (5 fallos = 60s offline)
+2. **Snapshot Service** - Captura de imagenes JPEG via streaming channel con storage y cleanup automatico
+3. **Device Discovery** - Escaneo de NVR y camaras conectadas, sin dependencia de base de datos
+4. **Event Parser** - Parsing standalone de notificaciones XML con manejo de namespaces ISAPI
+5. **PTZ Control** - Comandos pan-tilt-zoom via XML: movimiento continuo, stop, presets
+
+Incluye 17 tests con respuestas XML mockeadas y documentacion del protocolo ISAPI.
+
+## Contexto
+
+Extraidos de un sistema de videovigilancia en produccion. El circuit breaker y retry fueron esenciales: los NVR Hikvision cortan conexiones bajo carga sin retornar error HTTP. El cliente tiene 211 lineas y es completamente standalone.
