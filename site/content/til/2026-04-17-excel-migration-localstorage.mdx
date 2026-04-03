@@ -1,0 +1,67 @@
+---
+title: "Migrar datos historicos de Excel a una web app (sin backend)"
+slug: "excel-migration-localstorage"
+category: "javascript"
+stack: ["typescript", "excel", "nextjs"]
+date: "2026-04-17"
+project: "simulabnb"
+---
+
+## Contexto
+
+El usuario tenia 2 anios de reservaciones Airbnb en un Excel con columnas inconsistentes (fechas en diferentes formatos, montos con y sin signo de pesos, celdas vacias). Necesitaba migrar esos datos a la web app para que el historial y reportes mensuales funcionaran desde el dia 1.
+
+## Lo que aprendi
+
+En vez de parsear el Excel en runtime (pesado, propenso a errores), lo converti a JSON una sola vez con un script de seed:
+
+```typescript
+// seed_data.ts - se ejecuta UNA VEZ
+const HISTORICAL_DATA = [
+  {
+    property: "Casa 142",
+    checkIn: "2025-04-04",
+    checkOut: "2025-04-07",
+    nights: 3,
+    platform: "airbnb",
+    grossIncome: 3200,
+    airbnbFee: 556.80,
+    isrRetention: 128,
+    ivaRetention: 256,
+    payout: 2771.20,
+  },
+  // ... 50+ registros
+];
+
+function seedLocalStorage() {
+  const existing = localStorage.getItem("reservations");
+  if (existing) {
+    console.log("Ya hay datos, saltando seed");
+    return;
+  }
+  localStorage.setItem("reservations", JSON.stringify(HISTORICAL_DATA));
+  console.log(`Seed: ${HISTORICAL_DATA.length} reservaciones importadas`);
+}
+```
+
+### Limpieza del Excel
+
+Las transformaciones que tuve que hacer:
+
+```typescript
+// Fechas: "04/04/2025" o "4-abr-25" -> "2025-04-04"
+function normalizeDate(raw: string): string {
+  const d = new Date(raw);
+  return d.toISOString().split("T")[0];
+}
+
+// Montos: "$3,200.00" o "3200" -> 3200
+function normalizeMoney(raw: string | number): number {
+  if (typeof raw === "number") return raw;
+  return parseFloat(raw.replace(/[$,]/g, ""));
+}
+```
+
+## Por que importa
+
+Si tu app empieza vacia, el usuario no ve valor. Con datos historicos precargados, la app se siente util desde el primer minuto: los reportes mensuales ya tienen datos, el dashboard muestra graficas reales, y el usuario puede comparar meses. La migracion de Excel es fea pero necesaria.

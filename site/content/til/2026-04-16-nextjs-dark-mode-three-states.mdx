@@ -1,0 +1,76 @@
+---
+title: "Dark mode con 3 estados: claro, oscuro y auto (Next.js + Tailwind)"
+slug: "nextjs-dark-mode-three-states"
+category: "react"
+stack: ["nextjs", "tailwind", "typescript"]
+date: "2026-04-16"
+project: "simulabnb"
+---
+
+## Contexto
+
+La mayoria de las implementaciones de dark mode tienen 2 estados: claro y oscuro. Pero los usuarios esperan un tercero: "auto" que sigue la preferencia del sistema operativo. Si tu laptop esta en dark mode, la app deberia arrancar oscura sin que tengas que configurar nada.
+
+## Lo que aprendi
+
+El patron con 3 botones (no toggle) es mas claro para el usuario:
+
+```typescript
+type Theme = "light" | "dark" | "system";
+
+function useTheme() {
+  const [theme, setTheme] = useState<Theme>("system");
+
+  useEffect(() => {
+    const stored = localStorage.getItem("theme") as Theme | null;
+    if (stored) setTheme(stored);
+  }, []);
+
+  useEffect(() => {
+    const root = document.documentElement;
+
+    if (theme === "system") {
+      const isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      root.classList.toggle("dark", isDark);
+      localStorage.removeItem("theme");
+    } else {
+      root.classList.toggle("dark", theme === "dark");
+      localStorage.setItem("theme", theme);
+    }
+  }, [theme]);
+
+  return { theme, setTheme };
+}
+```
+
+Para que responda a cambios del SO en tiempo real (usuario cambia de claro a oscuro mientras usa la app):
+
+```typescript
+useEffect(() => {
+  if (theme !== "system") return;
+
+  const mq = window.matchMedia("(prefers-color-scheme: dark)");
+  const handler = (e: MediaQueryListEvent) => {
+    document.documentElement.classList.toggle("dark", e.matches);
+  };
+
+  mq.addEventListener("change", handler);
+  return () => mq.removeEventListener("change", handler);
+}, [theme]);
+```
+
+## UI: 3 botones en vez de toggle
+
+```tsx
+<div className="flex gap-1">
+  <button onClick={() => setTheme("light")}>Claro</button>
+  <button onClick={() => setTheme("system")}>Auto</button>
+  <button onClick={() => setTheme("dark")}>Oscuro</button>
+</div>
+```
+
+Es mas explicito que un toggle con icono de sol/luna. El usuario sabe exactamente que opcion eligio.
+
+## Por que importa
+
+"Auto" deberia ser el default en toda app. Si el usuario no ha elegido tema, respeta su preferencia del SO. Solo guarda en localStorage cuando elige explicitamente claro u oscuro. Es un detalle pequeno que marca la diferencia en UX.

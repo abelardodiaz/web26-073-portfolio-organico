@@ -1,0 +1,42 @@
+---
+title: "Recharts waterfall chart para desglose fiscal en apps financieras"
+slug: "recharts-waterfall-fiscal"
+category: "react"
+stack: ["react", "recharts", "typescript", "nextjs"]
+date: "2026-04-13"
+project: "simulabnb"
+---
+
+## Contexto
+
+En una app de calculo fiscal para Airbnb necesitaba mostrar como el ingreso bruto se reduce paso a paso: comision Airbnb, ISR, IVA, impuesto de alojamiento, hasta llegar al payout neto. Una tabla con numeros funciona pero no comunica visualmente la "caida" del dinero.
+
+## Lo que aprendi
+
+Recharts no tiene un componente Waterfall nativo, pero se puede simular con un BarChart apilado donde una barra invisible actua como base:
+
+```tsx
+const data = [
+  { name: "Total Cliente", base: 0, value: 19314, fill: "#3b82f6" },
+  { name: "Comision", base: 16320, value: 2994, fill: "#ef4444" },
+  { name: "ISR 4%", base: 15654, value: 666, fill: "#ef4444" },
+  { name: "IVA 8%", base: 14322, value: 1332, fill: "#ef4444" },
+  { name: "Imp. Aloj.", base: 11658, value: 2664, fill: "#f97316" },
+  { name: "Payout", base: 0, value: 14322, fill: "#22c55e" },
+];
+
+<BarChart data={data}>
+  <Bar dataKey="base" stackId="stack" fill="transparent" />
+  <Bar dataKey="value" stackId="stack">
+    {data.map((entry, i) => (
+      <Cell key={i} fill={entry.fill} />
+    ))}
+  </Bar>
+</BarChart>
+```
+
+El truco: `base` es invisible (transparent) y "levanta" la barra `value` a la posicion correcta. Las deducciones (rojo) se apilan desde arriba hacia abajo, y el payout (verde) empieza desde cero mostrando lo que queda.
+
+## Por que importa
+
+Un waterfall chart convierte una tabla aburrida de retenciones fiscales en algo que el usuario entiende en 2 segundos: "ah, de $19K me quedan $14K". Para apps financieras dirigidas a no-contadores, la visualizacion es la diferencia entre una herramienta util y una confusa.

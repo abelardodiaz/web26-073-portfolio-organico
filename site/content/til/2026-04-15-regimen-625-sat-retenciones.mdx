@@ -1,0 +1,55 @@
+---
+title: "Regimen 625 SAT: como calcular retenciones ISR/IVA de plataformas tecnologicas"
+slug: "regimen-625-sat-retenciones"
+category: "finanzas"
+stack: ["sat", "fiscal", "mexico", "airbnb"]
+date: "2026-04-15"
+project: "simulabnb"
+---
+
+## Contexto
+
+Al construir SimulaBnB necesitaba entender exactamente como el SAT calcula las retenciones para anfitriones de Airbnb bajo el Regimen 625 (Plataformas Tecnologicas). La informacion oficial existe pero esta dispersa en varios documentos del SAT y cada contador te dice algo diferente.
+
+## Lo que aprendi
+
+Cuando un huesped paga $19,314 por una estancia en Airbnb, NO recibes esa cantidad. El dinero se reparte asi:
+
+```
+Pago del huesped:              $19,314.00
+  - Comision Airbnb (~15.5%):  -$2,993.67
+  = Ingreso bruto anfitrion:   $16,320.33
+
+Retenciones SAT (sobre ingreso bruto):
+  - ISR (4%):                  -$652.81
+  - IVA retenido (8%):         -$1,305.63
+
+Impuesto estatal:
+  - Alojamiento (~3%):         -$489.61 (varia por estado)
+
+  = Payout neto:               $13,872.28
+```
+
+### Las tasas clave
+
+| Concepto | Tasa | Sobre que se calcula |
+|----------|------|---------------------|
+| Comision Airbnb | ~15-16% | Total cobrado al huesped |
+| ISR retenido | 4% | Ingreso bruto del anfitrion |
+| IVA retenido | 8% | Ingreso bruto del anfitrion |
+| Imp. alojamiento | 2-5% | Varia por estado (SLP: 3%) |
+
+### Matices importantes
+
+- **ISR al 4%** es una retencion provisional, no el impuesto final. En tu declaracion anual puedes pagar mas o menos segun tus deducciones
+- **IVA al 8%** es la mitad del 16% porque la plataforma retiene la otra mitad
+- **Reservas directas** (sin Airbnb) no tienen retencion automatica - tu declaras todo manualmente
+- **Impuesto de alojamiento** es estatal y Airbnb lo cobra al huesped por separado en algunos estados
+
+### CFDI (facturacion)
+
+Airbnb emite un CFDI global mensual al publico en general (RFC: XAXX010101000). Si tu huesped necesita factura con su RFC, debes emitirla tu directamente - Airbnb no lo hace por ti.
+
+## Por que importa
+
+Si eres anfitrion Airbnb en Mexico y no entiendes estos numeros, no sabes cuanto ganas realmente. Vi casos donde anfitriones ponen tarifas "competitivas" sin calcular retenciones y terminan perdiendo dinero despues de impuestos. Una herramienta que haga estos calculos automaticamente les ahorra horas con el contador y malas sorpresas en la declaracion anual.

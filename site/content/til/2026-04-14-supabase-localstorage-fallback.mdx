@@ -1,0 +1,55 @@
+---
+title: "Supabase con fallback a localStorage para apps que funcionan offline"
+slug: "supabase-localstorage-fallback"
+category: "react"
+stack: ["react", "supabase", "typescript", "nextjs"]
+date: "2026-04-14"
+project: "simulabnb"
+---
+
+## Contexto
+
+Estaba construyendo una calculadora fiscal donde los usuarios guardan propiedades y reservaciones. Queria usar Supabase como backend, pero tambien necesitaba que la app funcionara sin conexion y sin obligar al usuario a crear cuenta. La solucion: un hook que usa Supabase si hay sesion, y localStorage si no.
+
+## Lo que aprendi
+
+El patron es un wrapper que decide el storage en runtime:
+
+```typescript
+function useStorage<T>(key: string, defaultValue: T) {
+  const { session } = useAuth();
+
+  async function save(data: T) {
+    if (session) {
+      await supabase.from(key).upsert(data);
+    } else {
+      localStorage.setItem(key, JSON.stringify(data));
+    }
+  }
+
+  async function load(): Promise<T> {
+    if (session) {
+      const { data } = await supabase.from(key).select();
+      return data ?? defaultValue;
+    }
+    const stored = localStorage.getItem(key);
+    return stored ? JSON.parse(stored) : defaultValue;
+  }
+
+  return { save, load };
+}
+```
+
+Ventajas:
+- **Sin registro obligatorio**: el usuario empieza a usar la app inmediatamente
+- **Upgrade transparente**: cuando crea cuenta, los datos migran a Supabase
+- **Offline funcional**: si Supabase esta caido, localStorage sigue sirviendo
+- **Zero costo inicial**: localStorage no genera queries a Supabase
+
+## Cuidado
+
+localStorage tiene limite de ~5MB y no sincroniza entre dispositivos. Para datos simples (configuraciones, historial de simulaciones) funciona perfecto. Para datos pesados o multi-dispositivo, empujar al usuario hacia crear cuenta.
+
+## Por que importa
+
+El 80% de los usuarios abandona una app que pide registro antes de mostrar valor. Con este patron, muestras valor primero (calculadora funcionando) y el registro es opcional para features avanzadas (sync, backup).
