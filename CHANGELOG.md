@@ -8,6 +8,10 @@ All notable changes to this project will be documented in this file.
 - Project page: Hikvision ISAPI Patterns (scheduled 2026-04-07)
   - 5 production patterns for Hikvision NVR/DVR integration via ISAPI
   - Public repo: github.com/abelardodiaz/hikvision-isapi-patterns
+- Project page: Hikvision CCTV Backend (scheduled 2026-04-12)
+  - 19-endpoint private backend, full system overview
+- Project page: De Patterns a Plataforma (scheduled 2026-04-17)
+  - Public vs private comparative case study
 
 ## [0.9.1] - 2026-03-31
 

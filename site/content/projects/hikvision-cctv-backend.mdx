@@ -1,0 +1,44 @@
+---
+title: "Hikvision CCTV Backend"
+slug: "hikvision-cctv-backend"
+description: "Backend API completo para videovigilancia con NVR Hikvision. 19 endpoints REST, eventos en tiempo real, busqueda de grabaciones y monitoreo de storage. Verificado contra hardware real."
+stack: ["python", "fastapi", "postgresql", "celery", "redis", "httpx"]
+github: ""
+category: "fullstack"
+featured: false
+date: "2026-04-12"
+---
+
+## El Problema
+
+Los NVR Hikvision dependen de software propietario (IVMS-4200, Hik-Connect) para monitoreo y control. No hay API REST estandar, no hay forma de integrar con sistemas propios, y no hay acceso programatico a eventos, grabaciones o estado de camaras sin pasar por la interfaz del fabricante.
+
+## La Solucion
+
+Un backend API completo que habla directamente con el NVR via protocolo ISAPI sobre HTTP, eliminando la dependencia de software propietario.
+
+### 19 Endpoints REST
+
+- **Descubrimiento automatico** -- detecta NVR y camaras conectadas, modelo, firmware, serial, estado
+- **Snapshots en vivo** -- JPEG de cualquier camara bajo demanda
+- **Eventos en tiempo real** -- el NVR notifica movimiento, intrusion, tamper, video loss
+- **Busqueda de grabaciones** -- encontrar clips por camara y rango de fechas, obtener URLs RTSP
+- **Control PTZ** -- mover camaras motorizadas remotamente
+- **Monitoreo de storage** -- espacio disponible en los discos del NVR
+- **Health checks** -- estado del NVR, base de datos y Redis con latencia
+
+### Arquitectura
+
+- **FastAPI** con async throughout (httpx para NVR, SQLAlchemy async para DB)
+- **PostgreSQL** con 3 tablas: devices, camera_status, events
+- **Celery + Redis** con 4 tasks automaticas: polling de estado, snapshots programados, cleanup de eventos, beat schedule
+- **Circuit breaker + retry** con exponential backoff en todas las comunicaciones con el NVR
+- **Alembic** para migraciones de base de datos
+
+## Contexto
+
+Verificado contra un NVR DS-7616NI-K2 con 3 camaras IP en produccion. ~2,200 lineas de Python. El HDD de 1TB estaba al 100% -- dato operativo que ahora tenemos via API en vez de tener que abrir IVMS-4200.
+
+Este proyecto es la base para dashboards web, alertas inteligentes (Telegram/WhatsApp con snapshot adjunto), analitica de video con ML, e integracion con domotica. La API abstrae toda la complejidad de ISAPI/XML/DigestAuth para que cualquier frontend o sistema externo la consuma.
+
+Repositorio privado.

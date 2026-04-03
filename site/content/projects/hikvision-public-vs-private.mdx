@@ -1,0 +1,64 @@
+---
+title: "De Patterns a Plataforma: Hikvision Publico vs Privado"
+slug: "hikvision-public-vs-private"
+description: "Caso de estudio: como extraer un repo open source de un sistema privado de produccion. Comparativa entre hikvision-isapi-patterns (publico) y el backend CCTV completo (privado)."
+stack: ["python", "fastapi", "httpx", "open-source"]
+github: "https://github.com/abelardodiaz/hikvision-isapi-patterns"
+category: "fullstack"
+featured: false
+date: "2026-04-17"
+---
+
+## El Problema
+
+Tienes un sistema de produccion privado que resuelve problemas reales. Quieres compartir el conocimiento sin exponer infraestructura, credenciales ni logica de negocio. Como decides que extraer, que sanitizar y que dejar privado?
+
+## El Caso
+
+Un backend de videovigilancia con 19 endpoints (privado) del cual se extrajo una libreria de 5 patterns (publico). Mismo dominio, distinto alcance.
+
+### Que tiene cada uno
+
+| Capacidad | Publico | Privado |
+|---|---|---|
+| ISAPIClient (circuit breaker, retry, auth) | Si | Si |
+| Snapshots, Discovery, Events, PTZ | Si | Si |
+| Busqueda de grabaciones (RTSP) | -- | Si |
+| Monitoreo de storage | -- | Si |
+| 19 endpoints REST (FastAPI) | -- | Si |
+| PostgreSQL (3 tablas) | -- | Si |
+| Celery tasks (4 automaticas) | -- | Si |
+| Redis cache | -- | Si |
+| Migraciones (Alembic) | -- | Si |
+
+### En numeros
+
+| Metrica | Publico | Privado |
+|---|---|---|
+| Lineas de codigo | ~590 | ~2,200 |
+| Archivos Python | 6 | ~35 |
+| Dependencias | 2 (httpx, xmltodict) | 12+ |
+| Tests | 17 | -- |
+| Infraestructura | Ninguna | PostgreSQL + Redis + Celery |
+
+## Criterios de Extraccion
+
+Lo que se publico:
+- **Standalone**: funciona sin base de datos, sin framework web, sin infraestructura
+- **Reutilizable**: cualquier proyecto Python que necesite hablar con un NVR Hikvision
+- **Conocimiento escaso**: casi no hay recursos sobre ISAPI en Python, menos en espanol
+
+Lo que se quedo privado:
+- **Acoplado a infraestructura**: modelos ORM, Celery tasks, endpoints FastAPI
+- **Datos sensibles**: IPs internas, credenciales, topologia de red
+- **Logica de negocio**: como se persisten eventos, que se monitorea, alertas
+
+## El Refactor
+
+El cambio mas grande fue en Device Discovery. En el sistema privado dependia de SQLAlchemy ORM (Session, Device model, .add(), .commit()). La version publica retorna dicts planos y no toca base de datos. Los metodos de consulta ISAPI (get_device_info, list_cameras, list_streaming_channels) ya retornaban dicts, asi que la extraccion fue limpia.
+
+El Event Parser usaba enums del modelo (EventType.VMD, EventState.active). La version publica usa strings planos. Misma funcionalidad, cero dependencias.
+
+## Leccion
+
+El motor y el vehiculo son cosas distintas. El repo publico es el motor: el cliente ISAPI con circuit breaker, retry y digest auth. El privado es el vehiculo completo: API REST, base de datos, tasks automaticas, monitoreo. Quien agarre el motor puede construir su propio vehiculo.
