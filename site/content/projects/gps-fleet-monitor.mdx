@@ -1,0 +1,44 @@
+---
+title: "GPS Fleet Monitor"
+slug: "gps-fleet-monitor"
+description: "Sistema completo de fleet tracking con Tracksolid API. 26 endpoints REST, dashboard con mapas Leaflet, adaptive polling, geofences, comandos remotos y alertas en tiempo real."
+stack: ["python", "fastapi", "postgresql", "celery", "redis", "htmx", "leaflet"]
+github: ""
+category: "fullstack"
+featured: false
+date: "2026-04-27"
+---
+
+## El Problema
+
+Los sistemas de rastreo GPS vehicular dependen de aplicaciones propietarias del proveedor (Tracksolid app, web portal). No hay forma de integrar con sistemas internos, personalizar alertas, ni combinar datos de multiples fuentes sin pasar por interfaces limitadas.
+
+## La Solucion
+
+Un backend + dashboard completo que se conecta directamente a la API del proveedor GPS y expone toda la funcionalidad via REST API propia y UI web.
+
+### 26 Endpoints REST
+
+- **Devices** -- registro, sync con plataforma, metadata de vehiculos
+- **Positions** -- posiciones en tiempo real con cache, refresh forzado, metricas de latencia
+- **Tracks** -- historial de rutas con polyline replay
+- **Geofences** -- crear/eliminar zonas con sync bidireccional al proveedor
+- **Commands** -- envio remoto con confirmacion 2-step y timeout 5min
+- **Alerts** -- velocidad, geofence, ignicion con estados read/acknowledged
+- **Events** -- Server-Sent Events para actualizaciones en tiempo real
+- **Dashboard** -- mapa interactivo con HTMX + Leaflet + OpenStreetMap
+
+### Arquitectura
+
+- **FastAPI** async throughout con httpx para el proveedor GPS
+- **PostgreSQL** con 6 modelos: Device, Position, Geofence, Command, Alert, Fleet
+- **Celery + Redis** con adaptive polling (moving=30s, stopped=5min, offline=15min)
+- **Circuit breaker Redis-backed** + retry con exponential backoff
+- **9 excepciones custom** con HTTP status codes apropiados
+- **HTMX + Leaflet** para dashboard sin framework JS pesado
+
+## Contexto
+
+Verificado contra una flota real con dispositivos JimiIoT/Concox via Tracksolid Open API. ~3,900 lineas de Python, 24 commits, 342 lineas de tests. El adaptive polling redujo las llamadas API en ~60% al clasificar dispositivos por estado.
+
+Repositorio privado.

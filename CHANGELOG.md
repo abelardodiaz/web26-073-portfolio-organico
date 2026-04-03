@@ -12,6 +12,13 @@ All notable changes to this project will be documented in this file.
   - 19-endpoint private backend, full system overview
 - Project page: De Patterns a Plataforma (scheduled 2026-04-17)
   - Public vs private comparative case study
+- Project page: GPS Tracking Patterns (scheduled 2026-04-22)
+  - 6 production patterns for GPS fleet tracking via Tracksolid
+  - Public repo: github.com/abelardodiaz/gps-tracking-patterns
+- Project page: GPS Fleet Monitor (scheduled 2026-04-27)
+  - 26-endpoint private fleet tracking system
+- Project page: De Patterns a Fleet (scheduled 2026-05-02)
+  - GPS public vs private comparative case study
 
 ## [0.9.1] - 2026-03-31
 

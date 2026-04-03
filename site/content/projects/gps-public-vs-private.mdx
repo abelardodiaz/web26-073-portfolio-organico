@@ -1,0 +1,69 @@
+---
+title: "De Patterns a Fleet: GPS Publico vs Privado"
+slug: "gps-public-vs-private"
+description: "Caso de estudio: extraccion de un repo open source desde un sistema de fleet tracking privado. Comparativa entre gps-tracking-patterns (publico) y GPS Fleet Monitor (privado)."
+stack: ["python", "fastapi", "httpx", "open-source"]
+github: "https://github.com/abelardodiaz/gps-tracking-patterns"
+category: "fullstack"
+featured: false
+date: "2026-05-02"
+---
+
+## El Problema
+
+Segundo caso de estudio de extraccion open source. Un sistema de fleet tracking privado del cual se extrajo una libreria de 6 patterns. Mismo dominio, distinto alcance.
+
+## El Caso
+
+Un sistema de monitoreo GPS vehicular con 26 endpoints (privado) del cual se extrajo una libreria con provider interface, circuit breaker, adaptive polling y track utils (publico).
+
+### Que tiene cada uno
+
+| Capacidad | Publico | Privado |
+|---|---|---|
+| GPS Provider Interface (abstracto) | Si | Si |
+| Tracksolid Adapter (auth, positions, tracks) | Si | Si |
+| OAuth + MD5 signing + Redis cache | Si | Si |
+| Circuit Breaker (Redis-backed) | Si | Si |
+| Track Utils (haversine, trip summary) | Si | Si |
+| Adaptive Polling | Si | Si |
+| 26 endpoints REST (FastAPI) | -- | Si |
+| PostgreSQL (6 modelos) | -- | Si |
+| Dashboard web (HTMX + Leaflet) | -- | Si |
+| Celery tasks (adaptive polling) | -- | Si |
+| Geofence sync bidireccional | -- | Si |
+| Comandos remotos (2-step confirm) | -- | Si |
+| Alertas (velocidad, geofence, ignicion) | -- | Si |
+| Server-Sent Events (tiempo real) | -- | Si |
+
+### En numeros
+
+| Metrica | Publico | Privado |
+|---|---|---|
+| Lineas de codigo | ~1,000 | ~3,900 |
+| Archivos Python | 8 | ~35 |
+| Dependencias | 3 (httpx, redis, tenacity) | 15+ |
+| Tests | 25 | 342 LOC |
+| Infraestructura | Solo Redis | PostgreSQL + Redis + Celery |
+
+## Criterios de Extraccion
+
+Lo que se publico:
+- **Standalone**: funciona sin base de datos, sin framework web (solo Redis para circuit breaker)
+- **Intercambiable**: el provider interface permite implementar otros proveedores GPS
+- **Conocimiento escaso**: la API de Tracksolid no tiene SDK oficial, rate limits no documentados
+
+Lo que se quedo privado:
+- **Acoplado a infraestructura**: modelos ORM, Celery tasks, endpoints FastAPI, dashboard
+- **Datos sensibles**: credenciales API, IMEIs de dispositivos, datos de flota
+- **Logica de negocio**: geofence sync, comandos remotos, sistema de alertas
+
+## El Refactor
+
+El cambio principal fue el **Adaptive Polling Manager**. En el sistema privado consultaba SQLAlchemy directamente (`db.query(Device).filter(...)`). La version publica acepta una lista de dicts con `{imei, status, last_gps_time}` y retorna los IMEIs a pollear. Misma logica, cero ORM.
+
+El **Circuit Breaker** uso keys hardcodeadas (`gps:cb:state`). La version publica acepta `key_prefix` configurable para usar multiples circuit breakers independientes.
+
+## Leccion
+
+Misma formula que con Hikvision: el repo publico es el motor (cliente API + patterns de resiliencia), el privado es el vehiculo (API REST + DB + dashboard + automatizacion). La diferencia es que GPS agrego el adaptive polling como pattern -- una optimizacion que solo descubres cuando pagas por cada API call en produccion.

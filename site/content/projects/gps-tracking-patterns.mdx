@@ -1,0 +1,31 @@
+---
+title: "GPS Tracking Patterns"
+slug: "gps-tracking-patterns"
+description: "6 patterns de produccion para integracion con GPS fleet tracking via Tracksolid/JimiIoT Open API. Provider interface, circuit breaker Redis, adaptive polling y track utils."
+stack: ["python", "httpx", "redis", "tenacity"]
+github: "https://github.com/abelardodiaz/gps-tracking-patterns"
+category: "fullstack"
+featured: false
+date: "2026-04-22"
+---
+
+## El Problema
+
+Las plataformas GPS fleet (Tracksolid, Queclink, Teltonika) tienen APIs con documentacion fragmentaria, autenticacion MD5 no estandar, rate limits no documentados, y se caen bajo carga sin retornar errores claros. No hay SDKs oficiales en Python.
+
+## Los Patterns
+
+6 patterns extraidos de un sistema de fleet monitoring con 26 endpoints:
+
+1. **GPS Provider Interface** - Contrato abstracto para cualquier proveedor GPS (swap sin cambiar logica)
+2. **Tracksolid Adapter** - Implementacion completa: auth, positions, tracks, geofences, commands, alarms
+3. **OAuth + MD5 Signing** - Token caching en Redis con TTL y firma MD5 custom de Tracksolid
+4. **Redis Circuit Breaker** - Estado persistido en Redis, configurable por servicio
+5. **Track Utils** - Haversine, trip summary, stop detection -- puro math, sin dependencias
+6. **Adaptive Polling** - Decide que dispositivos pollear segun estado (moving/stopped/offline)
+
+Incluye 25 tests y documentacion del protocolo Tracksolid.
+
+## Contexto
+
+Extraidos de un sistema de fleet monitoring en produccion. El circuit breaker y retry fueron criticos: Tracksolid rate-limita con codigo 1006 sin documentar el threshold, y los timeouts bajo carga no retornan HTTP error. El adaptive polling redujo las llamadas API en ~60% al saltar dispositivos detenidos o offline.
