@@ -56,7 +56,11 @@ export function getAllTils(): TilEntry[] {
     } satisfies TilEntry;
   });
 
-  return tils.sort(
+  const today = new Date();
+  today.setHours(23, 59, 59, 999);
+  const published = tils.filter((til) => new Date(til.date) <= today);
+
+  return published.sort(
     (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
   );
 }
