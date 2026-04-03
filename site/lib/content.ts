@@ -118,7 +118,11 @@ export function getAllProjects(): Project[] {
     } satisfies Project;
   });
 
-  return projects.sort(
+  const today = new Date();
+  today.setHours(23, 59, 59, 999);
+  const published = projects.filter((p) => new Date(p.date) <= today);
+
+  return published.sort(
     (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
   );
 }
