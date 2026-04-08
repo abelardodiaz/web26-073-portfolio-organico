@@ -1,0 +1,46 @@
+---
+title: "Live Conference Translator"
+slug: "live-conference-translator"
+description: "CLI que captura audio del sistema en tiempo real, transcribe con Faster-Whisper (local) y traduce al espanol. Tambien procesa YouTube y archivos locales generando subtitulos .srt/.vtt."
+stack: ["python", "whisper", "wasapi", "yt-dlp", "ffmpeg"]
+github: "https://github.com/abelardodiaz/live-conference-translator"
+category: "tools"
+featured: true
+date: "2026-04-07"
+---
+
+## El Problema
+
+Seguir conferencias en ingles en tiempo real requiere atencion constante. Pausar para traducir rompe el flujo. Los servicios de traduccion en vivo tienen costo mensual y requieren integraciones especificas por plataforma.
+
+## La Solucion
+
+Un pipeline multi-threaded que captura cualquier audio del sistema (Discord, Zoom, YouTube, cualquier app) y muestra subtitulos bilingues en terminal:
+
+1. **AudioCapture** - WASAPI Loopback captura audio del sistema sin software extra
+2. **Transcriber** - Faster-Whisper transcribe localmente (4x mas rapido que Whisper, gratis)
+3. **Translator** - deep-translator (Google Translate) traduce sin API key
+4. **Display** - Terminal con colores ANSI muestra ambos idiomas en tiempo real
+5. **Logger** - Guarda transcripciones automaticamente
+
+Todo corre local excepto la traduccion. Sin costos de API para transcripcion.
+
+## Modo Offline
+
+Ademas del modo live, procesa videos completos:
+
+- **YouTube y 1000+ sitios** via yt-dlp
+- **Archivos locales** (mp4, mp3, wav, etc.)
+- **Output**: archivos .txt, .srt y .vtt en ambos idiomas
+- **Multi-idioma**: soporta `--source-lang` para audio en cualquier idioma
+
+## Arquitectura
+
+Pipeline de queues con 5 threads independientes: capture, transcriber, translator, logger, display. Cada componente es un modulo aislado que se comunica via `queue.Queue`. Shutdown coordinado con signal handlers.
+
+## Decisiones Tecnicas
+
+- **Faster-Whisper** sobre Whisper original: usa CTranslate2, 4x mas rapido en CPU, menor uso de memoria
+- **WASAPI Loopback** sobre virtual audio cable: nativo de Windows, zero config
+- **deep-translator** sobre APIs de pago: gratis, sin limites practicos para uso personal
+- **VAD filter** activo: Whisper solo procesa cuando detecta voz, reduce ruido y CPU

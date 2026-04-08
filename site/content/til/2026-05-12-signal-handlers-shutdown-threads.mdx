@@ -1,0 +1,93 @@
+---
+title: "Signal handlers para shutdown coordinado de threads"
+slug: "signal-handlers-shutdown-threads"
+category: "python"
+stack: ["python", "signal", "threading"]
+date: "2026-05-12"
+project: "live-conference-translator"
+---
+
+## Contexto
+
+Un pipeline con 5 threads (audio capture, transcriber, translator, logger, display) necesita apagarse limpiamente con Ctrl+C. Si solo matas el proceso, el archivo de transcripcion se corrompe, el stream de audio queda abierto, y pierdes los ultimos segmentos traducidos.
+
+## Lo que aprendi
+
+El patron: `signal.SIGINT` llama a un shutdown handler que notifica a cada componente via `threading.Event`, luego espera con timeout:
+
+```python
+import signal
+import sys
+import threading
+
+def run_pipeline():
+    # Crear componentes (cada uno tiene un _stop_event interno)
+    capture = AudioCapture(audio_queue)
+    transcriber = Transcriber(audio_queue, text_queue)
+    translator = Translator(text_queue, [logger_queue, display_queue])
+    logger = TranscriptLogger(logger_queue)
+    display = Display(display_queue)
+
+    workers = [
+        threading.Thread(target=capture.run, daemon=True),
+        threading.Thread(target=transcriber.run, daemon=True),
+        threading.Thread(target=translator.run, daemon=True),
+        threading.Thread(target=logger.run, daemon=True),
+    ]
+
+    for t in workers:
+        t.start()
+
+    def shutdown(sig=None, frame=None):
+        # Notificar a cada componente en orden
+        capture.stop()       # para de capturar audio
+        transcriber.stop()   # termina segmento actual
+        translator.stop()    # traduce lo pendiente
+        logger.stop()        # flush al disco
+        display.stop()       # limpia terminal
+
+        # Esperar con timeout (no bloquear indefinidamente)
+        for t in workers:
+            t.join(timeout=3.0)
+
+        sys.exit(0)
+
+    signal.signal(signal.SIGINT, shutdown)
+
+    try:
+        display.run()  # El main thread corre el display (bloquea)
+    except KeyboardInterrupt:
+        shutdown()
+```
+
+Cada componente implementa el mismo patron internamente:
+
+```python
+class TranscriptLogger:
+    def __init__(self, queue):
+        self._stop_event = threading.Event()
+        self.queue = queue
+
+    def run(self):
+        while not self._stop_event.is_set():
+            try:
+                item = self.queue.get(timeout=1.0)
+            except queue.Empty:
+                continue
+            self._write_to_file(item)
+        # Al salir del loop, flush final
+        self._flush()
+
+    def stop(self):
+        self._stop_event.set()
+```
+
+Detalles importantes:
+- `daemon=True` en los threads: si el shutdown falla, el proceso muere de todos modos
+- `timeout=1.0` en `queue.get()`: sin timeout, el thread nunca checa el `_stop_event`
+- `join(timeout=3.0)`: si un thread se cuelga, no esperar para siempre
+- El main thread corre el display (bloqueante), los workers son daemon threads
+
+## Por que importa
+
+Sin shutdown coordinado, Ctrl+C mata el proceso y pierdes datos. Con este patron, cada componente termina su trabajo actual, hace flush, y cierra limpiamente. Son 10 lineas extra por componente.

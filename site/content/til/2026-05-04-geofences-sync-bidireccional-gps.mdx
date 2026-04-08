@@ -1,0 +1,79 @@
+---
+title: "Geofences con sync bidireccional al proveedor GPS"
+slug: "geofences-sync-bidireccional-gps"
+category: "python"
+stack: ["python", "fastapi", "httpx"]
+date: "2026-05-04"
+project: "gps-fleet-monitor"
+---
+
+## Contexto
+
+En un sistema de fleet tracking, las geofences (zonas geograficas) se crean tanto en tu sistema como en la plataforma del proveedor GPS (Tracksolid). Si solo las creas localmente, el proveedor no genera alertas de entrada/salida. Si solo las creas en el proveedor, no tienes registro local. Necesitas sync bidireccional.
+
+## Lo que aprendi
+
+El patron es crear la geofence localmente primero y luego sincronizarla con el proveedor, guardando el ID remoto para futuras operaciones:
+
+```python
+async def create_geofence(self, name: str, points: list[dict], device_imeis: list[str]) -> dict:
+    """Crea geofence local + sync al proveedor."""
+    # 1. Crear en base de datos local
+    geofence = await self.repo.create({
+        "name": name,
+        "points": points,  # [{lat, lon}, ...]
+        "device_imeis": device_imeis,
+    })
+
+    # 2. Sync al proveedor GPS
+    try:
+        remote_id = await self.provider.create_geofence(
+            name=name,
+            points=points,
+            imeis=device_imeis,
+        )
+        geofence.remote_id = remote_id
+        geofence.sync_status = "synced"
+    except ProviderAPIError:
+        geofence.sync_status = "pending"
+
+    await self.repo.update(geofence)
+    return geofence
+```
+
+Para la eliminacion, el orden inverso: primero borrar del proveedor, luego localmente:
+
+```python
+async def delete_geofence(self, geofence_id: int):
+    """Elimina del proveedor primero, luego localmente."""
+    geofence = await self.repo.get(geofence_id)
+
+    if geofence.remote_id:
+        try:
+            await self.provider.delete_geofence(geofence.remote_id)
+        except ProviderAPIError:
+            pass  # Si falla en el remoto, borrar local de todos modos
+
+    await self.repo.delete(geofence_id)
+```
+
+El campo `sync_status` permite reintentar syncs fallidos en un Celery task periodico:
+
+```python
+@celery_app.task
+def retry_pending_syncs():
+    """Reintenta geofences que no se sincronizaron."""
+    pending = repo.get_by_sync_status("pending")
+    for gf in pending:
+        try:
+            remote_id = provider.create_geofence(gf.name, gf.points, gf.imeis)
+            gf.remote_id = remote_id
+            gf.sync_status = "synced"
+            repo.update(gf)
+        except ProviderAPIError:
+            pass  # Se reintentara en el proximo ciclo
+```
+
+## Por que importa
+
+Sin sync bidireccional, tus geofences son decorativas: existen en tu sistema pero el proveedor GPS no genera alertas cuando un vehiculo entra o sale. El `sync_status` evita perder geofences por errores temporales de red.

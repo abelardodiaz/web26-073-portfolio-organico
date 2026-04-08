@@ -1,0 +1,44 @@
+---
+title: "OAuth con firma MD5 custom de Tracksolid"
+slug: "tracksolid-oauth-md5-signing"
+category: "python"
+stack: ["python", "httpx", "redis", "md5"]
+date: "2026-04-18"
+project: "gps-tracking-patterns"
+---
+
+## Contexto
+
+Tracksolid (JimiIoT) usa un esquema OAuth que no es estandar. En vez de HMAC-SHA256 como la mayoria de APIs, usa firma MD5 con un patron especifico: concatenar el secret, los parametros ordenados alfabeticamente, y el secret de nuevo. Si el orden de los parametros esta mal, el digest no coincide y recibes un error generico sin explicacion.
+
+## Lo que aprendi
+
+La firma MD5 se construye asi: `app_secret + params_ordenados + app_secret`:
+
+```python
+import hashlib
+
+def sign_request(params: dict, app_secret: str) -> str:
+    """Firma MD5 custom de Tracksolid: secret + sorted params + secret."""
+    sign_string = app_secret
+    for key in sorted(params.keys()):
+        sign_string += f"{key}{params[key]}"
+    sign_string += app_secret
+    return hashlib.md5(sign_string.encode()).hexdigest().upper()
+```
+
+El token se cachea en Redis con un buffer de 5 minutos antes de que expire, para evitar auth failures a mitad de una llamada:
+
+```python
+token_ttl = max(expires_in - 300, 60)  # 5 min buffer, minimo 60s
+redis.setex("tracksolid:oauth:token", token_ttl, token)
+```
+
+Otros detalles no documentados:
+- El timestamp debe ser UTC en formato `%Y-%m-%d %H:%M:%S` (no ISO 8601)
+- Nunca pedir un token mas de una vez cada 30 segundos (rate limit silencioso que bloquea la cuenta)
+- El `expires_in` se solicita como `"7200"` (string, 2 horas) pero el TTL real puede variar
+
+## Por que importa
+
+Sin el cache en Redis, cada request pide un token nuevo y eventualmente te bloquean. Sin el buffer de 5 minutos, el token puede expirar entre que lo obtuviste y que lo usas. Estos detalles no estan en la documentacion oficial.

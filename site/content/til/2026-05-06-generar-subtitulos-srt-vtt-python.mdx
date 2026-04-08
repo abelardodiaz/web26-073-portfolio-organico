@@ -1,0 +1,77 @@
+---
+title: "Generar subtitulos .srt y .vtt desde transcripcion"
+slug: "generar-subtitulos-srt-vtt-python"
+category: "python"
+stack: ["python", "srt", "vtt"]
+date: "2026-05-06"
+project: "live-conference-translator"
+---
+
+## Contexto
+
+Despues de transcribir un video con Whisper, tenia segmentos con timestamps y texto. Necesitaba exportar a formatos de subtitulos estandar (.srt para reproductores, .vtt para web) en ambos idiomas.
+
+## Lo que aprendi
+
+La unica diferencia real entre SRT y VTT es el separador de milisegundos y el header:
+
+```python
+def format_timestamp_srt(seconds: float) -> str:
+    """SRT usa coma: 00:01:23,456"""
+    h = int(seconds // 3600)
+    m = int((seconds % 3600) // 60)
+    s = int(seconds % 60)
+    ms = int((seconds % 1) * 1000)
+    return f"{h:02d}:{m:02d}:{s:02d},{ms:03d}"
+
+def format_timestamp_vtt(seconds: float) -> str:
+    """VTT usa punto: 00:01:23.456"""
+    h = int(seconds // 3600)
+    m = int((seconds % 3600) // 60)
+    s = int(seconds % 60)
+    ms = int((seconds % 1) * 1000)
+    return f"{h:02d}:{m:02d}:{s:02d}.{ms:03d}"
+```
+
+El formato SRT es:
+
+```
+1
+00:00:02,500 --> 00:00:05,800
+The circuit breaker prevents cascading failures
+
+2
+00:00:06,100 --> 00:00:09,300
+When the NVR stops responding we stop calling it
+```
+
+VTT agrega un header obligatorio:
+
+```python
+def write_vtt(segments: list[dict], output_path: str, text_key: str = "source"):
+    with open(output_path, "w", encoding="utf-8") as f:
+        f.write("WEBVTT\n\n")  # Header obligatorio
+        for i, seg in enumerate(segments, 1):
+            start = format_timestamp_vtt(seg["start"])
+            end = format_timestamp_vtt(seg["end"])
+            text = seg.get(text_key, "")
+            f.write(f"{i}\n{start} --> {end}\n{text}\n\n")
+```
+
+Para generar ambos idiomas, uso un `text_key` que selecciona entre `"source"` (ingles) y `"translated"` (espanol):
+
+```python
+def write_all(segments, output_dir, base_name, source_lang="en", target_lang="es"):
+    base = os.path.join(output_dir, f"{base_name}_{source_lang}")
+    write_srt(segments, f"{base}.srt", "source")
+    write_vtt(segments, f"{base}.vtt", "source")
+
+    if target_lang and any("translated" in seg for seg in segments):
+        base = os.path.join(output_dir, f"{base_name}_{target_lang}")
+        write_srt(segments, f"{base}.srt", "translated")
+        write_vtt(segments, f"{base}.vtt", "translated")
+```
+
+## Por que importa
+
+SRT es el formato universal que entienden VLC, mpv, y la mayoria de reproductores. VTT es el estandar web para `<track>` en HTML5 video. Con ambos cubres el 99% de los casos de uso.

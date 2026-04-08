@@ -1,0 +1,56 @@
+---
+title: "WASAPI Loopback: capturar audio del sistema sin virtual cable"
+slug: "wasapi-loopback-captura-audio-sistema"
+category: "python"
+stack: ["python", "pyaudiowpatch", "wasapi"]
+date: "2026-04-25"
+project: "live-conference-translator"
+---
+
+## Contexto
+
+Necesitaba capturar lo que suena por los parlantes/audifonos en Windows (audio de Discord, YouTube, cualquier app) para transcribirlo en tiempo real. La solucion tipica es instalar un "virtual audio cable" que crea un dispositivo loopback. Pero WASAPI en Windows ya soporta loopback nativo.
+
+## Lo que aprendi
+
+PyAudioWPatch (fork de PyAudio para Windows) expone los dispositivos WASAPI loopback. El truco es encontrar el dispositivo correcto: buscar el que coincide con el nombre del output default y tiene `isLoopbackDevice = True`:
+
+```python
+import pyaudiowpatch as pyaudio
+
+def get_loopback_device(pa):
+    """Encuentra el dispositivo loopback WASAPI del sistema."""
+    wasapi_info = pa.get_host_api_info_by_type(pyaudio.paWASAPI)
+    default_speakers = pa.get_device_info_by_index(
+        wasapi_info["defaultOutputDevice"]
+    )
+
+    for i in range(pa.get_device_count()):
+        dev = pa.get_device_info_by_index(i)
+        if dev.get("name", "").startswith(default_speakers["name"]):
+            if dev.get("isLoopbackDevice", False):
+                return dev
+
+    raise RuntimeError(f"No loopback for: {default_speakers['name']}")
+```
+
+El stream se abre en modo lectura con los parametros nativos del dispositivo:
+
+```python
+stream = pa.open(
+    format=pyaudio.paInt16,
+    channels=device["maxInputChannels"],
+    rate=int(device["defaultSampleRate"]),  # usualmente 48kHz
+    input=True,
+    input_device_index=int(device["index"]),
+    frames_per_buffer=int(rate * 0.5),  # buffer de 500ms
+)
+
+data = stream.read(frames_per_buffer, exception_on_overflow=False)
+```
+
+El `exception_on_overflow=False` es clave: si Whisper tarda en procesar y el buffer se llena, PyAudio lanza excepcion por default. Con este flag, simplemente descarta los frames perdidos.
+
+## Por que importa
+
+Zero instalacion de software extra. WASAPI loopback es nativo de Windows, PyAudioWPatch lo expone en Python. Funciona con cualquier aplicacion sin configuracion: Discord, Zoom, YouTube, Spotify, lo que sea que suene por los parlantes.

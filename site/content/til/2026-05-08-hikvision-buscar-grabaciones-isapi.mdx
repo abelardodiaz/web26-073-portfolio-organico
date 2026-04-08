@@ -1,0 +1,77 @@
+---
+title: "Buscar grabaciones por rango de fechas via ISAPI"
+slug: "hikvision-buscar-grabaciones-isapi"
+category: "python"
+stack: ["python", "httpx", "isapi", "xml"]
+date: "2026-05-08"
+project: "hikvision-cctv-backend"
+---
+
+## Contexto
+
+Un NVR Hikvision graba continuamente en sus discos duros. Para encontrar grabaciones de una camara especifica en un rango de fechas, hay que hacer un POST con XML al endpoint de busqueda. La documentacion oficial tiene errores que te hacen perder horas.
+
+## Lo que aprendi
+
+El endpoint es `POST /ISAPI/ContentMgmt/search` con un body XML:
+
+```python
+import uuid
+
+def build_search_xml(channel_id: int, start: str, end: str, max_results: int = 40):
+    """Construye XML de busqueda de grabaciones ISAPI."""
+    return f"""<CMSearchDescription>
+    <searchID>{uuid.uuid4()}</searchID>
+    <trackIDList>
+        <trackID>{channel_id}</trackID>
+    </trackIDList>
+    <timeSpanList>
+        <timeSpan>
+            <startTime>{start}</startTime>
+            <endTime>{end}</endTime>
+        </timeSpan>
+    </timeSpanList>
+    <maxResults>{max_results}</maxResults>
+    <searchResultPostion>0</searchResultPostion>
+</CMSearchDescription>"""
+```
+
+Tres trampas que no estan documentadas correctamente:
+
+1. **`searchResultPostion`** tiene un typo intencional: falta la "i" en "Position". Si escribes `searchResultPosition` (correcto en ingles), no funciona. Hikvision usa `Postion` en el request Y en la respuesta.
+
+2. **Track IDs**: `X01` = video de camara X, `X03` = fotos. Para camara 1 video usa `101`, para camara 2 video usa `201`.
+
+3. **Timestamps en UTC**: `2026-04-03T00:00:00Z` a `2026-04-03T23:59:59Z`. Si envias timestamps sin `Z`, el NVR los interpreta en su zona horaria local.
+
+Para paginacion:
+
+```python
+async def search_recordings(self, channel_id, start, end):
+    """Busca grabaciones con paginacion automatica."""
+    all_results = []
+    offset = 0
+
+    while True:
+        xml = build_search_xml(channel_id, start, end, max_results=40)
+        xml = xml.replace(
+            "<searchResultPostion>0</searchResultPostion>",
+            f"<searchResultPostion>{offset}</searchResultPostion>",
+        )
+        response = await self.client.post_xml(
+            "/ISAPI/ContentMgmt/search", xml
+        )
+        matches = response.get("CMSearchResult", {}).get("matchList", {}).get("searchMatchItem", [])
+        if isinstance(matches, dict):
+            matches = [matches]
+        if not matches:
+            break
+        all_results.extend(matches)
+        offset += len(matches)
+
+    return all_results
+```
+
+## Por que importa
+
+Sin busqueda programatica, tienes que abrir IVMS-4200 y navegar manualmente para encontrar grabaciones. Con este endpoint puedes construir busquedas por rango, exportar clips, o integrar con un dashboard web.

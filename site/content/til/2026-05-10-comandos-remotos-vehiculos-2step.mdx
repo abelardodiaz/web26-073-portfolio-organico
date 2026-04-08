@@ -1,0 +1,83 @@
+---
+title: "Comandos remotos a vehiculos con confirmacion 2-step"
+slug: "comandos-remotos-vehiculos-2step"
+category: "python"
+stack: ["python", "fastapi", "celery"]
+date: "2026-05-10"
+project: "gps-fleet-monitor"
+---
+
+## Contexto
+
+En un sistema de fleet tracking puedes enviar comandos remotos a los dispositivos GPS (apagar motor, activar alarma, solicitar ubicacion). El problema es que el dispositivo no responde inmediatamente: el comando viaja del servidor al proveedor GPS, del proveedor al dispositivo celular, y la respuesta regresa por el mismo camino. Puede tardar de 5 segundos a 5 minutos.
+
+## Lo que aprendi
+
+El patron 2-step separa el envio del resultado. Paso 1: enviar el comando. Paso 2: pollear el resultado.
+
+```python
+async def send_command(self, imei: str, instruction_id: int, template: str, params: list[str] = None) -> dict:
+    """Envia comando al dispositivo. Retorna ID de instruccion."""
+    result = await self.provider.send_instruction(
+        imei=imei,
+        inst_id=str(instruction_id),
+        inst_template=template,
+        params=params or [],
+    )
+    # Guardar en DB con status "pending"
+    command = await self.repo.create({
+        "imei": imei,
+        "instruction_id": instruction_id,
+        "status": "pending",
+        "sent_at": datetime.utcnow(),
+    })
+    return command
+```
+
+Para obtener el resultado, pollear con timeout de 5 minutos:
+
+```python
+@celery_app.task(bind=True, max_retries=10)
+def check_command_result(self, command_id: int):
+    """Pollea el resultado del comando cada 30 segundos."""
+    command = repo.get(command_id)
+    if not command or command.status != "pending":
+        return
+
+    try:
+        result = provider.get_instruction_result(command.imei)
+        if result.get("status") == "completed":
+            command.status = "completed"
+            command.result = result
+            command.completed_at = datetime.utcnow()
+            repo.update(command)
+            return
+    except ProviderAPIError:
+        pass
+
+    # Timeout: 5 minutos desde envio
+    elapsed = (datetime.utcnow() - command.sent_at).total_seconds()
+    if elapsed > 300:
+        command.status = "timeout"
+        repo.update(command)
+        return
+
+    # Reintentar en 30 segundos
+    raise self.retry(countdown=30)
+```
+
+El endpoint REST expone ambos pasos:
+
+```python
+@router.post("/devices/{imei}/commands")
+async def send(imei: str, body: CommandRequest):
+    return await service.send_command(imei, body.instruction_id, body.template)
+
+@router.get("/commands/{command_id}")
+async def get_result(command_id: int):
+    return await service.get_command(command_id)
+```
+
+## Por que importa
+
+Sin el patron 2-step, tu endpoint HTTP se queda bloqueado esperando la respuesta del dispositivo (que puede nunca llegar). Con 2-step, el usuario recibe confirmacion inmediata de que el comando se envio y consulta el resultado despues.

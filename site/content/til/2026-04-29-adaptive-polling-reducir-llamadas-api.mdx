@@ -1,0 +1,65 @@
+---
+title: "Adaptive polling: reducir 60% de llamadas API clasificando por estado"
+slug: "adaptive-polling-reducir-llamadas-api"
+category: "python"
+stack: ["python", "celery", "redis"]
+date: "2026-04-29"
+project: "gps-fleet-monitor"
+---
+
+## Contexto
+
+Un sistema de fleet tracking con 50 vehiculos que pollea posiciones cada 30 segundos genera ~144,000 llamadas API al dia. Pero la mayoria de los vehiculos estan detenidos o apagados la mayor parte del tiempo. Pollear un vehiculo estacionado cada 30 segundos es desperdicio puro.
+
+## Lo que aprendi
+
+Adaptive polling clasifica cada dispositivo por su estado y decide si vale la pena pollear en este ciclo:
+
+```python
+def get_imeis_to_poll(devices: list[dict], now: datetime = None) -> list[str]:
+    """Filtra que dispositivos pollear en este ciclo.
+
+    - moving/idle: SIEMPRE pollear
+    - stopped: skip si last_gps_time < 5 min
+    - offline: skip si last_gps_time < 15 min
+    """
+    now = now or datetime.utcnow()
+    to_poll = []
+
+    for dev in devices:
+        status = dev.get("status", "moving")
+        last_gps = dev.get("last_gps_time")
+
+        # Sin datos previos: siempre pollear (bootstrap)
+        if not last_gps:
+            to_poll.append(dev["imei"])
+            continue
+
+        if status in ("moving", "idle"):
+            to_poll.append(dev["imei"])
+        elif status == "stopped":
+            if (now - last_gps).total_seconds() > 300:  # 5 min
+                to_poll.append(dev["imei"])
+        elif status == "offline":
+            if (now - last_gps).total_seconds() > 900:  # 15 min
+                to_poll.append(dev["imei"])
+
+    return to_poll
+```
+
+En una flota tipica, el resultado es dramatico:
+
+```
+Device 001: moving, 30s ago    -> POLL
+Device 002: stopped, 2min ago  -> SKIP
+Device 003: stopped, 10min ago -> POLL (datos viejos)
+Device 004: offline, 3min ago  -> SKIP
+Device 005: offline, 20min ago -> POLL (verificar si volvio)
+Resultado: 3 de 5 polleados (40% reduccion)
+```
+
+Con flotas reales donde 60-70% de vehiculos estan detenidos en horario laboral, la reduccion llega al 60%.
+
+## Por que importa
+
+Menos llamadas API = menos riesgo de rate limit, menos costo si la API cobra por request, y menos carga en el servidor. La logica son 20 lineas y el impacto es masivo.

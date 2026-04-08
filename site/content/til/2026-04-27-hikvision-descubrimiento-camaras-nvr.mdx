@@ -1,0 +1,69 @@
+---
+title: "Descubrimiento automatico de camaras conectadas a un NVR"
+slug: "hikvision-descubrimiento-camaras-nvr"
+category: "python"
+stack: ["python", "httpx", "isapi", "xml"]
+date: "2026-04-27"
+project: "hikvision-cctv-backend"
+---
+
+## Contexto
+
+Un NVR Hikvision puede tener 4, 8, 16 o 32 camaras conectadas. No hay un boton de "listar camaras" en la API. Hay que consultar el endpoint correcto y parsear XML con quirks de formato.
+
+## Lo que aprendi
+
+El endpoint `/ISAPI/ContentMgmt/InputProxy/channels` retorna las camaras IP conectadas al NVR:
+
+```python
+async def list_cameras(self) -> list[dict]:
+    """Descubre camaras conectadas al NVR via ISAPI."""
+    data = await self.client.get_xml(
+        "/ISAPI/ContentMgmt/InputProxy/channels"
+    )
+    channels = data.get("InputProxyChannelList", {}).get(
+        "InputProxyChannel", []
+    )
+    # QUIRK: si solo hay 1 camara, la respuesta es dict, no list
+    if isinstance(channels, dict):
+        channels = [channels]
+
+    cameras = []
+    for ch in channels:
+        source = ch.get("sourceInputPortDescriptor", {})
+        cameras.append({
+            "channel_id": int(ch.get("id", 0)),
+            "name": ch.get("name", f"Camera {ch.get('id')}"),
+            "ip_address": source.get("ipAddress"),
+            "is_online": ch.get("online", "false").lower() == "true",
+            "model": source.get("model"),
+            "serial": source.get("serialNumber"),
+        })
+    return cameras
+```
+
+Dos trampas importantes:
+
+1. **Una sola camara = dict, multiples = list**. Si no normalizas con `isinstance(channels, dict)`, tu codigo falla en NVRs con una sola camara.
+
+2. **El campo `online` es string `"true"`/`"false"`**, no booleano. Requiere `.lower() == "true"`.
+
+El descubrimiento completo combina tres endpoints:
+
+```python
+async def discover_all(self) -> dict:
+    nvr_info = await self.get_device_info()       # /ISAPI/System/deviceInfo
+    cameras = await self.list_cameras()            # /ISAPI/ContentMgmt/InputProxy/channels
+    streaming = await self.list_streaming_channels()  # /ISAPI/Streaming/channels
+    return {
+        "nvr": nvr_info,
+        "cameras": cameras,
+        "streaming_channels": streaming,
+        "camera_count": len(cameras),
+        "online_count": sum(1 for c in cameras if c["is_online"]),
+    }
+```
+
+## Por que importa
+
+Con este patron, tu sistema detecta automaticamente que camaras hay sin configuracion manual. Cuando alguien agrega o quita una camara del NVR, el proximo discovery lo refleja.

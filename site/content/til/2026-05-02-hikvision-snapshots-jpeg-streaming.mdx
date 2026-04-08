@@ -1,0 +1,60 @@
+---
+title: "Snapshots JPEG via streaming channel en Hikvision"
+slug: "hikvision-snapshots-jpeg-streaming"
+category: "python"
+stack: ["python", "httpx", "isapi"]
+date: "2026-05-02"
+project: "hikvision-cctv-backend"
+---
+
+## Contexto
+
+Necesitaba capturar imagenes JPEG de camaras conectadas a un NVR Hikvision bajo demanda (por ejemplo, adjuntar un snapshot a una alerta de movimiento via Telegram). El NVR expone esto via ISAPI pero la respuesta es binaria, no XML.
+
+## Lo que aprendi
+
+El endpoint `/ISAPI/Streaming/channels/{channel_id}/picture` retorna JPEG crudo:
+
+```python
+async def capture(self, channel_id: int) -> bytes:
+    """Captura un snapshot de una camara. Retorna JPEG bytes."""
+    path = f"/ISAPI/Streaming/channels/{channel_id}/picture"
+    data = await self.client.get_raw(path)
+    return data
+```
+
+Los channel IDs siguen un patron: `X01` es el stream principal de la camara X, `X02` es el sub-stream. Para snapshot, siempre usar el main stream (`101`, `201`, `301`...).
+
+Para guardar snapshots organizados por fecha con cleanup automatico:
+
+```python
+from pathlib import Path
+from datetime import datetime, timezone
+
+async def capture_and_save(self, channel_id: int) -> str:
+    """Captura y guarda snapshot. Retorna path del archivo."""
+    data = await self.capture(channel_id)
+    now = datetime.now(timezone.utc)
+
+    # Organizar por fecha: media/snapshots/2026-04-03/101_143000.jpg
+    date_dir = self.base_path / now.strftime("%Y-%m-%d")
+    date_dir.mkdir(parents=True, exist_ok=True)
+
+    filename = f"{channel_id}_{now.strftime('%H%M%S')}.jpg"
+    file_path = date_dir / filename
+    file_path.write_bytes(data)
+    return str(file_path)
+
+def cleanup_old(self, days: int = 30):
+    """Elimina directorios de snapshots mas viejos que N dias."""
+    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+    for date_dir in self.base_path.iterdir():
+        if date_dir.is_dir():
+            dir_date = datetime.strptime(date_dir.name, "%Y-%m-%d")
+            if dir_date < cutoff:
+                shutil.rmtree(date_dir)
+```
+
+## Por que importa
+
+Un snapshot bajo demanda es la base para alertas inteligentes: deteccion de movimiento + snapshot + envio a Telegram/WhatsApp. Sin esto, solo recibes "movimiento detectado" sin saber que lo causo.

@@ -1,0 +1,62 @@
+---
+title: "deep-translator como alternativa gratuita a APIs de traduccion"
+slug: "deep-translator-alternativa-gratuita"
+category: "python"
+stack: ["python", "deep-translator"]
+date: "2026-04-30"
+project: "live-conference-translator"
+---
+
+## Contexto
+
+Para un traductor de conferencias en tiempo real necesitaba traducir texto de ingles a espanol. Google Cloud Translation y DeepL cobran por caracter. Para un uso personal donde traduzco horas de conferencias, el costo se acumula rapido.
+
+## Lo que aprendi
+
+`deep-translator` usa Google Translate por detras sin necesitar API key ni cuenta de Google Cloud:
+
+```python
+from deep_translator import GoogleTranslator
+
+translator = GoogleTranslator(source="en", target="es")
+texto = translator.translate("The circuit breaker pattern prevents cascading failures")
+# "El patron de circuit breaker previene fallas en cascada"
+```
+
+Para integrarlo en un pipeline threaded, la inicializacion se hace lazy dentro del thread (no en `__init__`):
+
+```python
+class Translator:
+    def __init__(self, text_queue, output_queues):
+        self.text_queue = text_queue
+        self.output_queues = output_queues
+        self._translator = None
+
+    def run(self):
+        # Inicializar en el thread, no en el constructor
+        self._translator = GoogleTranslator(source="en", target="es")
+
+        while not self._stop_event.is_set():
+            try:
+                item = self.text_queue.get(timeout=1.0)
+            except queue.Empty:
+                continue
+
+            try:
+                translated = self._translator.translate(item["text"])
+            except Exception:
+                translated = f"[translation error] {item['text']}"
+
+            result = {"english": item["text"], "spanish": translated}
+            for q in self.output_queues:
+                try:
+                    q.put(result, timeout=1.0)
+                except queue.Full:
+                    pass  # backpressure: drop si la queue esta llena
+```
+
+El manejo de errores con fallback es importante: si Google Translate falla (red, rate limit temporal), mostrar el texto original con un prefijo en vez de perder el segmento.
+
+## Por que importa
+
+`pip install deep-translator` y tienes traduccion funcional sin API key, sin cuenta, sin costo. Para uso personal y prototipos es perfecto. La calidad es Google Translate, que para conferencias tecnicas es mas que suficiente.

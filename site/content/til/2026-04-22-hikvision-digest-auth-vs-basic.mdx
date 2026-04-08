@@ -1,0 +1,54 @@
+---
+title: "Digest Auth vs Basic Auth: cuando Hikvision ignora tu header"
+slug: "hikvision-digest-auth-vs-basic"
+category: "python"
+stack: ["python", "httpx", "digest-auth"]
+date: "2026-04-22"
+project: "hikvision-isapi-patterns"
+---
+
+## Contexto
+
+Los NVR Hikvision soportan Digest Auth y Basic Auth via ISAPI, pero no hay forma de saber cual usa un dispositivo especifico sin probarlo. Algunos modelos aceptan ambos, otros solo Digest. Si envias Basic a uno que espera Digest, te responde 401 sin mas detalle.
+
+## Lo que aprendi
+
+La solucion es auto-detectar en la primera request inspeccionando el header `WWW-Authenticate`:
+
+```python
+async def _detect_auth(self):
+    """Auto-detect Digest vs Basic auth on first request."""
+    if self._auth_detected:
+        return
+
+    client = await self._get_client()
+    response = await client.get("/ISAPI/System/deviceInfo")
+
+    if response.status_code == 401:
+        www_auth = response.headers.get("WWW-Authenticate", "")
+        if "Digest" in www_auth:
+            self._auth = httpx.DigestAuth(self.username, self.password)
+        elif "Basic" in www_auth:
+            self._auth = httpx.BasicAuth(self.username, self.password)
+        else:
+            # Si no reconoce el header, default a Digest
+            self._auth = httpx.DigestAuth(self.username, self.password)
+
+    self._auth_detected = True
+```
+
+Detalles no obvios de Hikvision:
+- **Digest Auth con POST** necesita un GET previo para establecer el nonce. `httpx.DigestAuth` maneja esto automaticamente
+- Si el dispositivo no responde al probe (timeout/connection error), se asume Digest (es lo mas comun)
+- El default siempre es Digest, no Basic. Basic es la excepcion en dispositivos Hikvision antiguos
+
+```python
+except (httpx.ConnectError, httpx.ConnectTimeout, httpx.ReadTimeout):
+    self._auth = httpx.DigestAuth(self.username, self.password)
+    self._auth_detected = True
+    raise
+```
+
+## Por que importa
+
+Sin auto-deteccion, tendrias que hardcodear el tipo de auth por dispositivo o pedirle al usuario que lo configure. Con este patron, el cliente se adapta automaticamente al primer request y cachea el resultado para el resto de la sesion.

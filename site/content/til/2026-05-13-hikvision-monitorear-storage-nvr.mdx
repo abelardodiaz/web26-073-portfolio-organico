@@ -1,0 +1,68 @@
+---
+title: "Monitorear storage de NVR via API"
+slug: "hikvision-monitorear-storage-nvr"
+category: "python"
+stack: ["python", "fastapi", "isapi"]
+date: "2026-05-13"
+project: "hikvision-cctv-backend"
+---
+
+## Contexto
+
+Un NVR Hikvision graba 24/7 en sus discos duros. Si el disco se llena, las grabaciones mas antiguas se sobreescriben (o peor, se detiene la grabacion si no esta configurado en modo ciclico). Descubri que un HDD de 1TB estaba al 100% solo porque abri IVMS-4200 a revisar. Necesitaba monitorear esto via API.
+
+## Lo que aprendi
+
+El endpoint `GET /ISAPI/ContentMgmt/Storage` retorna el estado de los discos del NVR:
+
+```python
+async def get_storage_status(self) -> list[dict]:
+    """Consulta estado de storage del NVR."""
+    data = await self.client.get_xml("/ISAPI/ContentMgmt/Storage")
+    hdds = data.get("storage", {}).get("hddList", {}).get("hdd", [])
+
+    if isinstance(hdds, dict):
+        hdds = [hdds]
+
+    storage = []
+    for hdd in hdds:
+        capacity_mb = int(hdd.get("capacity", 0))
+        free_mb = int(hdd.get("freeSpace", 0))
+        used_mb = capacity_mb - free_mb
+        usage_pct = round((used_mb / capacity_mb) * 100, 1) if capacity_mb > 0 else 0
+
+        storage.append({
+            "id": hdd.get("id"),
+            "name": hdd.get("hddName", f"HDD {hdd.get('id')}"),
+            "capacity_gb": round(capacity_mb / 1024, 1),
+            "free_gb": round(free_mb / 1024, 1),
+            "usage_percent": usage_pct,
+            "status": hdd.get("status", "unknown"),
+            "property": hdd.get("property", "unknown"),  # "RW" o "RO"
+        })
+    return storage
+```
+
+Con esto, un endpoint de health check puede incluir alertas de disco:
+
+```python
+@router.get("/health")
+async def health_check():
+    storage = await nvr_service.get_storage_status()
+    alerts = []
+    for hdd in storage:
+        if hdd["usage_percent"] > 90:
+            alerts.append(f"{hdd['name']}: {hdd['usage_percent']}% usado")
+
+    return {
+        "nvr": "online",
+        "storage": storage,
+        "storage_alerts": alerts,
+    }
+```
+
+El mismo quirk de siempre con ISAPI: si hay un solo HDD, la respuesta es `dict` en vez de `list`. Siempre normalizar con `isinstance`.
+
+## Por que importa
+
+Un NVR con el disco lleno es un NVR que no graba (o que sobreescribe evidencia importante). Con monitoreo via API puedes generar alertas automaticas a Telegram cuando el uso pasa del 90%, en vez de descubrirlo cuando ya es tarde.
