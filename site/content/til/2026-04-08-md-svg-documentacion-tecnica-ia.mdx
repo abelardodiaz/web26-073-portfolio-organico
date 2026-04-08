@@ -17,102 +17,219 @@ Un dia probe generar diagramas SVG como complemento al MD. Los puse en la raiz d
 
 La clave es que Markdown y SVG son complementarios, no redundantes. El MD explica el "que" y el "por que" en detalle. El SVG muestra el "como se conecta" de un vistazo.
 
+Para que se entienda bien, voy a usar un ejemplo que no tiene nada que ver con software: como hacer una carlota de limon. Si puedes documentar un postre con MD + SVG, puedes documentar cualquier sistema.
+
 ### Markdown: el manual de referencia
 
-Un documento MD bien escrito le dice a la IA (o al humano) exactamente que hace cada pieza:
+Asi se ve el codigo fuente de un documento Markdown:
+
+<div style={{border: '1px solid var(--border)', borderRadius: 'var(--radius)', margin: '1.5em 0', overflow: 'hidden'}}>
+<div style={{background: 'var(--muted)', padding: '0.5rem 1rem', borderBottom: '1px solid var(--border)', fontSize: '0.75rem', fontFamily: 'var(--font-mono)', color: 'var(--muted-foreground)'}}>carlota.md</div>
+<div style={{padding: '1rem'}}>
 
 ```markdown
-## Arquitectura del pipeline
+## Carlota de limon
 
-El sistema procesa datos en 3 etapas secuenciales:
+Postre mexicano sin horno, listo en 20 min + refrigeracion.
 
-- **Ingesta** — recibe eventos via webhook, valida schema JSON
-- **Transformacion** — normaliza campos, aplica reglas de negocio
-- **Salida** — envia a PostgreSQL + notifica via Redis pub/sub
+### Ingredientes
+- 2 paquetes de **galletas Maria**
+- 1 lata de **leche condensada** (397g)
+- 1 lata de **media crema** (225g)
+- 1 taza de **jugo de limon** (~8 limones)
+- Ralladura de 2 limones
 
-La ingesta usa `fastapi` con validacion Pydantic.
-El rate limit es 100 req/s por tenant.
+### Pasos
+1. Mezclar leche condensada + media crema + jugo de limon
+2. Remojar galletas en jugo de limon diluido (2 segundos, no mas)
+3. Capa de galletas, capa de mezcla, repetir 3 veces
+4. Refrigerar **4 horas minimo** (mejor toda la noche)
+5. Decorar con ralladura y galletas trituradas
 ```
 
-Y asi se ve renderizado -- es lo que estas leyendo ahora mismo. Markdown es texto plano que cualquier editor, celular o terminal puede abrir. No necesitas software especial. Git lo diffea linea por linea. Una IA lo parsea sin problema.
+</div>
+</div>
+
+Y asi se ve renderizado -- lo que leeria un humano (o una IA) al abrir el archivo:
+
+<div style={{border: '1px solid var(--border)', borderRadius: 'var(--radius)', margin: '1.5em 0', overflow: 'hidden'}}>
+<div style={{background: 'var(--muted)', padding: '0.5rem 1rem', borderBottom: '1px solid var(--border)', fontSize: '0.75rem', fontFamily: 'var(--font-mono)', color: 'var(--muted-foreground)'}}>Preview renderizado</div>
+<div style={{padding: '1.5rem'}}>
+
+#### Carlota de limon
+
+Postre mexicano sin horno, listo en 20 min + refrigeracion.
+
+**Ingredientes:** 2 paquetes de **galletas Maria**, 1 lata de **leche condensada** (397g), 1 lata de **media crema** (225g), 1 taza de **jugo de limon** (~8 limones), ralladura de 2 limones.
+
+**Pasos:** Mezclar leche condensada + media crema + jugo de limon. Remojar galletas 2 segundos. Alternar capas. Refrigerar **4 horas minimo**. Decorar con ralladura.
+
+</div>
+</div>
+
+Markdown es texto plano que cualquier editor, celular o terminal puede abrir. No necesitas software especial. Git lo diffea linea por linea. Una IA lo parsea sin problema. Pero fijate que el proceso (mezclar, remojar, capas, refrigerar) es secuencial con bifurcaciones -- y eso es dificil de ver en una lista numerada.
 
 ### SVG: el mapa visual
 
-Ahora el mismo pipeline pero como diagrama. Primero el codigo:
+Ahora el mismo proceso pero como diagrama. Primero el codigo fuente:
+
+<div style={{border: '1px solid var(--border)', borderRadius: 'var(--radius)', margin: '1.5em 0', overflow: 'hidden'}}>
+<div style={{background: 'var(--muted)', padding: '0.5rem 1rem', borderBottom: '1px solid var(--border)', fontSize: '0.75rem', fontFamily: 'var(--font-mono)', color: 'var(--muted-foreground)'}}>carlota_flujo.svg</div>
+<div style={{padding: '1rem'}}>
 
 ```xml
-<svg viewBox="0 0 520 80" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <marker id="a" viewBox="0 0 10 10" refX="8" refY="5"
-      markerWidth="6" markerHeight="6" orient="auto">
-      <path d="M2 2L8 5L2 8" fill="none"
-        stroke="#888" stroke-width="1.5"/>
-    </marker>
-  </defs>
-  <rect x="10" y="18" width="130" height="44"
-    rx="6" fill="#E1F5EE" stroke="#0F6E56"/>
-  <text x="75" y="44" text-anchor="middle"
-    font-family="sans-serif" font-size="13"
-    fill="#085041">Ingesta</text>
-  <rect x="195" y="18" width="130" height="44"
-    rx="6" fill="#E6F1FB" stroke="#185FA5"/>
-  <text x="260" y="44" text-anchor="middle"
-    font-family="sans-serif" font-size="13"
-    fill="#0C447C">Transformacion</text>
-  <rect x="380" y="18" width="130" height="44"
-    rx="6" fill="#EEEDFE" stroke="#534AB7"/>
-  <text x="445" y="44" text-anchor="middle"
-    font-family="sans-serif" font-size="13"
-    fill="#3C3489">Salida</text>
-  <line x1="140" y1="40" x2="193" y2="40"
-    stroke="#888" stroke-width="1.5"
-    marker-end="url(#a)"/>
-  <line x1="325" y1="40" x2="378" y2="40"
-    stroke="#888" stroke-width="1.5"
-    marker-end="url(#a)"/>
+<svg viewBox="0 0 600 320" xmlns="http://www.w3.org/2000/svg">
+  <title>Flujo para preparar Carlota de limon</title>
+  <desc>5 pasos desde ingredientes hasta postre listo</desc>
+
+  <!-- Ingredientes (3 entradas paralelas) -->
+  <rect x="10"  y="10" width="120" height="50" rx="8"
+        fill="#FEF3C7" stroke="#D97706"/>
+  <text x="70"  y="32" text-anchor="middle"
+        font-size="11" fill="#92400E">Leche condensada</text>
+  <text x="70"  y="48" text-anchor="middle"
+        font-size="11" fill="#92400E">+ media crema</text>
+
+  <rect x="10"  y="80" width="120" height="50" rx="8"
+        fill="#ECFCCB" stroke="#65A30D"/>
+  <text x="70"  y="108" text-anchor="middle"
+        font-size="12" fill="#3F6212">Jugo de limon</text>
+
+  <rect x="10"  y="150" width="120" height="50" rx="8"
+        fill="#FEE2E2" stroke="#DC2626"/>
+  <text x="70"  y="178" text-anchor="middle"
+        font-size="12" fill="#991B1B">Galletas Maria</text>
+
+  <!-- Flechas hacia mezcla -->
+  <line x1="130" y1="35"  x2="178" y2="80"  stroke="#888"/>
+  <line x1="130" y1="105" x2="178" y2="95"  stroke="#888"/>
+
+  <!-- Paso 1: Mezclar -->
+  <rect x="180" y="66" width="140" height="56" rx="8"
+        fill="#E1F5EE" stroke="#0F6E56"/>
+  <text x="250" y="88" text-anchor="middle"
+        font-size="13" font-weight="500" fill="#085041">
+    Mezclar</text>
+  <text x="250" y="106" text-anchor="middle"
+        font-size="10" fill="#085041">
+    hasta consistencia cremosa</text>
+
+  <!-- Paso 2: Remojar galletas -->
+  <line x1="130" y1="175" x2="178" y2="175" stroke="#888"/>
+  <rect x="180" y="148" width="140" height="56" rx="8"
+        fill="#E6F1FB" stroke="#185FA5"/>
+  <text x="250" y="170" text-anchor="middle"
+        font-size="13" font-weight="500" fill="#0C447C">
+    Remojar</text>
+  <text x="250" y="188" text-anchor="middle"
+        font-size="10" fill="#0C447C">
+    2 seg en jugo diluido</text>
+
+  <!-- Flechas hacia armado -->
+  <line x1="320" y1="94"  x2="368" y2="125" stroke="#888"/>
+  <line x1="320" y1="176" x2="368" y2="145" stroke="#888"/>
+
+  <!-- Paso 3: Armar capas -->
+  <rect x="370" y="108" width="120" height="56" rx="8"
+        fill="#EEEDFE" stroke="#534AB7"/>
+  <text x="430" y="130" text-anchor="middle"
+        font-size="13" font-weight="500" fill="#3C3489">
+    Armar capas</text>
+  <text x="430" y="148" text-anchor="middle"
+        font-size="10" fill="#3C3489">
+    galleta + mezcla x3</text>
+
+  <!-- Paso 4: Refrigerar -->
+  <line x1="430" y1="164" x2="430" y2="200" stroke="#888"/>
+  <rect x="355" y="202" width="150" height="56" rx="8"
+        fill="#E0F2FE" stroke="#0284C7" stroke-dasharray="6 3"/>
+  <text x="430" y="224" text-anchor="middle"
+        font-size="13" font-weight="500" fill="#0C4A6E">
+    Refrigerar</text>
+  <text x="430" y="242" text-anchor="middle"
+        font-size="10" fill="#0C4A6E">
+    4 hrs min (mejor 8 hrs)</text>
+
+  <!-- Paso 5: Servir -->
+  <line x1="430" y1="258" x2="430" y2="278" stroke="#888"/>
+  <rect x="370" y="280" width="120" height="36" rx="18"
+        fill="#FEF3C7" stroke="#D97706"/>
+  <text x="430" y="302" text-anchor="middle"
+        font-size="13" font-weight="600" fill="#92400E">
+    Carlota lista</text>
 </svg>
 ```
 
-Y aqui el mismo SVG renderizado en tu navegador:
-
-<div style={{border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '1.5rem', margin: '1.5em 0', background: 'var(--card)'}}>
-<svg viewBox="0 0 520 80" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <marker id="a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
-      <path d="M2 2L8 5L2 8" fill="none" stroke="#888" strokeWidth="1.5"/>
-    </marker>
-  </defs>
-  <rect x="10" y="18" width="130" height="44" rx="6" fill="#E1F5EE" stroke="#0F6E56"/>
-  <text x="75" y="44" textAnchor="middle" fontFamily="sans-serif" fontSize="13" fill="#085041">Ingesta</text>
-  <rect x="195" y="18" width="130" height="44" rx="6" fill="#E6F1FB" stroke="#185FA5"/>
-  <text x="260" y="44" textAnchor="middle" fontFamily="sans-serif" fontSize="13" fill="#0C447C">Transformacion</text>
-  <rect x="380" y="18" width="130" height="44" rx="6" fill="#EEEDFE" stroke="#534AB7"/>
-  <text x="445" y="44" textAnchor="middle" fontFamily="sans-serif" fontSize="13" fill="#3C3489">Salida</text>
-  <line x1="140" y1="40" x2="193" y2="40" stroke="#888" strokeWidth="1.5" markerEnd="url(#a)"/>
-  <line x1="325" y1="40" x2="378" y2="40" stroke="#888" strokeWidth="1.5" markerEnd="url(#a)"/>
-</svg>
+</div>
 </div>
 
-Eso es un archivo de texto plano. Pesa menos que una imagen PNG. Git lo diffea. Un navegador lo renderiza bonito. Y una IA lo lee como documento estructurado: ve tres nodos, dos conexiones, una secuencia de izquierda a derecha.
+Y aqui el mismo SVG renderizado en tu navegador:
+
+<div style={{border: '1px solid var(--border)', borderRadius: 'var(--radius)', margin: '1.5em 0', overflow: 'hidden'}}>
+<div style={{background: 'var(--muted)', padding: '0.5rem 1rem', borderBottom: '1px solid var(--border)', fontSize: '0.75rem', fontFamily: 'var(--font-mono)', color: 'var(--muted-foreground)'}}>Preview renderizado</div>
+<div style={{padding: '1.5rem', display: 'flex', justifyContent: 'center'}}>
+<svg viewBox="0 0 600 320" xmlns="http://www.w3.org/2000/svg" style={{maxWidth: '100%', height: 'auto'}}>
+  <title>Flujo para preparar Carlota de limon</title>
+  <desc>5 pasos desde ingredientes hasta postre listo</desc>
+  <defs>
+    <marker id="ca" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M2 2L8 5L2 8" fill="none" stroke="#888" strokeWidth="1.5" strokeLinecap="round"/>
+    </marker>
+  </defs>
+  <rect x="10" y="10" width="120" height="50" rx="8" fill="#FEF3C7" stroke="#D97706"/>
+  <text x="70" y="32" textAnchor="middle" fontSize="11" fill="#92400E">Leche condensada</text>
+  <text x="70" y="48" textAnchor="middle" fontSize="11" fill="#92400E">+ media crema</text>
+  <rect x="10" y="80" width="120" height="50" rx="8" fill="#ECFCCB" stroke="#65A30D"/>
+  <text x="70" y="108" textAnchor="middle" fontSize="12" fill="#3F6212">Jugo de limon</text>
+  <rect x="10" y="150" width="120" height="50" rx="8" fill="#FEE2E2" stroke="#DC2626"/>
+  <text x="70" y="178" textAnchor="middle" fontSize="12" fill="#991B1B">Galletas Maria</text>
+  <line x1="130" y1="35" x2="178" y2="80" stroke="#888" strokeWidth="1.5" markerEnd="url(#ca)"/>
+  <line x1="130" y1="105" x2="178" y2="95" stroke="#888" strokeWidth="1.5" markerEnd="url(#ca)"/>
+  <rect x="180" y="66" width="140" height="56" rx="8" fill="#E1F5EE" stroke="#0F6E56"/>
+  <text x="250" y="88" textAnchor="middle" fontSize="13" fontWeight="500" fill="#085041">Mezclar</text>
+  <text x="250" y="106" textAnchor="middle" fontSize="10" fill="#085041">hasta consistencia cremosa</text>
+  <line x1="130" y1="175" x2="178" y2="175" stroke="#888" strokeWidth="1.5" markerEnd="url(#ca)"/>
+  <rect x="180" y="148" width="140" height="56" rx="8" fill="#E6F1FB" stroke="#185FA5"/>
+  <text x="250" y="170" textAnchor="middle" fontSize="13" fontWeight="500" fill="#0C447C">Remojar</text>
+  <text x="250" y="188" textAnchor="middle" fontSize="10" fill="#0C447C">2 seg en jugo diluido</text>
+  <line x1="320" y1="94" x2="368" y2="125" stroke="#888" strokeWidth="1.5" markerEnd="url(#ca)"/>
+  <line x1="320" y1="176" x2="368" y2="145" stroke="#888" strokeWidth="1.5" markerEnd="url(#ca)"/>
+  <rect x="370" y="108" width="120" height="56" rx="8" fill="#EEEDFE" stroke="#534AB7"/>
+  <text x="430" y="130" textAnchor="middle" fontSize="13" fontWeight="500" fill="#3C3489">Armar capas</text>
+  <text x="430" y="148" textAnchor="middle" fontSize="10" fill="#3C3489">galleta + mezcla x3</text>
+  <line x1="430" y1="164" x2="430" y2="200" stroke="#888" strokeWidth="1.5" markerEnd="url(#ca)"/>
+  <rect x="355" y="202" width="150" height="56" rx="8" fill="#E0F2FE" stroke="#0284C7" strokeDasharray="6 3"/>
+  <text x="430" y="224" textAnchor="middle" fontSize="13" fontWeight="500" fill="#0C4A6E">Refrigerar</text>
+  <text x="430" y="242" textAnchor="middle" fontSize="10" fill="#0C4A6E">4 hrs min (mejor 8 hrs)</text>
+  <line x1="430" y1="258" x2="430" y2="278" stroke="#888" strokeWidth="1.5" markerEnd="url(#ca)"/>
+  <rect x="370" y="280" width="120" height="36" rx="18" fill="#FEF3C7" stroke="#D97706"/>
+  <text x="430" y="302" textAnchor="middle" fontSize="13" fontWeight="600" fill="#92400E">Carlota lista</text>
+</svg>
+</div>
+</div>
+
+Es el mismo archivo de texto plano. Pesa menos que un PNG. Git lo diffea. Un navegador lo renderiza bonito. Y una IA lo lee como documento estructurado: ve tres ingredientes, dos flujos paralelos que convergen, una secuencia de pasos, y un nodo final. Todo sin ver una sola flecha -- lo infiere del XML.
+
+Ahora imagina que en vez de un postre, el diagrama muestra las capas de una API, un flujo de decision de un chatbot, o las fases de un proyecto. Mismo formato, misma tecnica.
 
 ### Un archivo, dos lecturas
 
-Esto es lo mas interesante y lo que no es obvio al principio: un humano y una IA leen el mismo SVG de formas completamente distintas, y ambos lo entienden.
+Esto es lo mas interesante: un humano y una IA leen el mismo SVG de formas completamente distintas, y ambos lo entienden.
 
-**Tu** ves cajas de colores y flechas. Sigues el flujo visualmente de izquierda a derecha, de arriba a abajo. Las flechas te guian. Los colores te agrupan conceptos.
+**Tu** ves cajas de colores y flechas. Seguiste el flujo de la carlota de izquierda a derecha: ingredientes entran, se mezclan, se arman las capas, al refrigerador. Las flechas te guiaron. Los colores te agruparon cosas (amarillo = ingredientes lacteos, verde = limon, rojo = galletas).
 
-**La IA** no ve nada de eso. Lee XML. Parsea cada `<rect>` como un nodo con posicion, cada `<text>` como contenido semantico, cada `<line>` como una conexion. Infiere el flujo por el orden de los elementos y las coordenadas, no por las flechas renderizadas. Los atributos `<title>` y `<desc>` le dan contexto extra que tu ni ves en pantalla.
+**La IA** no vio nada de eso. Leyo XML. Parseo cada `<rect>` como un nodo con posicion y dimensiones. Cada `<text>` como contenido semantico. Cada `<line>` como una relacion entre coordenadas. Los atributos `<title>` y `<desc>` le dieron contexto extra que tu ni ves en pantalla. Inferio que "Leche condensada" y "Jugo de limon" convergen en "Mezclar" porque las lineas apuntan al mismo rectangulo.
 
-El resultado es que el mismo archivo comunica la misma arquitectura a los dos, por caminos distintos:
+El resultado:
 
 - Las **flechas** son para el humano
 - El **orden del XML** y los textos son para la IA
 - Los **colores** son para el humano (agrupan visualmente)
-- Las **clases CSS** y posiciones son para la IA (infiere jerarquia)
+- Las **coordenadas** y posiciones son para la IA (infiere jerarquia)
 
-Y como todo esta en el mismo archivo, nunca se desincronizan. No hay un diagrama en Figma que dice una cosa y un documento de texto que dice otra. Es una sola fuente de verdad con dos interfaces de lectura.
+Y como todo esta en el mismo archivo, nunca se desincronizan. No hay un diagrama en Figma que dice una cosa y un documento que dice otra. Una sola fuente de verdad con dos interfaces de lectura.
 
-### La receta practica
+### La receta practica (ahora si de software)
 
 Para documentar un proyecto para que tanto humanos como IAs lo entiendan rapido:
 
@@ -122,4 +239,4 @@ Para documentar un proyecto para que tanto humanos como IAs lo entiendan rapido:
 
 Los dos formatos son abiertos, pesan kilobytes, y se leen en cualquier computadora o celular con un editor de texto. El SVG ademas se renderiza bonito en cualquier navegador. No necesitas Figma, Lucidchart ni Mermaid -- un archivo de texto con angulos y coordenadas.
 
-Lo que me sorprendio es que no habia considerado los SVGs como documentacion. Siempre los vi como "imagenes vectoriales". Pero resulta que son documentos estructurados que comunican relaciones mejor que cualquier lista de bullets. Y las IAs los entienden de primera.
+Lo que me sorprendio es que nunca habia pensado en los SVGs como documentacion. Siempre los vi como "imagenes vectoriales para logos". Resulta que son documentos estructurados que comunican relaciones mejor que cualquier lista de bullets. Y las IAs los entienden de primera.
