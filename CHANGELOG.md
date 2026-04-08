@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.9.3] - 2026-04-08
+
+### Added
+- Project page: Live Conference Translator (public repo)
+  - Real-time audio capture + Whisper transcription + translation
+  - github.com/abelardodiaz/live-conference-translator
+- 17 scheduled TILs (2026-04-18 to 2026-05-17)
+  - 5 Hikvision (digest auth, discovery, snapshots, recordings, storage)
+  - 6 GPS tracking (OAuth MD5, adaptive polling, haversine, geofences, commands, track summary)
+  - 6 Live Conference Translator (WASAPI, threading, subtitles, deep-translator, signals, PyAudioWPatch)
+- TIL: MD + SVG as AI documentation technique (with inline rendered SVG example)
+
+### Security
+- Sanitized live-conference-translator public repo (removed API keys, internal IPs, private paths from git history)
+
 ## [0.9.2] - 2026-04-03
 
 ### Added
