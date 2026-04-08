@@ -95,16 +95,22 @@ Y aqui el mismo SVG renderizado en tu navegador:
 
 Eso es un archivo de texto plano. Pesa menos que una imagen PNG. Git lo diffea. Un navegador lo renderiza bonito. Y una IA lo lee como documento estructurado: ve tres nodos, dos conexiones, una secuencia de izquierda a derecha.
 
-### Por que funciona tan bien para IAs
+### Un archivo, dos lecturas
 
-Un SVG no es una imagen opaca como un PNG o JPG. Es XML con semantica:
+Esto es lo mas interesante y lo que no es obvio al principio: un humano y una IA leen el mismo SVG de formas completamente distintas, y ambos lo entienden.
 
-- Cada `<rect>` es un nodo con posicion y color
-- Cada `<text>` tiene contenido legible
-- Cada `<line>` con `marker-end` es una conexion dirigida
-- Los atributos `<title>` y `<desc>` agregan contexto que la IA lee aunque el humano no los vea
+**Tu** ves cajas de colores y flechas. Sigues el flujo visualmente de izquierda a derecha, de arriba a abajo. Las flechas te guian. Los colores te agrupan conceptos.
 
-Cuando una IA recibe un SVG como contexto, no lo "ve" como imagen -- lo parsea como estructura de datos. Entiende jerarquias, flujos, dependencias. Y lo hace mejor que con diagramas ASCII o listas de bullets intentando describir relaciones espaciales.
+**La IA** no ve nada de eso. Lee XML. Parsea cada `<rect>` como un nodo con posicion, cada `<text>` como contenido semantico, cada `<line>` como una conexion. Infiere el flujo por el orden de los elementos y las coordenadas, no por las flechas renderizadas. Los atributos `<title>` y `<desc>` le dan contexto extra que tu ni ves en pantalla.
+
+El resultado es que el mismo archivo comunica la misma arquitectura a los dos, por caminos distintos:
+
+- Las **flechas** son para el humano
+- El **orden del XML** y los textos son para la IA
+- Los **colores** son para el humano (agrupan visualmente)
+- Las **clases CSS** y posiciones son para la IA (infiere jerarquia)
+
+Y como todo esta en el mismo archivo, nunca se desincronizan. No hay un diagrama en Figma que dice una cosa y un documento de texto que dice otra. Es una sola fuente de verdad con dos interfaces de lectura.
 
 ### La receta practica
 
