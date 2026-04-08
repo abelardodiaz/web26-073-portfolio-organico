@@ -21,11 +21,9 @@ Para que se entienda bien, voy a usar un ejemplo que no tiene nada que ver con s
 
 ### Markdown: el manual de referencia
 
-Asi se ve el codigo fuente de un documento Markdown:
-
-<div style={{border: '1px solid var(--border)', borderRadius: 'var(--radius)', margin: '1.5em 0', overflow: 'hidden'}}>
-<div style={{background: 'var(--muted)', padding: '0.5rem 1rem', borderBottom: '1px solid var(--border)', fontSize: '0.75rem', fontFamily: 'var(--font-mono)', color: 'var(--muted-foreground)'}}>carlota.md</div>
-<div style={{padding: '1rem'}}>
+<div className="snippet snippet-source">
+<div className="snippet-label">source — carlota.md</div>
+<div className="snippet-body">
 
 ```markdown
 ## Carlota de limon
@@ -50,11 +48,9 @@ Postre mexicano sin horno, listo en 20 min + refrigeracion.
 </div>
 </div>
 
-Y asi se ve renderizado -- lo que leeria un humano (o una IA) al abrir el archivo:
-
-<div style={{border: '1px solid var(--border)', borderRadius: 'var(--radius)', margin: '1.5em 0', overflow: 'hidden'}}>
-<div style={{background: 'var(--muted)', padding: '0.5rem 1rem', borderBottom: '1px solid var(--border)', fontSize: '0.75rem', fontFamily: 'var(--font-mono)', color: 'var(--muted-foreground)'}}>Preview renderizado</div>
-<div style={{padding: '1.5rem'}}>
+<div className="snippet snippet-preview">
+<div className="snippet-label">preview</div>
+<div className="snippet-body">
 
 #### Carlota de limon
 
@@ -71,11 +67,11 @@ Markdown es texto plano que cualquier editor, celular o terminal puede abrir. No
 
 ### SVG: el mapa visual
 
-Ahora el mismo proceso pero como diagrama. Primero el codigo fuente:
+Ahora el mismo proceso pero como diagrama.
 
-<div style={{border: '1px solid var(--border)', borderRadius: 'var(--radius)', margin: '1.5em 0', overflow: 'hidden'}}>
-<div style={{background: 'var(--muted)', padding: '0.5rem 1rem', borderBottom: '1px solid var(--border)', fontSize: '0.75rem', fontFamily: 'var(--font-mono)', color: 'var(--muted-foreground)'}}>carlota_flujo.svg</div>
-<div style={{padding: '1rem'}}>
+<div className="snippet snippet-source">
+<div className="snippet-label">source — carlota_flujo.svg</div>
+<div className="snippet-body">
 
 ```xml
 <svg viewBox="0 0 600 320" xmlns="http://www.w3.org/2000/svg">
@@ -142,7 +138,8 @@ Ahora el mismo proceso pero como diagrama. Primero el codigo fuente:
   <!-- Paso 4: Refrigerar -->
   <line x1="430" y1="164" x2="430" y2="200" stroke="#888"/>
   <rect x="355" y="202" width="150" height="56" rx="8"
-        fill="#E0F2FE" stroke="#0284C7" stroke-dasharray="6 3"/>
+        fill="#E0F2FE" stroke="#0284C7"
+        stroke-dasharray="6 3"/>
   <text x="430" y="224" text-anchor="middle"
         font-size="13" font-weight="500" fill="#0C4A6E">
     Refrigerar</text>
@@ -163,12 +160,10 @@ Ahora el mismo proceso pero como diagrama. Primero el codigo fuente:
 </div>
 </div>
 
-Y aqui el mismo SVG renderizado en tu navegador:
-
-<div style={{border: '1px solid var(--border)', borderRadius: 'var(--radius)', margin: '1.5em 0', overflow: 'hidden'}}>
-<div style={{background: 'var(--muted)', padding: '0.5rem 1rem', borderBottom: '1px solid var(--border)', fontSize: '0.75rem', fontFamily: 'var(--font-mono)', color: 'var(--muted-foreground)'}}>Preview renderizado</div>
-<div style={{padding: '1.5rem', display: 'flex', justifyContent: 'center'}}>
-<svg viewBox="0 0 600 320" xmlns="http://www.w3.org/2000/svg" style={{maxWidth: '100%', height: 'auto'}}>
+<div className="snippet snippet-preview">
+<div className="snippet-label">preview</div>
+<div className="snippet-body">
+<svg viewBox="0 0 600 320" xmlns="http://www.w3.org/2000/svg">
   <title>Flujo para preparar Carlota de limon</title>
   <desc>5 pasos desde ingredientes hasta postre listo</desc>
   <defs>

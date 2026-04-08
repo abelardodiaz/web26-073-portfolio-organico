@@ -358,3 +358,46 @@
 .prose tbody tr:last-child td {
   border-bottom: none;
 }
+
+/* ── Snippet blocks (source + preview) ── */
+.snippet {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin: 1.5em 0;
+  overflow: hidden;
+}
+.snippet-label {
+  background: var(--muted);
+  padding: 0.4rem 0.85rem;
+  border-bottom: 1px solid var(--border);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+.snippet-source .snippet-label {
+  color: var(--muted-foreground);
+}
+.snippet-preview .snippet-label {
+  background: var(--secondary);
+  color: var(--foreground);
+}
+.snippet-source .snippet-body {
+  padding: 0;
+}
+.snippet-source .snippet-body pre {
+  margin: 0;
+  border: none;
+  border-radius: 0;
+}
+.snippet-preview .snippet-body {
+  padding: 1.5rem;
+  background: var(--card);
+}
+.snippet-preview .snippet-body svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+}
