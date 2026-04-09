@@ -8,6 +8,7 @@ import {
   useCallback,
   type ReactNode,
 } from "react";
+import { flushSync } from "react-dom";
 
 export type Theme = "editorial" | "terminal";
 export type Mode = "light" | "dark";
@@ -53,10 +54,18 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   }, [theme, mode]);
 
   const setTheme = useCallback((t: Theme) => setThemeRaw(t), []);
-  const toggleMode = useCallback(
-    () => setModeRaw((prev) => (prev === "dark" ? "light" : "dark")),
-    [],
-  );
+  const toggleMode = useCallback(() => {
+    const switchFn = () => {
+      flushSync(() => {
+        setModeRaw((prev) => (prev === "dark" ? "light" : "dark"));
+      });
+    };
+    if (!document.startViewTransition) {
+      switchFn();
+      return;
+    }
+    document.startViewTransition(switchFn);
+  }, []);
 
   return (
     <ThemeContext.Provider value={{ theme, mode, setTheme, toggleMode }}>

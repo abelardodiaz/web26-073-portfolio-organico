@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.9.4] - 2026-04-09
+
+### Added
+- Animated theme toggle using View Transitions API (circular reveal effect)
+
 ## [0.9.3] - 2026-04-08
 
 ### Added
