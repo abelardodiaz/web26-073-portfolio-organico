@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.10.1] - 2026-05-06
+
+### Added
+- Endpoint `GET /api/content-feed.json`: returns published TILs and
+  projects as JSON for downstream consumers (Twitter Publisher 994,
+  OpenClaw 850). ISR 86400s with 7-day stale-while-revalidate.
+  Implements Step 1 of docs/plan-content-feed-994-850.md.
+- 8 plan stubs in docs/citas-bot-universal-content/ (P02, T02-T08) so
+  the publication workflow is fully traced per POLICIES.md.
+
+### Memory
+- feedback_deepseek_review_diminishing_returns.md: editorial review
+  loses signal after the 3rd piece in a series; skip the rest.
+- feedback_til_no_accents_deliberate.md: portfolio writes Spanish
+  without accents on purpose; reject reviewer corrections that ask
+  for them.
+
 ## [0.10.0] - 2026-05-06
 
 ### Added
