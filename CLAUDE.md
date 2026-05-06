@@ -75,7 +75,9 @@ web26-073-portfolio-organico/
 
 ## Primera vez?
 
-1. Lee este archivo completo
-2. Lee docs/PLAN.md para contexto
-3. Lee docs/02-security-publication-checklist.md para reglas de seguridad
-4. Ejecuta la tarea que te asignen siguiendo el ROADMAP.md
+1. Lee **docs/POLICIES.md** PRIMERO (politicas, workflow, commits, DeepSeek validation, seguridad)
+2. Lee este archivo (CLAUDE.md) completo
+3. Lee docs/PLAN.md para contexto
+4. Lee docs/02-security-publication-checklist.md para reglas de seguridad
+5. Si hay milestone activo: lee docs/{proyecto}/ROADMAP.md + ultimo decision.md
+6. Pregunta al usuario que tarea quiere ejecutar (no empieces a codear sin confirmar)
