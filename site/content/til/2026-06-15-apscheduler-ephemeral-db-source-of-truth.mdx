@@ -54,9 +54,9 @@ El idempotency lo dan dos flags booleanos en cada `Appointment` (`reminder_24h_s
 
 Las ventajas son acumulativas:
 
-Primero, **resilencia gratis**. Reinicia el proceso, restartea APScheduler, recarga config: nada se pierde porque nada vivia en memoria que no estuviera tambien en BD.
+Primero, **resilencia incorporada**. Reinicia el proceso, recarga config, redeploya: nada se pierde porque nada vivia en memoria que no estuviera tambien en BD.
 
-Segundo, **operabilidad**. Para ver el estado del scheduler, queryeas `appointments` con cualquier client SQL. No hay que prender un dashboard especifico de APScheduler ni leer su jobstore.
+Segundo, **operabilidad**. Para ver el estado del scheduler, consultas `appointments` con cualquier cliente SQL. No hay que prender un dashboard especifico de APScheduler ni leer su jobstore.
 
 Tercero, **sin sincronizacion**. La pesadilla de un jobstore es que se desincroniza con la fuente real (cancelas una cita en la app, te olvidas de cancelar el job, sale el recordatorio igual). El pattern ephemeral elimina esa categoria de bug por construccion.
 

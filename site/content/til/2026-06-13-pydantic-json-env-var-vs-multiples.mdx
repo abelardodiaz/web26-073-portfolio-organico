@@ -62,10 +62,10 @@ Para tests, instanciar `Settings(business_info_json='{"name":"Test"}')` simula c
 
 El patron es generico: cualquier grupo de 3+ env vars que en el fondo describen un solo concepto se beneficia. Ejemplos donde aplica:
 
-- `META_VERIFY_TOKEN` + `META_APP_SECRET` + `META_PHONE_NUMBER_ID` + `META_ACCESS_TOKEN` -> `META_CONFIG_JSON`
-- `SMTP_HOST` + `SMTP_PORT` + `SMTP_USER` + `SMTP_PASS` -> `SMTP_CONFIG_JSON`
+- `META_VERIFY_TOKEN`, `META_APP_SECRET`, `META_PHONE_NUMBER_ID`, `META_ACCESS_TOKEN` -> `META_CONFIG_JSON`
+- `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` -> `SMTP_CONFIG_JSON`
 - Coordenadas geograficas, datos fiscales, credenciales de S3, etc.
 
 Tradeoff: el JSON es menos amigable para edicion casual via `export VAR=value`. Si la config la escribes una vez y la dejas, gana el JSON. Si la cambias frecuente desde shell, gana N vars sueltas.
 
-Para el caso de citas-bot-universal, BUSINESS_INFO se setea al desplegar y rara vez cambia. JSON gana.
+Para el caso de citas-bot-universal, BUSINESS_INFO se setea al desplegar y rara vez cambia. JSON conviene mas.
