@@ -1,0 +1,59 @@
+---
+title: "dateparser con locale es: fechas naturales en chatbots sin escribir un parser"
+slug: "dateparser-es-locale-fechas-naturales"
+category: "backend"
+stack: ["python", "dateparser", "chatbots", "nlu"]
+date: "2026-06-11"
+project: "citas-bot-universal"
+---
+
+## Contexto
+
+Para el flujo de agendar cita, el bot pregunta "?Para que dia?". Las respuestas reales que recibes en WhatsApp son cualquier cosa: "manana", "el lunes", "12 de junio", "el proximo martes a las 10", "para el 15", "en una semana". Escribir un parser que cubra todos esos formatos suena a inferno mantenible. Mi instinto inicial fue tirarle todo al LLM: "extrae la fecha del mensaje, devuelve ISO". Funciona, pero gasta tokens en cada turno y agrega 1-2s de latencia.
+
+La libreria `dateparser` resuelve la mayoria sin tocar el LLM.
+
+## Lo que aprendi
+
+`dateparser.parse(text, languages=["es"])` entiende fechas en lenguaje natural espanol con sorpresa positiva. La configuracion clave es `settings`:
+
+```python
+import dateparser
+
+parsed = dateparser.parse(
+    text,
+    languages=["es"],
+    settings={
+        "TIMEZONE": "America/Mexico_City",
+        "RETURN_AS_TIMEZONE_AWARE": True,
+        "PREFER_DATES_FROM": "future",
+    },
+)
+```
+
+`PREFER_DATES_FROM: "future"` es el setting que me ahorro la mayoria de bugs. Sin el, "el martes" puede resolverse al martes pasado si hoy es jueves. Con el, siempre va al proximo martes futuro. Lo mismo para "10 de junio" cuando estamos en julio: sin el setting cae al ano pasado; con el, salta al proximo junio.
+
+`RETURN_AS_TIMEZONE_AWARE: True` retorna `datetime` con `tzinfo`, no naive. Si lo omites, comparar contra `datetime.now(UTC)` lanza `TypeError: can't compare offset-naive and offset-aware datetimes`.
+
+Para parsear hora-del-dia sobre una fecha base ya capturada, hago un segundo `dateparser.parse(text)` (que probablemente devuelve hoy + esa hora) y combino:
+
+```python
+def _parse_time_on_date(text: str, base_iso: str, tz: str) -> datetime | None:
+    base = datetime.fromisoformat(base_iso)
+    parsed = dateparser.parse(text, languages=["es"], settings={...})
+    if parsed is None:
+        return None
+    return base.replace(
+        hour=parsed.hour, minute=parsed.minute, second=0, microsecond=0
+    )
+```
+
+Asi el usuario puede decir "10:00", "10 am", "diez de la manana", "10:30" y todo cae bien.
+
+## Por que importa
+
+`dateparser` es una de esas dependencias que parecen menores hasta que sustituyes 200 lineas de regex propio por 5. Para chatbots en espanol manejando fechas/horas, es el estandar de facto.
+
+Detalle no obvio: cuando `dateparser` falla (devuelve None), tirar al LLM como fallback es perfectamente razonable. Yo elegi NO hacer ese fallback porque agrega complejidad y costo, y prefiero pedirle al usuario que reformule. Pero el patron "dateparser primero, LLM cuando falla" es valido y aplica a muchos otros casos de NLU especifico (telefonos, montos, direcciones).
+
+El otro detalle: `dateparser` es pesado (importa pytz, jaltools, locales completos). Si arrancas un proceso lambda o serverless donde el cold start importa, considera el overhead. Para un FastAPI long-lived no hay problema.

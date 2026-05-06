@@ -1,0 +1,65 @@
+---
+title: "APScheduler ephemeral: la BD es la fuente de verdad, no el jobstore"
+slug: "apscheduler-ephemeral-db-source-of-truth"
+category: "backend"
+stack: ["python", "apscheduler", "scheduling"]
+date: "2026-06-15"
+project: "citas-bot-universal"
+---
+
+## Contexto
+
+Para mandar recordatorios automaticos 24h y 2h antes de cada cita, necesitaba un scheduler corriendo en el proceso FastAPI. APScheduler tiene dos modos canonicos: con `jobstore` (BD persistente que guarda los jobs programados con sus next_run_time) o sin jobstore (jobs viven en memoria, se pierden al reiniciar).
+
+La intuicion clasica es "usa jobstore, asi sobrevive reinicios". La implementacion final es la opuesta: jobs ephemeral en memoria, la BD de la app es la fuente de verdad.
+
+## Lo que aprendi
+
+El insight: ya tengo una tabla `appointments` con todas las citas y sus fechas. Esa tabla SE LA fuente de verdad. Crear ENTRADAS adicionales en un jobstore con un mirror del schedule es duplicar estado.
+
+El pattern correcto es un solo job que cada N minutos escanea la tabla y manda los recordatorios pendientes:
+
+```python
+async def run_once(self, *, now: datetime | None = None) -> int:
+    n = now or datetime.now(UTC)
+    window = timedelta(minutes=self.settings.reminder_window_minutes)
+    target_24h = n + timedelta(hours=24)
+    target_2h = n + timedelta(hours=2)
+    sent = 0
+
+    async with self.session_factory() as session:
+        stmt = select(Appointment).where(
+            Appointment.status.in_([SCHEDULED, CONFIRMED])
+        )
+        appointments = list((await session.execute(stmt)).scalars().all())
+
+        for appt in appointments:
+            if not appt.reminder_24h_sent and (
+                target_24h - window <= appt.scheduled_at <= target_24h + window
+            ):
+                await self.sender.send(...)
+                appt.reminder_24h_sent = True
+                sent += 1
+            # mismo para 2h
+
+        await session.commit()
+    return sent
+```
+
+APScheduler dispara `run_once` cada `REMINDER_SCAN_INTERVAL_SECONDS` (default 300). Cada tick es independiente: lee fresh de la BD, no asume nada del tick anterior.
+
+El idempotency lo dan dos flags booleanos en cada `Appointment` (`reminder_24h_sent`, `reminder_2h_sent`). Si el proceso muere a medio recordatorio, el siguiente tick se da cuenta de cuales se mandaron y cuales no por las flags. Cero state que reconciliar.
+
+## Por que importa
+
+Las ventajas son acumulativas:
+
+Primero, **resilencia gratis**. Reinicia el proceso, restartea APScheduler, recarga config: nada se pierde porque nada vivia en memoria que no estuviera tambien en BD.
+
+Segundo, **operabilidad**. Para ver el estado del scheduler, queryeas `appointments` con cualquier client SQL. No hay que prender un dashboard especifico de APScheduler ni leer su jobstore.
+
+Tercero, **sin sincronizacion**. La pesadilla de un jobstore es que se desincroniza con la fuente real (cancelas una cita en la app, te olvidas de cancelar el job, sale el recordatorio igual). El pattern ephemeral elimina esa categoria de bug por construccion.
+
+El tradeoff es escala. Cada tick escanea TODAS las citas activas. Para 5000 citas/mes esta perfecto (~milisegundos). Para 100,000 ya conviene anadir un index sobre `scheduled_at` y filtrar en SQL solo las que caen en la ventana ±5 min antes de iterar. Mas alla, distributed scheduling es otra discusion.
+
+El pattern aplica igual a workers que generan reportes, sincronizan datos externos, o mandan notificaciones por email: si la "fuente de verdad" ya existe en una tabla, no la dupliques en un jobstore.

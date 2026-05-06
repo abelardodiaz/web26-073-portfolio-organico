@@ -1,0 +1,76 @@
+---
+title: "Validar JSON output del LLM: Pydantic + extract helper para code fences"
+slug: "validar-llm-json-output-pydantic-extract"
+category: "ai"
+stack: ["python", "pydantic", "llm", "anthropic"]
+date: "2026-06-19"
+project: "citas-bot-universal"
+---
+
+## Contexto
+
+Cuando le pides al LLM que clasifique un mensaje en uno de N intents, lo correcto es pedirle JSON estructurado: `{"intent_name": "book", "confidence": 0.92, "reasoning": "..."}`. Pero el LLM no siempre obedece:
+
+- A veces envuelve la respuesta en code fences ` ```json ... ``` `
+- A veces agrega texto antes o despues ("Aqui esta tu JSON: { ... }. Espero que sirva!")
+- A veces inventa un campo extra o cambia nombres
+- A veces devuelve `intent: ` sin las comillas, JSON invalido tecnicamente
+
+Si parseas con `json.loads(response.text)` directo, fallas en cualquiera de esos casos. El bot crashea o cae a default sin razon clara en logs.
+
+## Lo que aprendi
+
+El stack de validacion robusto es dos piezas: un `extract_json` helper que aisla el JSON del texto libre, y un Pydantic model que valida los campos esperados.
+
+El extractor:
+
+```python
+import json
+
+def _extract_json(text: str) -> str:
+    text = text.strip()
+    if text.startswith("```"):
+        text = text.strip("`").lstrip("json").strip()
+    start = text.find("{")
+    end = text.rfind("}")
+    if start == -1 or end == -1 or end <= start:
+        raise ValueError("no json object in response")
+    candidate = text[start : end + 1]
+    json.loads(candidate)  # validate
+    return candidate
+```
+
+Maneja los casos comunes: code fences, texto antes/despues, presencia minima de objeto JSON. Si no encuentra `{...}` valido, lanza `ValueError`.
+
+El validador Pydantic:
+
+```python
+from pydantic import BaseModel, Field, ValidationError
+
+class _ClassifierJSON(BaseModel):
+    intent_name: str = Field(min_length=1)
+    confidence: float = Field(ge=0.0, le=1.0)
+    reasoning: str | None = None
+```
+
+Y la integracion:
+
+```python
+try:
+    payload = _ClassifierJSON.model_validate_json(_extract_json(response.text))
+except (ValidationError, ValueError) as exc:
+    log.warning("classifier_parse_error", raw=response.text, error=str(exc))
+    return Classification(intent_name="default", confidence=1.0, reasoning="parse_error")
+```
+
+Tres lineas de defensa: extract dolido, Pydantic estricto, fallback explicito a `default` con log. El sistema NUNCA crashea por output raro del LLM. Si hay parse error, el log captura el `raw` text para debugging.
+
+## Por que importa
+
+LLMs en produccion son no-deterministicos. Aunque pongas `temperature=0` y le pidas JSON estricto, eventualmente vas a ver respuestas que rompen tu parser. Especialmente cuando cambias de modelo (Claude 3.5 -> 4 -> 5) o de proveedor.
+
+El pattern Pydantic + extract helper es la version Python equivalente al [structured outputs](https://platform.openai.com/docs/guides/structured-outputs) de OpenAI o al [tool use](https://docs.anthropic.com/claude/docs/tool-use) de Anthropic. La diferencia: funciona con cualquier modelo, sin depender de la feature especifica del proveedor. Si manana te cambias a un modelo open source local, el pattern se mantiene.
+
+Tradeoff: el extract helper es heuristica, no es bulletproof. Hay edge cases (JSON con `{` en strings de description, multiples objetos en la respuesta, escape de unicode raro) que no captura. Para esos, OpenAI structured outputs o Anthropic tool use son mas seguros porque garantizan JSON valido por API. Pero requieren codigo proveedor-especifico.
+
+Para un template que quiere ser proveedor-agnostico, este nivel de defensa es el sweet spot.

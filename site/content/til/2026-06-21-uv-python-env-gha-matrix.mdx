@@ -1,0 +1,77 @@
+---
+title: "UV_PYTHON env var en GitHub Actions matrix: por que la version no respeta tu config"
+slug: "uv-python-env-gha-matrix"
+category: "devops"
+stack: ["python", "uv", "github-actions", "ci"]
+date: "2026-06-21"
+project: "citas-bot-universal"
+---
+
+## Contexto
+
+Configurando CI con `uv` y matrix de Python 3.11 + 3.12 en GitHub Actions, mi primer workflow se veia razonable:
+
+```yaml
+strategy:
+  matrix:
+    python-version: ["3.11", "3.12"]
+
+steps:
+  - uses: actions/checkout@v4
+  - uses: astral-sh/setup-uv@v3
+  - run: uv python install ${{ matrix.python-version }}
+  - run: uv sync --all-extras --python ${{ matrix.python-version }}
+  - run: uv run ruff check src tests
+```
+
+CI fallaba con `error: Failed to spawn: 'ruff'` y `Caused by: No such file or directory`. La salida del log mostraba `Using CPython 3.11.15` aunque el job era `test (3.12)`.
+
+Tarde tres iteraciones en entender que pasaba.
+
+## Lo que aprendi
+
+El bug tenia dos capas:
+
+**Capa 1: el archivo `.python-version`.** Tenia `3.11` en el repo (uso local con pyenv). `uv` lo lee con prioridad mayor que el flag `--python` que le paso a `uv sync`. Resultado: aunque el matrix selecciona 3.12, `uv sync --python 3.12` ignora el flag por el `.python-version`.
+
+**Capa 2: scope del `--python` flag.** Aunque `uv sync --python X` instale en 3.12, el siguiente step `uv run ruff check` no recuerda esa version y vuelve a leer `.python-version`. El resultado es que la venv se recrea con 3.11 y dev dependencies (incluyendo ruff) no se instalan en 3.12.
+
+La solucion correcta es el env var `UV_PYTHON` a nivel **job** (no step), asi todas las invocaciones de `uv` usan la misma version:
+
+```yaml
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]
+    env:
+      UV_PYTHON: ${{ matrix.python-version }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
+      - run: uv sync --all-extras
+      - run: uv run ruff check src tests
+      - run: uv run mypy src
+      - run: uv run pytest
+```
+
+Notar:
+
+- `env:` esta a nivel `jobs.test`, no en cada step. Asi se hereda a todos.
+- Sin flag `--python` en `uv sync`. Con `UV_PYTHON` set, no hace falta.
+- `uv python install` ya no es necesario; `setup-uv` + `UV_PYTHON` lo manejan.
+- El `.python-version` del repo no estorba porque `UV_PYTHON` tiene mayor precedencia que el archivo (al reves del flag).
+
+## Por que importa
+
+Si configuras CI con uv + matrix y dejas `.python-version` en el repo, vas a tener bugs sutiles donde la matrix dice 3.12 pero las cosas corren en 3.11. El sintoma es exactamente el que tuve: tools dev (ruff, mypy) "no instalados" porque la venv se reinventa cada step con la version del archivo.
+
+La regla operativa: cuando tienes `.python-version` para uso local pero matrix CI con multiples versiones, **siempre setea `UV_PYTHON` env var a nivel job** en el workflow. No hay forma cleaner de evitarlo.
+
+Otro detalle: si activas `enable-cache: true` en `setup-uv`, la accion espera que exista `uv.lock`. Si tu repo aun no lo commite (caso comun en proyectos jovenes), CI falla con `No matches found for glob: **/uv.lock`. Solucion: o committear `uv.lock`, o desactivar `enable-cache` hasta que tengas el lockfile.
+
+Pequeno costo de descubrir, gran ahorro al saberlo.

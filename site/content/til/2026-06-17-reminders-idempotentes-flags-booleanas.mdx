@@ -1,0 +1,61 @@
+---
+title: "Idempotencia de recordatorios: flags booleanas vs tabla de log"
+slug: "reminders-idempotentes-flags-booleanas"
+category: "backend"
+stack: ["python", "sqlalchemy", "scheduling"]
+date: "2026-06-17"
+project: "citas-bot-universal"
+---
+
+## Contexto
+
+Cada appointment recibe dos recordatorios: 24h y 2h antes. El scheduler escanea la BD cada 5 minutos. Necesito garantizar que cada recordatorio se mande exactamente una vez aunque:
+
+- El proceso se reinicie a mitad del envio
+- Dos workers concurrentes ejecuten el scan simultaneamente (futuro)
+- Meta API timeout y se reintente
+- Se cambie la zona horaria del servidor
+
+Hay dos formas de resolverlo: una tabla `reminder_log` con una row por cada recordatorio enviado, o flags booleanas directamente en el `Appointment`. Elegi flags por simplicidad. La review externa estuvo de acuerdo para v0.1.0.
+
+## Lo que aprendi
+
+El schema queda asi:
+
+```python
+class Appointment(IdMixin, TimestampMixin, Base):
+    __tablename__ = "appointments"
+
+    customer_id: Mapped[str] = mapped_column(String(36), ForeignKey(...))
+    scheduled_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    status: Mapped[AppointmentStatus] = mapped_column(String(20))
+    reminder_24h_sent: Mapped[bool] = mapped_column(Boolean, default=False)
+    reminder_2h_sent: Mapped[bool] = mapped_column(Boolean, default=False)
+```
+
+Cada tick del scheduler:
+
+```python
+if not appt.reminder_24h_sent and in_window(appt, target_24h):
+    await sender.send(customer.whatsapp_number, reply)
+    appt.reminder_24h_sent = True
+
+# similar para 2h
+await session.commit()
+```
+
+El orden importa: **send primero, flag despues**. Si invierto el orden y el send falla con timeout, la flag queda en True pero el recordatorio nunca llego. El usuario se queda sin aviso.
+
+Con el orden correcto: si el send falla a mitad, la flag sigue en False, el siguiente tick lo reintenta. El sender ya tiene su propio retry con tenacity, pero incluso si tras 3 intentos falla, el siguiente scan en 5 minutos lo intenta de nuevo. Eventually consistent.
+
+Para evitar dobles en concurrencia futura, basta agregar un `SELECT ... FOR UPDATE` o una transaccion con isolation level apropiado. Por ahora con un solo worker no aplica.
+
+## Por que importa
+
+Una tabla `reminder_log` con todas las entradas tiene ventajas (auditoria completa, queries de "que se mando entre fecha X y Y") pero costos: una migracion adicional, una tabla que crece sin parar, joins en cada query del scheduler. Para v0.1.0 las flags son suficientes.
+
+La regla heuristica que internalice: **idempotencia debe ser parte del schema del recurso, no una capa de log encima.** Si tu modelo tiene un Appointment, las flags de "ya hice X sobre este appointment" deben vivir en el row del Appointment.
+
+Cuando agregues un evento mas (por ejemplo recordatorio 1 semana antes), agregas otra columna `reminder_1week_sent`. Tres flags es manejable. Si llegas a diez, replantear. Para casos donde escala mas alla (eventos por hora durante una semana, miles de eventos por entidad), una tabla de log dedicada gana.
+
+El otro detalle: las flags no pierden informacion temporal. Si necesitas "cuando se mando el recordatorio 24h", la combinacion (`reminder_24h_sent=True`, `updated_at=2026-06-12 14:30`) lo aproxima. No es perfecto pero es suficiente para debugging real.

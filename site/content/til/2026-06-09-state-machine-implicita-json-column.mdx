@@ -1,0 +1,58 @@
+---
+title: "State machine implicita en columna JSON: zero deps, suficiente para slot filling"
+slug: "state-machine-implicita-json-column"
+category: "backend"
+stack: ["python", "sqlalchemy", "sqlite", "chatbots"]
+date: "2026-06-09"
+project: "citas-bot-universal"
+---
+
+## Contexto
+
+Para construir el flujo de agendar cita necesitaba una state machine: el bot pregunta fecha → hora → nombre → confirma → persiste. Cinco estados, transiciones lineales. La opcion intuitiva fue agarrar `transitions` o `python-statemachine`: librerias maduras, declarativas, hasta visualizables. Cuando arme el brainstorm de M06 considere las dos opciones contra una tercera: state implicito, derivado del estado de los slots ya capturados. La review externa estuvo de acuerdo con la opcion minimalista. Resultado: cero dependencias, ~30 lineas, trivial para entender.
+
+## Lo que aprendi
+
+El state no necesita ser un campo aparte si los datos que ya estas capturando lo determinan. Para el flow de book, los slots se llenan en orden: primero `date`, luego `time`, luego `name`, finalmente `confirm`. El "estado" es simplemente cual slot falta:
+
+```python
+SLOT_ORDER = ["date", "time", "name", "confirm"]
+
+def _next_step(slots: dict[str, Any]) -> str:
+    for slot in SLOT_ORDER:
+        if slot not in slots or slots[slot] is None:
+            return slot
+    return "done"
+```
+
+Eso es la state machine entera. El handler del intent llama `_next_step(slots)` y despacha al sub-handler correspondiente:
+
+```python
+async def handle_book(ctx: IntentContext) -> IntentResult:
+    slots = dict(ctx.conversation.slots_filled or {})
+    step = _next_step(slots)
+
+    if step == "date":
+        return _step_date(ctx.text, slots, tz)
+    if step == "time":
+        return _step_time(ctx.text, slots, tz, hours_str)
+    if step == "name":
+        return _step_name(ctx.text, slots, tz)
+    if step == "confirm":
+        return await _step_confirm(ctx, slots, tz, duration)
+    return IntentResult(reply=Reply(text=BOOK_RETRY_EXHAUSTED), clear_state=True)
+```
+
+El `slots_filled` es una columna JSON en `Conversation`. Postgres y SQLite la soportan nativo. Cada turno del usuario carga el JSON, evalua el step actual, valida la respuesta, persiste el JSON actualizado. La conversacion sobrevive a reinicios del proceso porque el state no esta en RAM, esta en BD.
+
+## Por que importa
+
+Tres ventajas concretas:
+
+Primero, persistencia automatica. Una libreria de state machine en RAM se pierde al reiniciar; tendrias que serializar y deserializar el state. Con la columna JSON, ya esta persistido por construccion.
+
+Segundo, debugabilidad trivial. Para ver donde quedo una conversacion, hago `SELECT slots_filled FROM conversations WHERE customer_id = 'X'` y veo el dict completo. Sin librerias raras, sin estado en logs.
+
+Tercero, extensibilidad. Para agregar un slot nuevo, edito `SLOT_ORDER`, agrego un `_step_X` handler, listo. Ningun framework que aprender, ninguna lista de transitions que mantener.
+
+El tradeoff: este patron solo funciona para flujos lineales (cada slot depende del anterior, no hay branching). Para state machines con bifurcaciones, transiciones condicionales o eventos paralelos, una libreria dedicada sigue siendo la respuesta correcta. Para la mayoria de flujos conversacionales que en la practica son lineales, esto basta.

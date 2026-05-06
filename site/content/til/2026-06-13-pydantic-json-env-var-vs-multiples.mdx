@@ -1,0 +1,71 @@
+---
+title: "Pydantic + 1 env var JSON: agrupar config relacionada en lugar de N variables sueltas"
+slug: "pydantic-json-env-var-vs-multiples"
+category: "backend"
+stack: ["python", "pydantic", "config"]
+date: "2026-06-13"
+project: "citas-bot-universal"
+---
+
+## Contexto
+
+Para configurar el bot, el negocio necesita declarar 5 datos relacionados: nombre, horario, direccion, telefono, descripcion. Mi primer impulso fue 5 env vars sueltas:
+
+```
+BUSINESS_NAME=Barberia X
+BUSINESS_HOURS=Mar-Sab 10-19
+BUSINESS_ADDRESS=Av. Y 123
+BUSINESS_PHONE=+5215555550100
+BUSINESS_DESCRIPTION=Cortes clasicos
+```
+
+Cinco lineas, cinco campos en `Settings`, cinco lugares donde cualquier typo en el nombre falla silenciosamente. La review externa apunto: "es fragil y no escala. Una sola env var con JSON y un model anidado es mas limpio". Acepte el cambio.
+
+## Lo que aprendi
+
+`pydantic-settings` permite anidar models. El truco es declarar la env var como string y exponer una `@property` que parsea con `model_validate_json`:
+
+```python
+from pydantic import BaseModel, Field
+from pydantic_settings import BaseSettings
+
+
+class BusinessInfo(BaseModel):
+    name: str = "Demo Business"
+    hours: str = "Lun-Vie 9-18"
+    address: str = "Por confirmar"
+    phone: str = ""
+    description: str = ""
+
+
+class Settings(BaseSettings):
+    business_info_json: str = Field(
+        default='{"name":"Demo Business","hours":"Lun-Vie 9-18"}'
+    )
+
+    @property
+    def business_info(self) -> BusinessInfo:
+        return BusinessInfo.model_validate_json(self.business_info_json)
+```
+
+`.env` queda con una sola linea:
+
+```
+BUSINESS_INFO_JSON='{"name":"Barberia X","hours":"Mar-Sab 10-19","address":"Av. Y 123","phone":"+5215555550100","description":"Cortes clasicos"}'
+```
+
+En el codigo accedes a `settings.business_info.name`, `settings.business_info.hours`, etc., con autocomplete y validacion Pydantic gratis. Si el JSON es invalido, Pydantic lanza un error claro al primer acceso, no un None silencioso.
+
+Para tests, instanciar `Settings(business_info_json='{"name":"Test"}')` simula cualquier configuracion sin tocar variables de entorno reales.
+
+## Por que importa
+
+El patron es generico: cualquier grupo de 3+ env vars que en el fondo describen un solo concepto se beneficia. Ejemplos donde aplica:
+
+- `META_VERIFY_TOKEN` + `META_APP_SECRET` + `META_PHONE_NUMBER_ID` + `META_ACCESS_TOKEN` -> `META_CONFIG_JSON`
+- `SMTP_HOST` + `SMTP_PORT` + `SMTP_USER` + `SMTP_PASS` -> `SMTP_CONFIG_JSON`
+- Coordenadas geograficas, datos fiscales, credenciales de S3, etc.
+
+Tradeoff: el JSON es menos amigable para edicion casual via `export VAR=value`. Si la config la escribes una vez y la dejas, gana el JSON. Si la cambias frecuente desde shell, gana N vars sueltas.
+
+Para el caso de citas-bot-universal, BUSINESS_INFO se setea al desplegar y rara vez cambia. JSON gana.

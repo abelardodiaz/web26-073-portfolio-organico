@@ -1,0 +1,79 @@
+---
+title: "De Consultorio a Template: Clinica Bot Privado vs citas-bot-universal Publico"
+slug: "clinica-bot-public-vs-private"
+description: "Caso de estudio: como destilar un sistema en produccion para consultorios medicos en un template Python open-source. Comparativa entre el bot privado del cliente y citas-bot-universal."
+stack: ["python", "fastapi", "anthropic", "open-source"]
+github: "https://github.com/abelardodiaz/citas-bot-universal"
+category: "fullstack"
+featured: false
+date: "2026-06-07"
+---
+
+## El Problema
+
+Tienes un sistema en produccion atendiendo a consultorios medicos: agenda Google Calendar, panel admin, IA con dos proveedores y fallback automatico, facturacion fiscal mexicana, recordatorios via Celery. El cliente paga por todo eso. ?Como sacas valor publico sin exponer datos de pacientes, logica fiscal especifica, ni regalar el producto que tu cliente compro? La respuesta: destilar un template generico que cubra el corazon del problema (agendar via WhatsApp) y dejar lo especifico privado. Citas-bot-universal nacio asi.
+
+## El Caso
+
+Un asistente WhatsApp para consultorios medicos privado (~6000 LOC, 16 tablas en Postgres, panel admin HTMX, Celery + Redis, Google Calendar, IA dual provider con fallback) del cual se extrajo `citas-bot-universal` (~1700 LOC, 3 tablas en SQLite, 1 proceso, sin admin, 1 LLM provider). Mismo dominio, distinto alcance.
+
+### Que tiene cada uno
+
+| Capacidad | Publico | Privado |
+|---|---|---|
+| Webhook Meta + HMAC | Si | Si |
+| Intent router hibrido (keyword + LLM) | Si | Si |
+| State machine para agendar | Si | Si |
+| Recordatorios automaticos | Si (24h, 2h) | Si (configurable por paciente) |
+| LLM provider abstraction | Si (Anthropic) | Si (DeepSeek + Groq con fallback) |
+| Multi-SIM / multi-tenant | -- | Si |
+| Google Calendar sync | -- | Si |
+| Panel admin HTMX | -- | Si |
+| RFC fiscal + facturacion | -- | Si |
+| Celery + Redis para colas | -- | Si |
+| Sistema de warnings 3-strikes | -- | Si |
+| Tomar control del chat (handoff real) | Flag basico | Sistema completo |
+| Cierre automatico de conversaciones inactivas | -- | Si |
+
+### En numeros
+
+| Metrica | Publico | Privado |
+|---|---|---|
+| Lineas de codigo | ~1700 | ~6000 |
+| Tablas BD | 3 | 16 |
+| Dependencias runtime | 8 | 30+ |
+| Procesos | 1 (FastAPI) | 3 (web + worker + beat) |
+| Cobertura tests | 87% | mayormente integration |
+| Migraciones Alembic | 3 | 40+ |
+| Intents shipping | 6 + default | 15+ |
+
+## Criterios de Extraccion
+
+Lo que se publico:
+
+- **Standalone**: corre sin Postgres, sin Redis, sin panel admin, sin Google
+- **Reutilizable**: cualquier negocio con citas (consultorios, barberias, talleres) lo puede forkar
+- **Patrones genericos**: state machine, intent router, MetaSender, scheduler de recordatorios
+
+Lo que se quedo privado:
+
+- **Logica fiscal mexicana**: RFC, razon social, datos para factura desde la conversacion. Cliente especifico, riesgo legal.
+- **Integracion Google Calendar**: el cliente compro esa pieza, su valor diferencial
+- **Panel admin completo**: HTMX + FullCalendar + Alpine.js, ~2000 LOC. No pertenece a un template
+- **Multi-tenant**: el privado sirve a varios consultorios desde una instancia. El publico asume 1 negocio
+- **3-strikes warnings**: politica de moderacion especifica del dominio medico
+- **Sistema de bloqueos por dia/horario**: granular, ligado al panel admin
+
+## El Refactor
+
+El cambio mas grande fue en la capa de scheduling. El sistema privado usa Celery con Redis para cola de tareas (recordatorios + sync Google Calendar + procesamiento async de mensajes con LLM lento). La version publica los reemplazo con APScheduler in-process: sin Redis, sin worker separado, todo en el mismo proceso FastAPI. Funciona perfecto hasta ~5000 citas/mes; si necesitas mas, BACKLOG.md apunta a la pieza a tocar (mover scheduling a worker separado con Postgres jobstore).
+
+El segundo cambio: intent router. El privado tenia 15+ intents (agendar, cancelar, FAQ, factura, queja, sugerencia, multiples flujos de bloqueo, comandos admin, etc.). El publico shippea solo los 6 universales: book, cancel, reschedule, list_mine, handoff, info. Cada fork dev agrega los suyos sin tocar el motor.
+
+El tercer cambio: el LLM. El privado usa DeepSeek + Groq con fallback automatico configurable. El publico usa solo Anthropic, con `LLMProvider` Protocol que permite agregar otros proveedores sin tocar el resto del codigo.
+
+## Leccion
+
+El motor y el vehiculo son cosas distintas. `citas-bot-universal` es el motor: webhook + intent router + state machine + scheduler + sender. El bot del consultorio es el vehiculo completo: motor + integraciones (Google, fiscal) + UI admin + multi-tenant + politica de uso. Quien forkea el motor puede construir su propio vehiculo. Quien necesita el vehiculo completo y especifico, contrata el desarrollo.
+
+Asi se demuestra capacidad tecnica sin regalar la propiedad del cliente: muestras lo generico, evidencias que sabes destilarlo, y dejas claro que es lo que tu cliente compro.
