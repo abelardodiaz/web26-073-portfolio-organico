@@ -2,6 +2,33 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.10.0] - 2026-05-06
+
+### Added
+- Project page: citas-bot-universal (public, MIT, v0.1.0 released)
+- Comparative page: clinica-bot-public-vs-private (privado vs publico)
+- 8 scheduled TILs (2026-06-05 to 2026-06-21) derived from citas-bot-universal:
+  - Hybrid intent classifier (keyword + LLM JSON fallback)
+  - State machine implicita en columna JSON
+  - dateparser ES locale para fechas naturales
+  - Pydantic + 1 env var JSON vs N env vars sueltas
+  - APScheduler ephemeral (BD como source of truth)
+  - Reminders idempotentes con flags booleanas
+  - Validar JSON output del LLM con Pydantic + extract helper
+  - UV_PYTHON env var en GHA matrix
+
+### Documentation
+- docs/POLICIES.md (v1.0): codifica milestone workflow, commit cadence,
+  DeepSeek validation, security pre-flight, decision tree para nuevos
+  trabajos en 073. Referenciado desde CLAUDE.md como onboarding step 1.
+
+### External
+- New public repo: github.com/abelardodiaz/citas-bot-universal v0.1.0
+  (template Python para asistentes WhatsApp de citas; 87% coverage,
+  6 intents, MetaSender real, APScheduler reminders, ~1700 LOC)
+- 14 GitHub Issues opened on github.com/abelardodiaz/web26-050-call-blocker
+  (9 backlog items + 5 pending features)
+
 ## [0.9.6] - 2026-05-06
 
 ### Added
