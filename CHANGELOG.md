@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.9.5] - 2026-05-06
+
+### Fixed
+- Scheduled publishing for TILs and projects: pages with date-based filtering
+  (lib/content.ts) were SSG-frozen at build time, so 16 TILs scheduled
+  2026-04-10..2026-04-30 never appeared on the live site after the last
+  deploy on 2026-04-09.
+
+### Added
+- ISR daily revalidation (`revalidate = 86400`) on app/page.tsx,
+  app/til/page.tsx, app/til/[slug]/page.tsx, app/projects/page.tsx so
+  Vercel regenerates with current date and scheduled content publishes
+  automatically without requiring a commit.
+
 ## [0.9.4] - 2026-04-09
 
 ### Added
