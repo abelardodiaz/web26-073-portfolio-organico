@@ -1,0 +1,76 @@
+---
+title: "Prefix blocking: por que SQL LIKE le gana a un Trie en Android"
+slug: "prefix-blocking-sql-like-vs-trie"
+category: "android"
+stack: ["kotlin", "room", "sqlite"]
+date: "2026-05-31"
+project: "call-blocker"
+---
+
+## Contexto
+
+La feature pedida: bloquear todos los numeros que empiecen con `800` (telemarketers) o con `4498` (un area especifica). Naturaleza es prefix matching, no exact match.
+
+Mi instinto inicial: estructura de datos en memoria. Trie. O3? O complejidad de matchear un numero. Eficientisimo. Lo escribi mentalmente en 30 segundos.
+
+Lo termine descartando 5 minutos despues.
+
+## Lo que aprendi
+
+La realidad de un app de bloqueo:
+
+- La blocklist tiene tipicamente 50-500 entradas (incluso usuarios pesados rara vez pasan de 1000)
+- Vive en Room (SQLite) por persistencia
+- Cada llamada hace 1 sola query
+
+Para 1000 filas, SQL `LIKE` con un `EXISTS` es < 5ms en hardware mid-range. Un Trie en RAM es ~0.05ms. Ambos son irrelevantes en el contexto de "el telefono esta sonando, tengo 4 segundos antes de que el usuario escuche el primer ring".
+
+El query que combina exact match Y prefix match en una sola pasada:
+
+```kotlin
+@Dao
+interface BlockedNumberDao {
+    @Query("""
+        SELECT EXISTS(
+            SELECT 1 FROM blocked_numbers
+            WHERE (is_prefix = 0 AND phoneNumber = :phoneNumber)
+               OR (is_prefix = 1 AND :phoneNumber LIKE phoneNumber || '%')
+        )
+    """)
+    suspend fun isNumberBlocked(phoneNumber: String): Boolean
+}
+```
+
+Notar:
+
+- `is_prefix` es un flag boolean en la fila (`INTEGER NOT NULL DEFAULT 0`)
+- `EXISTS` returns `0` o `1`, mapeado automaticamente a Boolean
+- El `LIKE phoneNumber || '%'` matchea "el numero entrante empieza con el patron almacenado"
+- Una sola pasada por la tabla, no dos queries
+
+Versus la alternativa con Trie:
+
+```kotlin
+// Hubiera necesitado:
+class PrefixTrie {
+    // build desde la blocklist al startup
+    // mantener sincronizado en cada add/delete
+    // recargar tras restore de backup
+    // serializar/deserializar?
+    // memory hit en cada launch de la app
+}
+```
+
+## Por que importa
+
+En mobile, "complejidad correcta" pierde frente a "delegar al engine que ya esta optimizado". SQLite hace LIKE rapido en columnas pequenas. Room compila el query en build time. El indice es trivial.
+
+Hay un caso donde el Trie SI gana: si tienes 100k+ prefijos (caso teorico de un agregador de blocklists publicas). Pero ningun usuario individual esta en ese caso.
+
+La regla heuristica que sigo:
+
+- < 10k filas, query sobre indice o tabla pequena -> SQL siempre
+- > 100k filas con queries muy frecuentes -> mide antes de elegir
+- Cache en RAM solo si la query domina el frame budget (16ms en UI thread)
+
+Bonus: el `is_prefix` flag permite UI conmutar entre "bloquear este numero exacto" y "bloquear todos los que empiecen con este". Una sola tabla, dos comportamientos.

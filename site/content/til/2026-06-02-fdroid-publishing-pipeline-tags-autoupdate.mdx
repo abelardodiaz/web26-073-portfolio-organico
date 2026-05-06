@@ -1,0 +1,86 @@
+---
+title: "F-Droid: del MR inicial al auto-publish via tags en 24h"
+slug: "fdroid-publishing-pipeline-tags-autoupdate"
+category: "devops"
+stack: ["fdroid", "android", "ci"]
+date: "2026-06-02"
+project: "call-blocker"
+---
+
+## Contexto
+
+F-Droid es el catalogo open source de Android. Estar ahi es diferenciador: usuarios que evitan Google Play, distros tipo /e/OS o GrapheneOS lo incluyen por default, y la presencia transmite "este software es serio, no es un side project con tracking".
+
+El flujo es 100% diferente a Play Store: no subes APK, no firmas tu mismo, no hay panel. Es un MR a un repo git.
+
+## Lo que aprendi
+
+Hay dos fases distintas:
+
+### Fase 1: Primer MR (manual, semanas)
+
+Forkear `fdroiddata` en GitLab, agregar `metadata/com.callblocker.yml`, abrir MR. Reviewers humanos validan: licencia, AndroidManifest, dependencias sin codigo propietario, AAB vs APK, build reproducible.
+
+El primer MR del Call Blocker (#32092, mergeado 2026-04-05) tomo varias semanas de ida y vuelta con `@linsui` como reviewer. Tipico.
+
+### Fase 2: Updates automaticos (zero work)
+
+La parte hermosa: tras la aprobacion inicial, configuras auto-update en el metadata:
+
+```yaml
+Categories:
+  - Phone & SMS
+License: GPL-3.0-only
+SourceCode: https://gitlab.com/abelardodiaz/web26-050-call-blocker
+RepoType: git
+Repo: https://gitlab.com/abelardodiaz/web26-050-call-blocker.git
+
+Builds:
+  - versionName: 0.3.3
+    versionCode: 16
+    commit: v0.3.3
+    subdir: app
+    gradle:
+      - yes
+
+  - versionName: 0.3.4
+    versionCode: 17
+    commit: v0.3.4
+    subdir: app
+    gradle:
+      - yes
+
+AutoUpdateMode: Version
+UpdateCheckMode: Tags
+CurrentVersion: 0.3.4
+CurrentVersionCode: 17
+```
+
+`UpdateCheckMode: Tags` le dice a F-Droid: "vigila los tags git de mi repo". Cuando push un tag `v0.3.5`, su CI:
+
+1. Detecta el nuevo tag
+2. Clona el repo en ese commit
+3. Compila contra su toolchain reproducible
+4. Firma con su llave master de F-Droid
+5. Publica en el catalogo
+
+En el caso real: tag `v0.3.4` pusheado 2026-04-14, app aparecio en F-Droid en ~24h. Zero intervencion.
+
+## Por que importa
+
+La asimetria en el effort es enorme:
+
+- Fase 1: 1 vez, semanas
+- Fase 2: 0 minutos por release
+
+Es exactamente el tradeoff que vale la pena pagar para un proyecto open source de larga vida. Si vas a hacer 5-10 releases al ano, la inversion inicial se amortiza en 6 meses.
+
+Detalles que aprendi:
+
+1. **`subdir: app`** importa. Si tu modulo Android no esta en la raiz del repo, hay que apuntarlo.
+2. **`versionCode` debe ser estrictamente creciente** (Android lo requiere, pero F-Droid lo valida ademas)
+3. **No hay rollback**. Si una build sale mala, el unico recurso es publicar v0.3.5 con el fix.
+4. **Tags vs branches**: `UpdateCheckMode: Tags` es lo correcto. `HTTP` y `Version` son para casos raros.
+5. **Build reproducibility**: si tu build no es deterministico (mtime de archivos en el APK), F-Droid puede rechazar. Gradle 8+ ayuda con `--no-daemon`.
+
+Si tu app es libre y tienes el tiempo, F-Droid es worth it. Da credibilidad que Play Store ya no da.

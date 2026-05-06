@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.9.6] - 2026-05-06
+
+### Added
+- Project page: Call Blocker (web26-050) - public Android app GPL-3, F-Droid published
+- 8 scheduled TILs (2026-05-19 to 2026-06-02) extracted from Call Blocker codebase:
+  - CallScreeningService vs BroadcastReceiver (Android 9 vs 10+ APIs)
+  - Forced dark theme in Compose Material 3
+  - Hilt @Binds vs @Provides (RepositoryModule vs AppModule)
+  - Room: 7 incremental migrations without data loss
+  - AES-256-GCM + PBKDF2 backup encryption with magic header
+  - Multi-SIM detection: 3 permission tiers across Android versions
+  - Prefix blocking: SQL LIKE wins over Trie on Android
+  - F-Droid auto-publish pipeline via tags
+
+### Changed
+- sanitize_check.py: added `gitlab.com/abelardodiaz/` to ALLOWLIST_PATTERNS (public mirror of GitHub repos)
+
 ## [0.9.5] - 2026-05-06
 
 ### Fixed

@@ -1,0 +1,76 @@
+---
+title: "Room: 7 migraciones incrementales sin perder datos del usuario"
+slug: "room-migrations-incrementales-7-versiones"
+category: "android"
+stack: ["kotlin", "room", "sqlite"]
+date: "2026-05-25"
+project: "call-blocker"
+---
+
+## Contexto
+
+Cada feature nuevo en una app movil de larga vida casi siempre necesita una columna nueva en la base de datos: un flag, un timestamp, un campo opcional. Tras 6 releases la app acumulo 7 migraciones de schema y zero usuarios reportaron perdida de datos. Esto no es accidente.
+
+## Lo que aprendi
+
+El patron de Room cuando el schema no es destructivo es brutalmente simple: `ALTER TABLE ... ADD COLUMN ... DEFAULT ...`. Cada migracion es un objeto `Migration(from, to)`:
+
+```kotlin
+object Migrations {
+    val MIGRATION_1_2 = object : Migration(1, 2) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("ALTER TABLE blocked_numbers ADD COLUMN is_prefix INTEGER NOT NULL DEFAULT 0")
+        }
+    }
+
+    val MIGRATION_2_3 = object : Migration(2, 3) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("ALTER TABLE settings ADD COLUMN enabled_sim_slots TEXT NOT NULL DEFAULT ''")
+        }
+    }
+
+    val MIGRATION_5_6 = object : Migration(5, 6) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("ALTER TABLE settings ADD COLUMN developer_mode_enabled INTEGER NOT NULL DEFAULT 0")
+            db.execSQL("ALTER TABLE settings ADD COLUMN dev_sim_detection_by_format INTEGER NOT NULL DEFAULT 0")
+            db.execSQL("ALTER TABLE settings ADD COLUMN dev_block_sim1 INTEGER NOT NULL DEFAULT 1")
+            db.execSQL("ALTER TABLE settings ADD COLUMN dev_block_sim2 INTEGER NOT NULL DEFAULT 1")
+        }
+    }
+}
+```
+
+Y se registran todas en el module:
+
+```kotlin
+Room.databaseBuilder(context, AppDatabase::class.java, AppDatabase.DATABASE_NAME)
+    .addMigrations(
+        Migrations.MIGRATION_1_2,
+        Migrations.MIGRATION_2_3,
+        Migrations.MIGRATION_3_4,
+        Migrations.MIGRATION_4_5,
+        Migrations.MIGRATION_5_6,
+        Migrations.MIGRATION_6_7
+    )
+    .build()
+```
+
+Si un usuario sigue en v1 y actualiza directo a v7, Room ejecuta las 6 migraciones en cadena automaticamente.
+
+### El detalle critico: defaults no-NULL
+
+Cualquier columna nueva debe ser:
+
+- `INTEGER NOT NULL DEFAULT 0` para flags/booleans (Kotlin: `Boolean = false`)
+- `INTEGER DEFAULT NULL` si quieres permitir nulos (Kotlin: `Int? = null`)
+- `TEXT NOT NULL DEFAULT ''` para strings con default vacio
+
+Si declaras la columna como `NOT NULL` sin `DEFAULT`, la migracion crashea en runtime para usuarios existentes (no para nuevas instalaciones, lo que oculta el bug en testing manual).
+
+## Por que importa
+
+`fallbackToDestructiveMigration()` es la salida facil. Borra la base de datos y la reconstruye. En una app de bloqueo de llamadas, equivale a borrar la blocklist del usuario sin avisar. Game over para el rating en Play Store.
+
+7 migraciones manuales son ~20 lineas extra por release. Es trivial. Lo dificil es la disciplina: cada vez que agregas un campo a una `@Entity`, escribes la migracion ANTES de bumpear `@Database(version = N+1)`. No despues. No "lo dejo para manana".
+
+Bonus: documenta las migraciones en CHANGELOG. Cuando v0.5.0 falle en un dispositivo viejo, vas a querer saber rapido que migracion fue.

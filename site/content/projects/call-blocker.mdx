@@ -1,0 +1,51 @@
+---
+title: "Call Blocker"
+slug: "call-blocker"
+description: "App Android open-source para bloqueo de llamadas no deseadas, publicada en F-Droid. Kotlin + Jetpack Compose + Clean Architecture."
+stack: ["kotlin", "jetpack-compose", "material3", "hilt", "room"]
+github: "https://github.com/abelardodiaz/web26-050-call-blocker"
+gitlab: "https://gitlab.com/abelardodiaz/web26-050-call-blocker"
+fdroid: "https://f-droid.org/packages/com.callblocker/"
+license: "GPL-3.0"
+category: "mobile"
+featured: true
+date: "2026-05-18"
+---
+
+## El Problema
+
+Las apps de bloqueo de llamadas en el Play Store estan llenas de tracking, ads y permisos abusivos. Las opciones open source son escasas, viejas, o no soportan multi-SIM ni Android moderno. Y bloquear llamadas no es trivial: Android cambio la API en 9, 10 y 12, cada version tiene sus permisos, y cada fabricante (Samsung, Xiaomi) introduce sus quirks.
+
+## La App
+
+App Android nativa que bloquea llamadas con criterios configurables: numeros exactos, prefijos, numeros privados (oculto). Soporta multi-SIM con bloqueo independiente por slot. Backups encriptados con AES-256-GCM derivado de password. UI en espanol/ingles con seleccion in-app. Todo open source bajo GPL-3.
+
+### Features tecnicas
+
+- **Call screening dual**: `CallScreeningService` (Android 10+) y `BroadcastReceiver` con `TelecomManager.endCall()` (Android 9 legacy)
+- **Multi-SIM real**: detecta SIMs activas via `SubscriptionManager`, bloqueo configurable por slot, deteccion del slot que recibio la llamada via `subscription_id` del CallLog
+- **Prefix blocking**: SQL `LIKE :phoneNumber || '%'` para matchear prefijos sin estructuras en RAM
+- **Backup AES-256-GCM**: PBKDF2 con 100k iteraciones, salt + IV aleatorios, magic header `CBBK` para validar formato antes de pedir password
+- **Room migrations**: 7 migraciones incrementales (v1 a v7), cada una `ALTER TABLE ADD COLUMN ... DEFAULT ...`
+- **Persistent foreground service**: garantiza que el screening sigue activo aunque el sistema mate el proceso
+- **Accesibilidad**: screen reader friendly, contraste WCAG AA
+- **Modo desarrollador oculto**: tap 7 veces en About activa flags de debug
+
+## Stack
+
+- **Lenguaje**: Kotlin 1.9
+- **UI**: Jetpack Compose + Material 3 (dark theme forzado por contexto de uso)
+- **Arquitectura**: Clean Architecture + MVVM (domain / data / presentation)
+- **DI**: Hilt (`@Binds` para repositorios, `@Provides` para Room)
+- **Database**: Room con migraciones manuales
+- **Min SDK**: 28 (Android 9), Target SDK 34
+
+## Distribucion
+
+- **F-Droid**: publicado como `com.callblocker` desde v0.3.3 (MR #32092 aceptado 2026-04-05)
+- **Auto-publish**: `AutoUpdateMode: Version` + `UpdateCheckMode: Tags` -> push de tag git -> publicacion automatica en ~24h
+- **GitHub + GitLab**: dual remote, gitlab es source-of-truth para F-Droid
+
+## Por que importa
+
+No es un toy project. Esta en F-Droid (catalogo oficial Android), tiene PRIVACY.md y SECURITY.md, CHANGELOG versionado, license GPL-3 y soporta dispositivos reales con sus limitaciones reales (incluyendo el documentado bypass de Samsung One UI para contactos guardados). Demuestra que se puede hacer software movil serio sin trackers ni ads.

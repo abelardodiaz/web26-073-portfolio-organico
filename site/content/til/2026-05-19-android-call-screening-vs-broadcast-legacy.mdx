@@ -1,0 +1,66 @@
+---
+title: "CallScreeningService vs BroadcastReceiver: dos APIs para bloquear llamadas"
+slug: "android-call-screening-vs-broadcast-legacy"
+category: "android"
+stack: ["kotlin", "android"]
+date: "2026-05-19"
+project: "call-blocker"
+---
+
+## Contexto
+
+Bloquear llamadas en Android no es una API: son dos. Android 10 (API 29) introdujo `CallScreeningService` con `respondToCall()`, que es la forma moderna y soportada. Pero Android 9 (API 28) sigue siendo ~5% del parque y depende de `BroadcastReceiver` con `TelecomManager.endCall()`, ya marcado como deprecated en API 29 pero funcional en 28.
+
+Si quieres soportar Android 9+, tienes que tener las dos implementaciones.
+
+## Lo que aprendi
+
+El `CallScreeningService` se registra en el manifest y recibe `Call.Details` con un objeto `CallResponse.Builder` para responder:
+
+```kotlin
+@AndroidEntryPoint
+class CallBlockerScreeningService : CallScreeningService() {
+    override fun onScreenCall(callDetails: Call.Details) {
+        val phoneNumber = callDetails.handle?.schemeSpecificPart ?: ""
+        serviceScope.launch {
+            if (shouldBlock(phoneNumber)) {
+                val response = CallResponse.Builder()
+                    .setDisallowCall(true)
+                    .setRejectCall(true)
+                    .setSkipCallLog(false)
+                    .build()
+                respondToCall(callDetails, response)
+            } else {
+                allowCall(callDetails)
+            }
+        }
+    }
+}
+```
+
+El `BroadcastReceiver` para API 28 escucha `ACTION_PHONE_STATE_CHANGED` y termina la llamada con `telecomManager.endCall()`:
+
+```kotlin
+class PhoneStateReceiver : BroadcastReceiver() {
+    override fun onReceive(context: Context, intent: Intent) {
+        // Early return en API 29+ donde CallScreeningService toma el rol
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) return
+        if (intent.action != TelephonyManager.ACTION_PHONE_STATE_CHANGED) return
+
+        val state = intent.getStringExtra(TelephonyManager.EXTRA_STATE)
+        if (state != TelephonyManager.EXTRA_STATE_RINGING) return
+
+        @Suppress("DEPRECATION")
+        val phoneNumber = intent.getStringExtra(TelephonyManager.EXTRA_INCOMING_NUMBER)
+        // ... endCall() en TelecomManager
+    }
+}
+```
+
+El gate `if (Build.VERSION.SDK_INT >= Q) return` es crucial: sin el, en API 29+ se ejecutan AMBOS receptores y compiten por bloquear, generando race conditions.
+
+## Por que importa
+
+La trampa es pensar "tengo Android 10+ como minSdk porque es 95% del parque, ignoro 9". Pero ese 5% es ~50M dispositivos. Si tu app es de utilidad pura (bloquear, antivirus, accesibilidad), es exactamente el publico que mas la necesita: gente con telefonos viejos a quien no puedes pedir actualizar.
+
+El costo de soportar ambas APIs es duplicar `determineBlockReason` en dos clases. Dolor real, pero menor que excluir usuarios. La logica comun se puede extraer a un use case del domain layer.

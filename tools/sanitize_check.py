@@ -87,6 +87,7 @@ EXCLUDED_FILES = {
 # Lines matching these patterns are safe and should not trigger findings
 ALLOWLIST_PATTERNS = [
     r"github\.com/abelardodiaz/",  # Public GitHub repo URLs are safe
+    r"gitlab\.com/abelardodiaz/",  # Public GitLab mirror URLs are safe
 ]
 
 BINARY_EXTENSIONS = {

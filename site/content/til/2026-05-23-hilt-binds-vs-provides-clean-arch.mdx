@@ -1,0 +1,79 @@
+---
+title: "Hilt: @Binds para repositorios, @Provides para Room"
+slug: "hilt-binds-vs-provides-clean-arch"
+category: "android"
+stack: ["kotlin", "hilt", "android"]
+date: "2026-05-23"
+project: "call-blocker"
+---
+
+## Contexto
+
+En clean architecture con Android, terminas con dos tipos distintos de dependencias para inyectar:
+
+1. **Interfaces -> implementaciones** (BlockedNumberRepository -> BlockedNumberRepositoryImpl)
+2. **Objetos construidos** (Room database, DAOs)
+
+Tentacion de novato: usar `@Provides` para todo. Funciona, pero genera codigo subobtimo y no transmite intent.
+
+## Lo que aprendi
+
+`@Binds` es para mapear interfaz a implementacion cuando el constructor de la implementacion ya esta inyectado:
+
+```kotlin
+@Module
+@InstallIn(SingletonComponent::class)
+abstract class RepositoryModule {
+
+    @Binds
+    @Singleton
+    abstract fun bindBlockedNumberRepository(
+        impl: BlockedNumberRepositoryImpl
+    ): BlockedNumberRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindBlockedCallRepository(
+        impl: BlockedCallRepositoryImpl
+    ): BlockedCallRepository
+}
+```
+
+Notar que el modulo es `abstract class`, no `object`. Hilt no necesita instanciarlo porque `@Binds` se resuelve en compilacion.
+
+`@Provides` es para cuando construyes el objeto manualmente:
+
+```kotlin
+@Module
+@InstallIn(SingletonComponent::class)
+object AppModule {
+
+    @Provides
+    @Singleton
+    fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase {
+        return Room.databaseBuilder(context, AppDatabase::class.java, AppDatabase.DATABASE_NAME)
+            .addMigrations(
+                Migrations.MIGRATION_1_2, Migrations.MIGRATION_2_3,
+                Migrations.MIGRATION_3_4, Migrations.MIGRATION_4_5,
+                Migrations.MIGRATION_5_6, Migrations.MIGRATION_6_7
+            )
+            .build()
+    }
+
+    @Provides
+    fun provideBlockedNumberDao(database: AppDatabase) = database.blockedNumberDao()
+}
+```
+
+Aqui el modulo es `object`, porque Hilt si necesita ejecutar `provideAppDatabase()` para obtener la instancia.
+
+## Por que importa
+
+`@Binds` genera codigo mas eficiente (Hilt lo resuelve sin reflexion ni instancia del modulo). Ademas comunica intent al lector: "esto es un mapeo, no una construccion". Cuando otro dev abre `RepositoryModule.kt` ve "abstract class + @Binds" y sabe inmediatamente que no hay logica custom.
+
+Regla rapida:
+
+- Tu clase tiene `@Inject constructor`? -> `@Binds` con abstract module
+- Construyes manualmente con builder, factory, o config? -> `@Provides` con object module
+
+Mezclarlos en el mismo proyecto esta perfecto. Mezclarlos en el mismo modulo no compila.

@@ -1,0 +1,91 @@
+---
+title: "Backup encriptado: AES-256-GCM + PBKDF2 con header magico"
+slug: "aes-256-gcm-pbkdf2-backup-magic-header"
+category: "android"
+stack: ["kotlin", "cryptography", "android"]
+date: "2026-05-27"
+project: "call-blocker"
+---
+
+## Contexto
+
+El usuario quiere exportar su blocklist y restaurarla en otro dispositivo. JSON plano funciona, pero contiene numeros telefonicos personales y patrones que pueden inferir habitos. El usuario pide encriptacion con password.
+
+Implementar cripto en mobile es donde se cometen errores caros: KDF debil, IV reutilizado, padding sin autenticar, validacion ausente que revela mediante timing si el archivo es del formato correcto.
+
+## Lo que aprendi
+
+El paquete `javax.crypto` en Android tiene todo. El stack que termina siendo correcto:
+
+- **AES-256-GCM**: cifrado autenticado, un solo paso encrypt + tag
+- **PBKDF2WithHmacSHA256**: derivar key de 256 bits desde password
+- **100k iteraciones**: balance entre seguridad y UX (decrypt < 200ms en mid-range)
+- **Salt 16 bytes**: random por archivo, evita rainbow tables
+- **IV 12 bytes**: random por archivo (12B es lo recomendado para GCM)
+- **Magic header `CBBK`**: 4 bytes al inicio para validar formato sin intentar decrypt
+
+```kotlin
+object BackupEncryption {
+
+    private const val ALGORITHM = "AES/GCM/NoPadding"
+    private const val PBKDF2_ALGORITHM = "PBKDF2WithHmacSHA256"
+    private const val KEY_LENGTH = 256
+    private const val IV_LENGTH = 12
+    private const val SALT_LENGTH = 16
+    private const val TAG_LENGTH = 128
+    private const val ITERATIONS = 100_000
+    private const val MAGIC_HEADER = "CBBK"
+
+    fun encrypt(data: String, password: String): ByteArray {
+        val salt = ByteArray(SALT_LENGTH).also { SecureRandom().nextBytes(it) }
+        val iv = ByteArray(IV_LENGTH).also { SecureRandom().nextBytes(it) }
+
+        val key = deriveKey(password, salt)
+        val cipher = Cipher.getInstance(ALGORITHM)
+        cipher.init(Cipher.ENCRYPT_MODE, key, GCMParameterSpec(TAG_LENGTH, iv))
+
+        val ciphertext = cipher.doFinal(data.toByteArray(Charsets.UTF_8))
+
+        // [4B magic][16B salt][12B IV][N bytes ciphertext+tag]
+        return MAGIC_HEADER.toByteArray(Charsets.UTF_8) + salt + iv + ciphertext
+    }
+
+    fun isEncrypted(data: ByteArray): Boolean {
+        if (data.size < 4) return false
+        val header = String(data.sliceArray(0 until 4), Charsets.UTF_8)
+        return header == MAGIC_HEADER
+    }
+
+    private fun deriveKey(password: String, salt: ByteArray): SecretKeySpec {
+        val factory = SecretKeyFactory.getInstance(PBKDF2_ALGORITHM)
+        val spec = PBEKeySpec(password.toCharArray(), salt, ITERATIONS, KEY_LENGTH)
+        return SecretKeySpec(factory.generateSecret(spec).encoded, "AES")
+    }
+}
+```
+
+Decrypt valida magic primero:
+
+```kotlin
+fun decrypt(encryptedData: ByteArray, password: String): String {
+    if (encryptedData.size < 48) {
+        throw IllegalArgumentException("Archivo encriptado invalido: muy corto")
+    }
+    val magic = String(encryptedData.sliceArray(0 until 4), Charsets.UTF_8)
+    if (magic != MAGIC_HEADER) {
+        throw IllegalArgumentException("Archivo no es un backup encriptado de Call Blocker")
+    }
+    val salt = encryptedData.sliceArray(4 until 20)
+    val iv = encryptedData.sliceArray(20 until 32)
+    val ciphertext = encryptedData.sliceArray(32 until encryptedData.size)
+    // ... cipher init en DECRYPT_MODE, throws AEADBadTagException si password incorrecto
+}
+```
+
+## Por que importa
+
+El **magic header** es el detalle no obvio. Sin el, "archivo corrupto" y "password incorrecto" se reportan igual al usuario (ambos lanzan `AEADBadTagException`). Con el, puedes mostrar antes de pedir password: "este archivo no es un backup encriptado de Call Blocker, parece un JSON plano, lo importo asi?".
+
+GCM como modo es no-negociable. CBC sin HMAC permite ataques de padding oracle. CTR sin tag permite manipulacion silenciosa del ciphertext. GCM autentica de un golpe. Si tu codigo dice `AES/CBC/PKCS5Padding`, esta mal.
+
+100k iteraciones en PBKDF2 ya empieza a ser baja por estandares 2026. Si tu app es nueva, considera 600k o cambiar a Argon2id (libsodium-jni en Android). Para apps existentes, migrar requiere bumping del KDF en formato y recifrar al primer unlock.

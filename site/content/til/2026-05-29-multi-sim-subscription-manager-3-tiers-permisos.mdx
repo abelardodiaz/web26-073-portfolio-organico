@@ -1,0 +1,83 @@
+---
+title: "Multi-SIM en Android: 3 tiers de permisos segun version"
+slug: "multi-sim-subscription-manager-3-tiers-permisos"
+category: "android"
+stack: ["kotlin", "android", "telephony"]
+date: "2026-05-29"
+project: "call-blocker"
+---
+
+## Contexto
+
+Detectar las SIMs activas en un dispositivo Android es necesario si quieres permitir bloqueo independiente por slot (caso clasico: SIM personal sin bloqueo, SIM de trabajo con blocklist agresiva). La API base es `SubscriptionManager.activeSubscriptionInfoList`, disponible desde API 22 (Android 5.1).
+
+La trampa: la API tecnicamente existe desde 22, pero los permisos requeridos cambiaron 2 veces despues. Asumir "una API publica" como universal es un crash garantizado.
+
+## Lo que aprendi
+
+Hay 3 tiers de comportamiento segun version:
+
+- **API 22-30 (Android 5.1 - 11)**: solo `READ_PHONE_STATE`
+- **API 31-32 (Android 12)**: requiere ADEMAS `READ_PHONE_NUMBERS` para `getActiveSubscriptionInfoList()`
+- **API 33+ (Android 13+)**: el numero de telefono ya no esta en `SubscriptionInfo.number` (deprecado), usa `subscriptionManager.getPhoneNumber(subId)` que requiere `READ_PHONE_NUMBERS`
+
+```kotlin
+fun getActiveSimCards(context: Context): List<SimConfig> {
+    if (ContextCompat.checkSelfPermission(
+            context, Manifest.permission.READ_PHONE_STATE
+        ) != PackageManager.PERMISSION_GRANTED) {
+        return emptyList()
+    }
+
+    // Android 12+: tambien READ_PHONE_NUMBERS
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        if (ContextCompat.checkSelfPermission(
+                context, Manifest.permission.READ_PHONE_NUMBERS
+            ) != PackageManager.PERMISSION_GRANTED) {
+            return emptyList()
+        }
+    }
+
+    val subscriptionManager = context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE)
+        as? SubscriptionManager ?: return emptyList()
+
+    return subscriptionManager.activeSubscriptionInfoList?.map { subInfo ->
+        SimConfig(
+            subscriptionId = subInfo.subscriptionId,
+            simSlot = subInfo.simSlotIndex,
+            carrierName = subInfo.carrierName?.toString() ?: "SIM ${subInfo.simSlotIndex + 1}",
+            phoneNumber = getPhoneNumber(context, subInfo.subscriptionId)
+        )
+    } ?: emptyList()
+}
+
+private fun getPhoneNumber(context: Context, subscriptionId: Int): String? {
+    val subManager = context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE)
+        as? SubscriptionManager ?: return null
+
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        // API 33+: API moderna
+        subManager.getPhoneNumber(subscriptionId).takeIf { it.isNotBlank() }
+    } else {
+        // API 22-32: legacy field con @Suppress("DEPRECATION")
+        @Suppress("DEPRECATION")
+        subManager.activeSubscriptionInfoList
+            ?.find { it.subscriptionId == subscriptionId }
+            ?.number
+            ?.takeIf { it.isNotBlank() }
+    }
+}
+```
+
+## Por que importa
+
+La API de telefonia en Android es el ejemplo canonico de "publica pero con quirks por version". Cualquier feature relacionado con SIM, IMEI, numero, MCC/MNC o subscription va a necesitar ramificacion por SDK.
+
+Lecciones:
+
+1. **No uses solo `try/catch`** para manejar permisos faltantes. `checkSelfPermission` antes evita logs de error y comportamientos inconsistentes.
+2. **Maneja el carrier name vacio** (`carrierName?.toString() ?: "SIM ${slot + 1}"`). Operadores chicos a veces no lo reportan.
+3. **El phone number puede ser null aunque tengas permisos**. El operador puede no proveerlo. UI debe permitir editar manualmente.
+4. **`@Suppress("DEPRECATION")` es legitimo aqui**, no es deuda tecnica: es soporte explicito de versiones viejas. Comenta el porque.
+
+Bonus: en el call screening, usar `subscription_id` del CallLog (campo no documentado pero estable) permite saber que SIM recibio una llamada bloqueada despues del hecho. Util si el usuario quiere stats por SIM.
