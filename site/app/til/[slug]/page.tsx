@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import { getAllTils, getTilBySlug } from "@/lib/content";
 import { MdxContent } from "@/components/shared/MdxContent";
 
+export const revalidate = 86400;
+
 type Props = {
   params: Promise<{ slug: string }>;
 };

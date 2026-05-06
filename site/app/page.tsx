@@ -5,6 +5,8 @@ import { RotatingLabel } from "@/components/shared/RotatingLabel";
 import { SocialProof } from "@/components/shared/SocialProof";
 import { getAllTils, getAllProjects } from "@/lib/content";
 
+export const revalidate = 86400;
+
 export default function Home() {
   const tils = getAllTils().slice(0, 5);
   const projects = getAllProjects().filter((p) => p.featured);

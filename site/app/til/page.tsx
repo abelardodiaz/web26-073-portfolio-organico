@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { getAllTils, getTilTagSets } from "@/lib/content";
 import { TilFeed } from "@/components/til/TilFeed";
 
+export const revalidate = 86400;
+
 export const metadata: Metadata = {
   title: "TIL - Today I Learned",
   description: "Micro-lecciones aprendidas en produccion.",

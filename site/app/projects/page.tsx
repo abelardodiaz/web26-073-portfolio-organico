@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { getAllProjects, getAllProjectCategories } from "@/lib/content";
 import { ProjectGrid } from "@/components/projects/ProjectGrid";
 
+export const revalidate = 86400;
+
 export const metadata: Metadata = {
   title: "Proyectos",
   description: "Micro-repos con patterns de produccion real.",
