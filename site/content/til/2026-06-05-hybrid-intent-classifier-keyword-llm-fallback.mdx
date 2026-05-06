@@ -1,0 +1,58 @@
+---
+title: "Clasificacion hibrida de intents: keywords primero, LLM despues"
+slug: "hybrid-intent-classifier-keyword-llm-fallback"
+category: "ai"
+stack: ["python", "fastapi", "anthropic", "nlu"]
+date: "2026-06-05"
+project: "citas-bot-universal"
+---
+
+## Contexto
+
+Construyendo un asistente WhatsApp para citas, cada mensaje del usuario tiene que clasificarse en un intent: agendar, cancelar, listar mis citas, info del negocio, hablar con humano. Hay dos extremos clasicos para resolverlo. Solo regex/keywords es rapido y gratis pero fragil ante redacciones creativas. Solo un LLM clasificador es robusto pero costoso y lento por cada mensaje. Antes de codear hice un brainstorm donde inicialmente me incline por LLM siempre, pero la review externa argumento que "para un template orientado a devs LATAM donde el costo y la latencia importan, mostrar el patron hibrido desde dia uno es mejor practica". Acepte el cambio.
+
+## Lo que aprendi
+
+El pipeline final tiene dos pasos. Primero scan de keywords contra cada Intent registrado. Si match, retorna confidence 1.0 sin llamar al LLM. Si no hay match, recien ahi se invoca al LLM con un system prompt construido dinamicamente desde la lista de intents para que devuelva JSON estructurado.
+
+```python
+async def _classify(self, text: str) -> Classification:
+    # 1. Keyword match: gratis e instantaneo
+    for intent in self._registry.all():
+        if intent.name == "default":
+            continue
+        for kw in intent.keywords:
+            if kw.lower() in text.lower():
+                return Classification(
+                    intent_name=intent.name,
+                    confidence=1.0,
+                    reasoning=f"keyword:{kw}",
+                )
+    # 2. LLM fallback: solo cuando keyword no resuelve
+    return await self._classify_with_llm(text)
+```
+
+Cada Intent declara una lista opcional `keywords: list[str]`. Para `book` son `["agendar", "cita", "reservar"]`; para `cancel` `["cancelar cita", "cancela mi"]`. Mensajes tipo "horario?" caen en el camino rapido sin tocar el LLM. El orden de iteracion del registry resuelve empates: por eso `cancel` se registra antes de `book`, asi "cancelar mi cita" matchea cancel (no book). El primer match gana y el loop termina.
+
+El system prompt del clasificador se construye dinamicamente:
+
+```python
+def _build_classifier_prompt(registry: IntentRegistry) -> str:
+    lines = ["Clasifica el mensaje en uno de los intents:", ""]
+    for intent in registry.all():
+        lines.append(f"- {intent.name}: {intent.description}")
+        if intent.examples:
+            examples = ", ".join(f'"{e}"' for e in intent.examples[:3])
+            lines.append(f"  Ejemplos: {examples}")
+    return "\n".join(lines)
+```
+
+Asi, agregar un intent nuevo no requiere tocar el clasificador: el prompt se actualiza solo. El LLM responde JSON con `{intent_name, confidence, reasoning}` que se valida con un Pydantic model y se aplica un threshold de 0.5 antes de despachar. Si la confianza queda debajo, el router cae al intent `default` y responde con un fallback amable; el clasificador nunca crashea por respuestas raras del LLM.
+
+## Por que importa
+
+Para un bot de citas, la gran mayoria de los mensajes son patrones obvios que contienen "agendar", "cita", "horario", "cancelar". Pagarle al LLM por cada uno es ineficiente. El LLM solo entra para los casos creativos: "podrias acomodarme algo" o "necesito mover lo del jueves". El usuario percibe respuesta instantanea en la mayoria de turnos y el costo mensual se mantiene predecible.
+
+Bonus: los keywords son trivialmente customizables por el dev que forkea el repo. Si tu negocio usa terminologia propia ("apartar mesa" en lugar de "agendar"), agregas la palabra al campo `keywords` del Intent y listo. El LLM se encarga de todo lo que no preveiste.
+
+El patron viaja bien a otros dominios donde la mayoria de queries son obvias y solo un porcentaje pide razonamiento real: soporte, ventas, FAQs, ayuda interna.

@@ -1,0 +1,63 @@
+---
+title: "citas-bot-universal"
+slug: "citas-bot-universal"
+description: "Template Python open-source para asistentes WhatsApp de citas. FastAPI + SQLite + APScheduler + Anthropic Claude. MIT, listo para fork-and-deploy."
+stack: ["python", "fastapi", "sqlalchemy", "anthropic", "whatsapp"]
+github: "https://github.com/abelardodiaz/citas-bot-universal"
+gitlab: "https://gitlab.com/abelardodiaz/citas-bot-universal"
+release: "https://github.com/abelardodiaz/citas-bot-universal/releases/tag/v0.1.0"
+license: "MIT"
+category: "fullstack"
+featured: true
+date: "2026-06-04"
+---
+
+## El Problema
+
+Negocios chicos en LATAM reciben citas por WhatsApp todo el dia: consultorios, barberias, talleres, salones, asesores con agenda. Las opciones disponibles para automatizar esa conversacion son extremos: SaaS caros que hacen lock-in al proveedor, frameworks generales tipo LangChain que sirven para todo y por eso requieren ensamblar mucho, o hacerlo a mano cada vez. Falta un punto medio: un template Python deployable en una VPS chica, listo para fork-and-deploy en un weekend, sin pagar por usuario ni casarse con un stack que no necesitas.
+
+## La Solucion
+
+`citas-bot-universal` es ese punto medio. Un template MIT que clonas, configuras con tus credenciales Meta y datos del negocio, y `make run` te deja con un asistente WhatsApp funcional. Stack minimo: FastAPI sobre SQLite con APScheduler corriendo en el mismo proceso, sin Celery ni Redis.
+
+Trae 6 intents core listos:
+
+- **book** — agendar cita con state machine de slot filling (fecha → hora → nombre → confirmar)
+- **cancel** — cancelar cita existente eligiendola por numero de lista
+- **reschedule** — reprogramar (combinacion nested de cancel + book)
+- **list_mine** — listar las citas activas del cliente
+- **handoff** — pasar la conversacion a un humano (flag persistido)
+- **info** — preguntas generales sobre el negocio (horarios, ubicacion, costos) usando el LLM
+
+Mas un `default` catch-all para lo que el clasificador no entiende. Recordatorios automaticos 24h y 2h antes de cada cita salen via Meta Cloud API. Idempotencia asegurada con flags booleanas en cada Appointment, asi que reiniciar el proceso no manda dobles.
+
+## Stack
+
+- Python 3.11 / 3.12 (matrix CI)
+- FastAPI con `lifespan` async
+- SQLAlchemy 2.0 declarativo + aiosqlite (Postgres-ready cambiando una URL)
+- APScheduler `AsyncIOScheduler` para los recordatorios
+- Anthropic Claude via SDK oficial, con tenacity retry; provider Protocol que permite swap a otro proveedor (DeepSeek planeado para v0.2.0+)
+- httpx + tenacity para el cliente Meta Send API
+- structlog en dos modos: ConsoleRenderer legible en dev, JSONRenderer estructurado en prod
+- Alembic para migraciones (3 versiones shipping en v0.1.0)
+
+Cobertura de tests: 87%, incluyendo fixtures JSON de conversaciones grabadas. mypy en modo strict, ruff como linter+formatter.
+
+## Por que importa
+
+La audiencia es explicita: devs Python en LATAM que necesitan deployar algo concreto para un cliente o su propio negocio sin pagar SaaS por usuario. Las decisiones de diseno son honestas sobre lo que NO escala: un proceso por instancia, un negocio por instancia, SQLite hasta unos miles de citas por mes. Para escalar mas alla, `BACKLOG.md` enumera que modificar (Postgres, Redis dedupe, distributed scheduling).
+
+Cada decision arquitectonica fue revisada con un LLM externo como asesor antes de codear, en un proceso tipo "second opinion". Eso mantuvo a raya tentaciones tipicas (mypy permisivo "para arrancar rapido", regex layer sobre dateparser, BUSINESS_INFO en cinco env vars sueltas) y dejo trazabilidad — cada `decision.md` interno cita el ticket correspondiente.
+
+```python
+def build_default_registry() -> IntentRegistry:
+    """Ships book, cancel, reschedule, list_mine, handoff, info + default."""
+    return IntentRegistry(
+        [LIST_MINE, RESCHEDULE, CANCEL, BOOK, HANDOFF, INFO, DEFAULT]
+    )
+```
+
+## Origen
+
+Destilado generico de un sistema en produccion para consultorios medicos. La version privada incluye logica fiscal mexicana, integracion Google Calendar, panel admin HTMX y Celery con Redis para colas — cosas especificas que no pertenecen a un template general. La comparativa publico-vs-privado vive en una pagina propia para que veas que se publico, que se quedo, y que criterios use para decidir.
