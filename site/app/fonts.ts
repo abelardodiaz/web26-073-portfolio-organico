@@ -1,4 +1,10 @@
-import { Inter, JetBrains_Mono, Space_Grotesk, IBM_Plex_Mono } from "next/font/google";
+import {
+  Inter,
+  JetBrains_Mono,
+  Space_Grotesk,
+  IBM_Plex_Mono,
+  Syne,
+} from "next/font/google";
 
 export const inter = Inter({
   subsets: ["latin"],
@@ -27,9 +33,17 @@ export const ibmPlexMono = IBM_Plex_Mono({
   preload: false,
 });
 
+export const syne = Syne({
+  subsets: ["latin"],
+  weight: ["600", "700", "800"],
+  variable: "--font-display-src",
+  display: "swap",
+});
+
 export const fontVariables = [
   inter.variable,
   jetbrainsMono.variable,
   spaceGrotesk.variable,
   ibmPlexMono.variable,
+  syne.variable,
 ].join(" ");

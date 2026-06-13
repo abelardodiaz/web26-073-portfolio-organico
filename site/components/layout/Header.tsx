@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useState } from "react";
 import dynamic from "next/dynamic";
 import { useTheme } from "@/components/shared/ThemeProvider";
+import { WhatsAppIcon } from "@/components/shared/WhatsAppIcon";
+import { whatsappUrl, WHATSAPP_MSG_GENERAL } from "@/lib/whatsapp";
 
 const ThemeSelector = dynamic(
   () => import("@/components/shared/ThemeSelector").then((m) => ({ default: m.ThemeSelector })),
@@ -35,6 +37,7 @@ export function Header() {
   const { theme } = useTheme();
   const [menuOpen, setMenuOpen] = useState(false);
   const navItems = theme === "editorial" ? editorialNav : terminalNav;
+  const waUrl = whatsappUrl(WHATSAPP_MSG_GENERAL);
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background">
@@ -86,6 +89,19 @@ export function Header() {
               <line x1="21" y1="21" x2="16.65" y2="16.65" />
             </svg>
           </Link>
+          <a
+            href={waUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={
+              theme === "editorial"
+                ? "ml-2 inline-flex items-center gap-1.5 rounded-full bg-primary px-3.5 py-1.5 text-xs font-semibold text-primary-foreground transition-colors hover:bg-primary/85"
+                : "ml-2 inline-flex items-center gap-1.5 rounded-md border border-primary bg-primary/10 px-3 py-1.5 font-mono text-xs font-medium text-primary transition-all hover:bg-primary/20 hover:shadow-[0_0_0_3px_var(--accent-glow)]"
+            }
+          >
+            <WhatsAppIcon className="size-3.5" />
+            {theme === "editorial" ? "Hablemos" : "./whatsapp"}
+          </a>
           <div className="ml-1 flex items-center gap-1 border-l border-border pl-3">
             <ThemeSelector />
             <ThemeToggle />
@@ -148,6 +164,16 @@ export function Header() {
           >
             {theme === "editorial" ? "Buscar" : "/buscar"}
           </Link>
+          <a
+            href={waUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => setMenuOpen(false)}
+            className="mt-2 inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
+          >
+            <WhatsAppIcon className="size-4" />
+            {theme === "editorial" ? "Hablemos por WhatsApp" : "./whatsapp.sh"}
+          </a>
         </nav>
       )}
     </header>

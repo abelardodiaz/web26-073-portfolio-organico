@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.11.0] - 2026-06-12
+
+### Added
+- WhatsApp como CTA primario en todo el sitio: boton en el hero del home,
+  en el header (desktop + menu movil) y barra sticky inferior en movil para
+  /diagnostico-ia (aparece tras scroll). Numero y mensajes centralizados en
+  `site/lib/whatsapp.ts` + icono compartido `WhatsAppIcon`.
+- FAQ en /diagnostico-ia (4 preguntas) reutilizando `FaqAccordion`.
+- Tipografia display Syne (variable `--font-display`) en titulares editoriales
+  del home y /diagnostico-ia; enfasis por color en vez de italica sintetica.
+- Textura de fondo en el hero (`.hero-bg`, solo CSS) por theme: glow calido +
+  patron de puntos (editorial) y grid blueprint + glow (terminal).
+
+### Changed
+- Hero copy reescrito: "Construyo agentes de IA que trabajan mientras tu
+  duermes"; bridge line convertido en pregunta directa para negocios en SLP.
+
 ## [0.10.1] - 2026-05-06
 
 ### Added

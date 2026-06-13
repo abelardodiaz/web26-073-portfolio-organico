@@ -73,6 +73,7 @@
 .theme-editorial {
   --font-sans: var(--font-editorial);
   --font-mono: var(--font-editorial-mono);
+  --font-display: var(--font-display-src), ui-sans-serif, system-ui, sans-serif;
   --background: #fafaf9;
   --foreground: #1c1917;
   --card: #ffffff;
@@ -236,6 +237,70 @@
 /* ── Terminal buttons use mono font ── */
 .theme-terminal [data-slot="button"] {
   font-family: var(--font-mono);
+}
+
+/* ── Display typography (editorial: Syne; terminal: falls back to sans) ── */
+.font-display {
+  font-family: var(--font-display, var(--font-sans));
+  letter-spacing: -0.015em;
+}
+/* Syne has no true italic; use color/weight as emphasis instead of synthetic oblique */
+.font-display em {
+  font-style: normal;
+}
+
+/* ── Hero background texture ── */
+.hero-bg {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 34rem;
+  pointer-events: none;
+}
+.theme-editorial .hero-bg {
+  background:
+    radial-gradient(
+      ellipse 70% 55% at 78% -12%,
+      color-mix(in oklab, var(--primary) 14%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 45% 38% at 12% -5%,
+      color-mix(in oklab, var(--primary) 7%, transparent),
+      transparent 70%
+    );
+}
+.theme-editorial .hero-bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(
+    color-mix(in oklab, var(--foreground) 22%, transparent) 1px,
+    transparent 1px
+  );
+  background-size: 26px 26px;
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.55), transparent 70%);
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.55), transparent 70%);
+}
+.theme-terminal .hero-bg {
+  background-image:
+    linear-gradient(
+      to right,
+      color-mix(in oklab, var(--primary) 9%, transparent) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      to bottom,
+      color-mix(in oklab, var(--primary) 9%, transparent) 1px,
+      transparent 1px
+    ),
+    radial-gradient(
+      ellipse 60% 50% at 72% -10%,
+      color-mix(in oklab, var(--primary) 12%, transparent),
+      transparent 70%
+    );
+  background-size: 42px 42px, 42px 42px, 100% 100%;
+  mask-image: linear-gradient(to bottom, black 25%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black 25%, transparent 100%);
 }
 
 /* ── Cursor blink animation ── */

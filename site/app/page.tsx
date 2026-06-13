@@ -3,7 +3,9 @@ import Link from "next/link";
 import { ButtonLink } from "@/components/shared/ButtonLink";
 import { RotatingLabel } from "@/components/shared/RotatingLabel";
 import { SocialProof } from "@/components/shared/SocialProof";
+import { WhatsAppIcon } from "@/components/shared/WhatsAppIcon";
 import { getAllTils, getAllProjects } from "@/lib/content";
+import { whatsappUrl, WHATSAPP_MSG_GENERAL } from "@/lib/whatsapp";
 
 export const revalidate = 86400;
 
@@ -11,26 +13,37 @@ export default function Home() {
   const tils = getAllTils().slice(0, 5);
   const projects = getAllProjects().filter((p) => p.featured);
 
+  const heroWhatsappUrl = whatsappUrl(WHATSAPP_MSG_GENERAL);
+
   return (
-    <div className="mx-auto max-w-5xl px-4">
+    <div className="relative">
+      {/* Hero texture (full-bleed, theme-aware) */}
+      <div aria-hidden className="hero-bg" />
+
+      <div className="relative mx-auto max-w-5xl px-4">
       {/* ── Hero (unificado) ── */}
       <section className="editorial:py-20 terminal:py-16 py-16">
         <RotatingLabel />
 
-        <h1 className="mt-5 editorial:text-4xl editorial:sm:text-5xl editorial:tracking-tight editorial:leading-[1.15] terminal:text-3xl terminal:sm:text-[2.75rem] terminal:tracking-tighter terminal:leading-[1.2] font-bold">
-          Multi-IA gateways,
-          <br />
-          construyo agentes que no duermen,
-          <br />
-          <span className="hidden editorial:inline text-primary">
-            y zero downtime.
+        <h1 className="mt-5 font-display editorial:text-[2.75rem] editorial:sm:text-6xl editorial:font-semibold editorial:tracking-tight editorial:leading-[1.08] terminal:text-3xl terminal:sm:text-[2.75rem] terminal:font-bold terminal:tracking-tighter terminal:leading-[1.2]">
+          <span className="hidden editorial:inline">
+            Construyo agentes de IA
+            <br />
+            que trabajan{" "}
+            <em className="text-primary">mientras tu duermes</em>.
           </span>
-          <span className="hidden terminal:inline">y zero downtime.</span>
+          <span className="hidden terminal:inline">
+            Agentes de IA que trabajan
+            <br />
+            mientras tu duermes.{" "}
+            <span className="text-primary">Zero downtime.</span>
+          </span>
         </h1>
 
         <p className="mt-4 max-w-xl editorial:text-lg terminal:text-base leading-relaxed text-muted-foreground">
-          Escribo software que toma decisiones por si solo. Ayudo a que los
-          agentes autonomos de IA hagan que tu trabajo sea facil.
+          Escribo software que toma decisiones por si solo: multi-IA
+          gateways, automatizacion B2B y sistemas autonomos que llevan meses
+          corriendo en produccion sin supervision.
         </p>
 
         {/* Stats (terminal only) */}
@@ -62,32 +75,50 @@ export default function Home() {
         </div>
 
         {/* CTAs */}
-        <div className="mt-8 flex gap-3">
-          <div className="hidden editorial:flex gap-3">
-            <ButtonLink href="/projects">Ver proyectos</ButtonLink>
-            <ButtonLink href="/diagnostico-ia" variant="outline">
-              Ver servicios
+        <div className="mt-8">
+          <div className="hidden editorial:flex flex-wrap items-center gap-3">
+            <a
+              href={heroWhatsappUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2.5 rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/85"
+            >
+              <WhatsAppIcon className="size-4" />
+              Hablemos por WhatsApp
+            </a>
+            <ButtonLink href="/projects" variant="outline">
+              Ver proyectos
             </ButtonLink>
           </div>
-          <div className="hidden terminal:flex gap-3">
-            <ButtonLink href="/projects">git clone proyectos</ButtonLink>
-            <ButtonLink href="/diagnostico-ia" variant="outline">
-              ./ver_servicios.sh
+          <div className="hidden terminal:flex flex-wrap items-center gap-3">
+            <a
+              href={heroWhatsappUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2.5 rounded-md border border-primary bg-primary/10 px-5 py-2.5 font-mono text-sm font-medium text-primary transition-all hover:bg-primary/20 hover:shadow-[0_0_0_3px_var(--accent-glow)]"
+            >
+              <WhatsAppIcon className="size-4" />
+              ./whatsapp.sh
+            </a>
+            <ButtonLink href="/projects" variant="outline">
+              git clone proyectos
             </ButtonLink>
           </div>
         </div>
       </section>
 
       {/* ── Bridge line ── */}
-      <p className="hidden editorial:block py-6 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-        Todo esto tambien lo pongo a trabajar para negocios locales. Si
-        tienes una empresa en San Luis Potosi y quieres que la inteligencia
-        artificial haga parte del trabajo por ti, esto es para ti:
+      <p className="hidden editorial:block py-6 max-w-2xl font-display text-xl leading-snug">
+        Tienes una empresa en San Luis Potosi?{" "}
+        <em className="text-primary">
+          Todo esto tambien puede trabajar para ti.
+        </em>
       </p>
-      <p className="hidden terminal:block py-4 max-w-2xl text-[13px] leading-relaxed text-muted-foreground">
-        Todo esto tambien lo pongo a trabajar para negocios locales. Si
-        tienes una empresa en San Luis Potosi y quieres que la inteligencia
-        artificial haga parte del trabajo por ti, esto es para ti:
+      <p className="hidden terminal:block py-4 max-w-2xl text-base font-medium leading-snug">
+        Tienes una empresa en San Luis Potosi?{" "}
+        <span className="text-primary">
+          Todo esto tambien puede trabajar para ti.
+        </span>
       </p>
 
       {/* ── Servicios IA ── */}
@@ -447,6 +478,7 @@ export default function Home() {
           </>
         )}
       </section>
+      </div>
     </div>
   );
 }
