@@ -22,6 +22,12 @@ export type Project = {
   body: string;
 };
 
+export type ResourceMeta = {
+  name: string;
+  url: string;
+  kind: "library" | "tool" | "service" | "template";
+};
+
 export type TilEntry = {
   title: string;
   slug: string;
@@ -29,6 +35,8 @@ export type TilEntry = {
   stack: string[];
   date: string;
   project?: string;
+  resource?: ResourceMeta;
+  demoRepo?: string;
   body: string;
 };
 
@@ -52,6 +60,8 @@ export function getAllTils(): TilEntry[] {
       stack: data.stack ?? [],
       date: data.date ?? "",
       project: data.project ?? undefined,
+      resource: data.resource ?? undefined,
+      demoRepo: data.demo_repo ?? undefined,
       body: content,
     } satisfies TilEntry;
   });
@@ -89,6 +99,10 @@ export function getAllTilProjects(): string[] {
 export function getTilBySlug(slug: string): TilEntry | null {
   const tils = getAllTils();
   return tils.find((t) => t.slug === slug) ?? null;
+}
+
+export function getResourceTils(): TilEntry[] {
+  return getAllTils().filter((t) => t.resource);
 }
 
 export function getAllProjects(): Project[] {
