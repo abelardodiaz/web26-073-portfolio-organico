@@ -73,6 +73,7 @@ web26-073-portfolio-organico/
 | docs/BRIEF-993.md | Estrategia original |
 | docs/PLAN-EJECUCION.md | Plan tactico |
 | docs/08-sistema-recursos.md | Sistema de Recursos: TILs `resource:`, /recursos, backlog, workflow de graduacion a micro-repo |
+| docs/chats-index.md | Indice/catalogo de chats de IA (claude.ai, etc.) para recordar y retomar; proceso en skill `revisar-chats-ia` |
 
 ## Primera vez?
 
