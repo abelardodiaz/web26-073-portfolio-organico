@@ -23,6 +23,20 @@ zoom, thumbnails) como un store de Zustand. Eso permite construir UI custom
 (toolbar, panel de miniaturas) leyendo el mismo store, en vez de pelear con
 el API imperativo de pdf.js.
 
+El gotcha que me costo runtime (no lo agarra el build): en Vite hay que
+configurar el worker de pdf.js a mano. Sin esto, pdf.js cae a un "fake worker",
+el documento nunca carga y la UI muestra `Pagina 0 / 0`:
+
+```ts
+import { GlobalWorkerOptions } from "pdfjs-dist";
+import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
+
+GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
+```
+
+Detalle clave: `pdfjs-dist` debe estar en la MISMA version que usa
+`@pdfslick/core` (en mi caso 6.0.227); si no, el worker es incompatible.
+
 ## Ejemplo
 
 ```tsx
