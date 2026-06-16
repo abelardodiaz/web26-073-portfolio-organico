@@ -1,0 +1,55 @@
+---
+title: "PDFSlick: visor y render de PDF en React con estado via Zustand"
+slug: "pdfslick-pdf-viewer-react"
+category: "react"
+stack: [react, typescript, pdf]
+date: "2026-06-25"
+resource:
+  name: "PDFSlick"
+  url: "https://github.com/pdfslick/pdfslick"
+  kind: "library"
+---
+
+## Contexto
+
+Necesitaba mostrar un PDF dentro de una app React con thumbnails, zoom y
+busqueda, sin armar todo el visor a mano sobre pdf.js.
+
+## Lo que aprendi
+
+PDFSlick envuelve pdf.js y expone el estado del documento (pagina actual,
+zoom, thumbnails) como un store de Zustand. Eso permite construir UI custom
+(toolbar, panel de miniaturas) leyendo el mismo store, en vez de pelear con
+el API imperativo de pdf.js.
+
+## Ejemplo
+
+```tsx
+import { usePDFSlick } from "@pdfslick/react";
+import "@pdfslick/react/dist/pdf_viewer.css";
+
+function Viewer({ url }: { url: string }) {
+  const { viewerRef, usePDFSlickStore, PDFSlickViewer } = usePDFSlick(url);
+  const pageNumber = usePDFSlickStore((s) => s.pageNumber);
+  const numPages = usePDFSlickStore((s) => s.numPages);
+
+  return (
+    <div className="h-[600px] relative">
+      <div className="absolute top-2 right-2 z-10 text-xs">
+        {pageNumber} / {numPages}
+      </div>
+      <PDFSlickViewer viewerRef={viewerRef} usePDFSlickStore={usePDFSlickStore} />
+    </div>
+  );
+}
+```
+
+## Por que importa
+
+Si necesitas un visor de PDF con UI propia, PDFSlick te ahorra el boilerplate
+de pdf.js y te da estado reactivo listo para componer. Lo guardo como recurso
+para no volver a armar un visor desde cero.
+
+## Referencias
+
+- [PDFSlick (GitHub)](https://github.com/pdfslick/pdfslick)
