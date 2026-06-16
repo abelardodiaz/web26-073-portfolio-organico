@@ -72,6 +72,7 @@ web26-073-portfolio-organico/
 | docs/05-design-system-branding.md | Design system |
 | docs/BRIEF-993.md | Estrategia original |
 | docs/PLAN-EJECUCION.md | Plan tactico |
+| docs/08-sistema-recursos.md | Sistema de Recursos: TILs `resource:`, /recursos, backlog, workflow de graduacion a micro-repo |
 
 ## Primera vez?
 
