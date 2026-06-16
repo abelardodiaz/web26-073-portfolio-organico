@@ -101,6 +101,11 @@ export function TilFeed({ tils, tagSets, activeFilter }: Props) {
                   <span className="rounded bg-primary/10 px-2 py-0.5 font-mono text-xs uppercase text-primary">
                     {til.category}
                   </span>
+                  {til.resource && (
+                    <span className="rounded border border-primary/40 px-2 py-0.5 font-mono text-xs text-primary">
+                      recurso: {til.resource.name}
+                    </span>
+                  )}
                   {til.project && (
                     <span className="rounded border border-border px-2 py-0.5 font-mono text-xs text-muted-foreground">
                       {til.project}
@@ -136,6 +141,11 @@ export function TilFeed({ tils, tagSets, activeFilter }: Props) {
                   <span className="rounded bg-primary/10 px-2 py-0.5 font-mono text-xs uppercase text-primary">
                     {til.category}
                   </span>
+                  {til.resource && (
+                    <span className="rounded border border-primary/40 px-2 py-0.5 font-mono text-xs text-primary">
+                      recurso: {til.resource.name}
+                    </span>
+                  )}
                   {til.project && (
                     <span className="rounded border border-border px-2 py-0.5 font-mono text-xs text-muted-foreground">
                       {til.project}
