@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.12.0] - 2026-06-16
+
+### Added
+- Sistema de Recursos: TILs pueden marcar un recurso descubierto (libreria,
+  herramienta, servicio o template) con un bloque `resource:` en frontmatter
+  (name/url/kind) + `demo_repo` opcional. Badge "recurso: <nombre>" en el feed
+  de TILs (editorial + terminal) y pagina nueva `/recursos` que agrupa los TILs
+  de recurso por tipo, con link al repo original y al micro-repo demo si existe.
+- `tools/til_entry.py`: flags `--resource-name/--resource-url/--resource-kind/`
+  `--demo-repo` para generar TILs de recurso.
+- TIL piloto de PDFSlick (visor de PDF en React con estado via Zustand).
+- `docs/recursos-backlog.md` (local): inbox de captura rapida de recursos.
+
+### Changed
+- Categorias de TIL unificadas: `IA` -> `ai` (9 archivos migrados).
+- `tools/til_entry.py`: `category` y `date` ahora se emiten entre comillas en el
+  frontmatter generado, consistente con los TILs existentes.
+
 ## [0.11.0] - 2026-06-12
 
 ### Added
