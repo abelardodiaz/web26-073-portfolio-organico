@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.12.4] - 2026-06-24
+
+### Fixed
+- Build de Vercel roto: el TIL validar-llm-json-output-pydantic-extract tenia
+  `{ ... }` en prosa plana (sin backticks); MDX lo parseaba como expresion JS y
+  fallaba el prerender ("Could not parse expression with acorn"). Envuelto en
+  codigo inline. Build local completo verificado antes de pushear.
+
 ## [0.12.3] - 2026-06-24
 
 ### Added

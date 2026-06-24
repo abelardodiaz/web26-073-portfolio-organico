@@ -12,7 +12,7 @@ project: "citas-bot-universal"
 Cuando le pides al LLM que clasifique un mensaje en uno de N intents, lo correcto es pedirle JSON estructurado: `{"intent_name": "book", "confidence": 0.92, "reasoning": "..."}`. Pero el LLM no siempre obedece:
 
 - A veces envuelve la respuesta en code fences ` ```json ... ``` `
-- A veces agrega texto antes o despues ("Aqui esta tu JSON: { ... }. Espero que sirva!")
+- A veces agrega texto antes o despues (`Aqui esta tu JSON: { ... }. Espero que sirva!`)
 - A veces inventa un campo extra o cambia nombres
 - A veces devuelve `intent: ` sin las comillas, JSON invalido tecnicamente
 
