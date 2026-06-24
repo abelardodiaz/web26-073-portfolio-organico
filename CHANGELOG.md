@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.12.2] - 2026-06-24
+
+### Added
+- TIL resource: "sileo: toasts con fisica y morphing SVG para React" (programado
+  para 2026-06-26 via date-filter). Recurso kind=library + demo_repo
+  sileo-react-demo. Documenta el patron Toaster unico + objeto sileo, los 6
+  metodos (show/success/error/warning/info/action), promise, action con boton
+  undo, y el gotcha de importar `sileo/styles.css`.
+- Micro-repo demo publicado: github.com/abelardodiaz/sileo-react-demo
+  (Vite 6 + React 19 + TS estricto, build verificado).
+
 ## [0.12.1] - 2026-06-24
 
 ### Added

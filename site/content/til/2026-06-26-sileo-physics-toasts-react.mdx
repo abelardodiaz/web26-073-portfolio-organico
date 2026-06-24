@@ -1,0 +1,101 @@
+---
+title: "sileo: toasts con fisica y morphing SVG para React (cero config)"
+slug: "sileo-physics-toasts-react"
+category: "react"
+stack: [react, typescript, ui]
+date: "2026-06-26"
+resource:
+  name: "sileo"
+  url: "https://github.com/hiaaryan/sileo"
+  kind: "library"
+demo_repo: "sileo-react-demo"
+---
+
+## Contexto
+
+Queria toasts/notificaciones que se vieran bien sin pelear con estilos ni armar
+el componente a mano, y que cubrieran los casos tipicos: exito, error, promesa
+en curso y un toast con boton de "deshacer".
+
+## Lo que aprendi
+
+sileo es una libreria de toasts para React construida sobre `motion` (fisica de
+resortes + morphing SVG). El patron es el mismo de sonner: montas **un solo**
+`<Toaster />` en el root y disparas desde cualquier parte con el objeto `sileo`.
+Cada metodo infiere el tipo (color/badge):
+
+```ts
+sileo.show(opts)      // generico
+sileo.success(opts)
+sileo.error(opts)
+sileo.warning(opts)
+sileo.info(opts)
+sileo.action(opts)    // opts.button = { title, onClick }  -> patron undo
+sileo.promise(promise, { loading, success, error })
+sileo.dismiss(id)     // cada metodo retorna un id string
+sileo.clear(position?)
+```
+
+El `<Toaster />` acepta `position` (6 posiciones), `theme` (`light`/`dark`/
+`system`) y `offset`, que sirven de default para cada toast.
+
+El gotcha que me costo (no lo agarra el type-check): el CSS se exporta como
+**subpath aparte**. Si lo olvidas, los toasts se montan sin estilos -- sin la
+fisica visual ni el morphing -- y parece que la libreria "no hace nada":
+
+```ts
+import "sileo/styles.css";
+```
+
+## Ejemplo
+
+```tsx
+import { sileo, Toaster } from "sileo";
+import "sileo/styles.css";
+
+export default function App() {
+  return (
+    <>
+      <button
+        onClick={() =>
+          sileo.action({
+            title: "Elemento eliminado",
+            description: "Puedes deshacer esta accion.",
+            button: { title: "Deshacer", onClick: restore },
+          })
+        }
+      >
+        Eliminar
+      </button>
+
+      {/* Unico punto de montaje; position/theme son defaults */}
+      <Toaster position="bottom-right" theme="system" />
+    </>
+  );
+}
+```
+
+El toast de promesa encadena los tres estados solo:
+
+```tsx
+sileo.promise(saveProfile(), {
+  loading: { title: "Guardando..." },
+  success: (data) => ({ title: "Guardado", description: `v${data.version}` }),
+  error: { title: "No se pudo guardar" },
+});
+```
+
+## Por que importa
+
+Si necesitas notificaciones que se vean pulidas sin invertir tiempo en CSS ni en
+animaciones, sileo te las da por defecto. Lo guardo como recurso para UIs donde
+quiero feedback inmediato (guardar, deshacer, sincronizar) sin montar mi propio
+sistema de toasts. Peer dependency: React >= 18.
+
+Demo funcional con los 6 tipos + `promise` + `action` y selector de posicion/tema
+en el micro-repo (link abajo).
+
+## Referencias
+
+- [sileo (GitHub)](https://github.com/hiaaryan/sileo)
+- [Documentacion](https://sileo.aaryan.design/docs)
