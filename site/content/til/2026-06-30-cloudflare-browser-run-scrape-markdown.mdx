@@ -1,0 +1,88 @@
+---
+title: "Cloudflare Browser Run: scrapear sitios JS-heavy a Markdown para pipelines IA"
+slug: "cloudflare-browser-run-scrape-markdown"
+category: "ai"
+stack: [python, httpx, cloudflare, scraping]
+date: "2026-06-30"
+resource:
+  name: "Cloudflare Browser Run"
+  url: "https://developers.cloudflare.com/browser-run/"
+  kind: "service"
+demo_repo: "cf-browser-run-demo"
+---
+
+## Contexto
+
+Para alimentar un pipeline de IA/RAG con contenido web necesitas dos cosas que
+el `requests.get` no te da: ejecutar el JavaScript de la pagina (muchos sitios
+renderizan el contenido en el cliente) y entregar Markdown limpio en vez de HTML
+crudo. La opcion clasica es montar Puppeteer/Playwright en un server, mantener
+Chromium, y parsear a mano.
+
+## Lo que aprendi
+
+Cloudflare Browser Run (antes "Browser Rendering") expone un headless browser en
+el edge via API REST. Tres endpoints utiles para ingestion:
+
+- `/markdown` -> pagina renderizada a Markdown.
+- `/scrape` -> texto/HTML/atributos de elementos por selector CSS.
+- `/crawl` -> sigue links de un sitio entero (HTML/Markdown/JSON).
+
+Todos son POST a:
+
+```
+https://api.cloudflare.com/client/v4/accounts/<accountId>/browser-rendering/<endpoint>
+```
+
+con header `Authorization: Bearer <token>` y body JSON. La respuesta llega como
+`{ "success": true, "result": ... }`.
+
+Lo verifique en vivo con un token de **free tier** (permiso minimo
+`Account.Browser Rendering: Edit`):
+
+```python
+import httpx
+
+def post(account_id, token, endpoint, payload):
+    url = f"https://api.cloudflare.com/client/v4/accounts/{account_id}/browser-rendering/{endpoint}"
+    headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
+    r = httpx.post(url, headers=headers, json=payload, timeout=60.0)
+    r.raise_for_status()
+    return r.json()["result"]
+
+# Pagina a Markdown
+md = post(acc, tok, "markdown", {"url": "https://example.com"})
+
+# Elementos por selector CSS
+data = post(acc, tok, "scrape", {
+    "url": "https://example.com",
+    "elements": [{"selector": "h1"}, {"selector": "a"}],
+})
+```
+
+**La prueba que importa**: corri `/scrape` sobre `quotes.toscrape.com/js/`, una
+pagina cuyo contenido SOLO existe despues de ejecutar JavaScript. El selector
+`.quote .text` devolvio las 10 citas -> confirma que el edge ejecuta el JS antes
+de extraer, no solo lee el HTML inicial. Eso es lo que lo diferencia de un fetch
+plano.
+
+## Por que importa
+
+Es scraping JS-aware sin infra propia: nada de Chromium que mantener, escala en
+el edge de Cloudflare, free tier para empezar. Para construir knowledge bases o
+RAG sobre contenido web vivo, `/markdown` y `/crawl` entregan justo lo que el
+downstream necesita (texto limpio, no HTML).
+
+Caveats reales que vi:
+- El token va SOLO en `.env`; usa permiso minimo (`Browser Rendering`) y rotalo
+  si lo expones.
+- En Windows, la consola puede mostrar mal caracteres unicode (comillas
+  tipograficas) aunque el dato llegue bien en UTF-8: fuerza UTF-8 al imprimir.
+
+Demo CLI en Python (httpx) con `markdown` y `scrape` en el micro-repo (link abajo).
+
+## Referencias
+
+- [Cloudflare Browser Run](https://developers.cloudflare.com/browser-run/)
+- [/markdown endpoint](https://developers.cloudflare.com/browser-rendering/rest-api/markdown-endpoint/)
+- [/scrape endpoint](https://developers.cloudflare.com/browser-rendering/rest-api/scrape-endpoint/)

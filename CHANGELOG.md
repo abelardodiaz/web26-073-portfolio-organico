@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.12.5] - 2026-06-24
+
+### Added
+- TIL resource: "Cloudflare Browser Run: scrapear sitios JS-heavy a Markdown para
+  pipelines IA" (programado 2026-06-30). Recurso kind=service + demo_repo
+  cf-browser-run-demo. VERIFICADO en vivo con token free-tier: /markdown y
+  /scrape funcionan y el edge ejecuta JS (probado con quotes.toscrape.com/js).
+- Micro-repo demo publicado: github.com/abelardodiaz/cf-browser-run-demo
+  (CLI Python + httpx; credenciales solo en .env).
+
 ## [0.12.4] - 2026-06-24
 
 ### Fixed
