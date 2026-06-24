@@ -105,6 +105,51 @@ export function getResourceTils(): TilEntry[] {
   return getAllTils().filter((t) => t.resource);
 }
 
+export type BlogPost = {
+  title: string;
+  slug: string;
+  date: string;
+  summary: string;
+  tags: string[];
+  body: string;
+};
+
+export function getAllBlogPosts(): BlogPost[] {
+  const blogDir = path.join(contentDir, "blog");
+  if (!fs.existsSync(blogDir)) return [];
+
+  const files = fs
+    .readdirSync(blogDir)
+    .filter((f) => f.endsWith(".mdx") || f.endsWith(".md"));
+
+  const posts = files.map((file) => {
+    const raw = fs.readFileSync(path.join(blogDir, file), "utf-8");
+    const { data, content } = matter(raw);
+    const slug = file.replace(/\.mdx?$/, "");
+
+    return {
+      title: data.title ?? slug,
+      slug: data.slug ?? slug,
+      date: data.date ?? "",
+      summary: data.summary ?? "",
+      tags: data.tags ?? [],
+      body: content,
+    } satisfies BlogPost;
+  });
+
+  const today = new Date();
+  today.setHours(23, 59, 59, 999);
+  const published = posts.filter((p) => new Date(p.date) <= today);
+
+  return published.sort(
+    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+  );
+}
+
+export function getBlogPostBySlug(slug: string): BlogPost | null {
+  return getAllBlogPosts().find((p) => p.slug === slug) ?? null;
+}
+
 export function getAllProjects(): Project[] {
   const projDir = path.join(contentDir, "projects");
   if (!fs.existsSync(projDir)) return [];

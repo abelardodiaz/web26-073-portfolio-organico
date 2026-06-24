@@ -4,6 +4,7 @@ import {
   getAllProjectCategories,
   getAllTils,
   getAllTilProjects,
+  getAllBlogPosts,
 } from "@/lib/content";
 
 const BASE_URL = "https://abelardodiaz.dev";
@@ -13,6 +14,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: BASE_URL, lastModified: new Date(), changeFrequency: "weekly", priority: 1 },
     { url: `${BASE_URL}/projects`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.8 },
     { url: `${BASE_URL}/til`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.8 },
+    { url: `${BASE_URL}/blog`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.8 },
     { url: `${BASE_URL}/about`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.5 },
     { url: `${BASE_URL}/contact`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.5 },
     { url: `${BASE_URL}/diagnostico-ia`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.7 },
@@ -47,5 +49,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.7,
   }));
 
-  return [...staticRoutes, ...projects, ...projectCategories, ...tils, ...tilProjects];
+  const blog = getAllBlogPosts().map((p) => ({
+    url: `${BASE_URL}/blog/${p.slug}`,
+    lastModified: new Date(p.date),
+    changeFrequency: "monthly" as const,
+    priority: 0.7,
+  }));
+
+  return [...staticRoutes, ...projects, ...projectCategories, ...tils, ...tilProjects, ...blog];
 }

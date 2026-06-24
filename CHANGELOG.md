@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.13.0] - 2026-06-24
+
+### Added
+- Subsistema Blog (Spec B): tipo `BlogPost` + getters en content.ts, ruta `/blog`
+  (indice) + `/blog/[slug]` (articulo) + opengraph-image, link en Header
+  (editorial + terminal), wireado en sitemap y search. Fechas escalonadas e ISR
+  como TIL.
+- Primer articulo: "La oleada OSS del diseno AI-native: el ecosistema abierto tras
+  Claude Design" (cluster Open Design + open-pencil + html.to.design +
+  awesome-design-md + ui-ux-pro-max-skill). Fuentes verificadas en vivo con links
+  inline; revision editorial DeepSeek v4-pro via API 900.
+- skill `/publicar`: seccion de blogs (verificar fuentes + revision IA + automejora).
+
 ## [0.12.5] - 2026-06-24
 
 ### Added

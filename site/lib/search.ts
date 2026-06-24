@@ -1,9 +1,9 @@
-import { getAllProjects, getAllTils } from "./content";
+import { getAllProjects, getAllTils, getAllBlogPosts } from "./content";
 
 export type SearchItem = {
   title: string;
   slug: string;
-  type: "project" | "til";
+  type: "project" | "til" | "blog";
   href: string;
   category: string;
   stack: string[];
@@ -35,7 +35,19 @@ export function getSearchIndex(): SearchItem[] {
     })
   );
 
-  return [...projects, ...tils];
+  const blog = getAllBlogPosts().map(
+    (p): SearchItem => ({
+      title: p.title,
+      slug: p.slug,
+      type: "blog",
+      href: `/blog/${p.slug}`,
+      category: "blog",
+      stack: p.tags,
+      excerpt: p.summary || p.body.slice(0, 120).replace(/\n/g, " "),
+    })
+  );
+
+  return [...projects, ...tils, ...blog];
 }
 
 export function getPopularStacks(items: SearchItem[], limit = 12): string[] {

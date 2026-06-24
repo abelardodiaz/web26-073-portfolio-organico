@@ -1,0 +1,98 @@
+---
+title: "La oleada OSS del diseno AI-native: el ecosistema abierto tras Claude Design"
+slug: "diseno-ai-native-oss"
+date: "2026-06-24"
+summary: "Anthropic lanzo Claude Design y en semanas aparecio un ecosistema open source alrededor: generadores de artefactos, contexto de diseno para agentes y un puente con Figma. Mapa de las cinco piezas que importan y como usarlas hoy."
+tags: ["diseno", "ai", "open-source", "agentes"]
+---
+
+El 17 de abril de 2026 Anthropic lanzo
+[Claude Design](https://www.anthropic.com/news/claude-design-anthropic-labs):
+por primera vez un LLM dejaba de escribir prosa y empezaba a entregar artefactos
+de diseno directamente (prototipos, slides, imagenes). El modelo mental cambio de
+"describeme un boton" a "dame la pantalla". Once dias despues ya existia el primer
+clon open source, y para junio el ecosistema alrededor habia explotado.
+
+Lo interesante no es un solo producto, sino que el diseno se esta volviendo
+**agent-native**: los agentes producen artefactos y, sobre todo, consumen
+contexto de diseno en formatos que entienden. Aqui esta el mapa de las cinco
+piezas que vale la pena conocer, agrupadas por lo que hacen.
+
+> Siglas que se repiten abajo: **CLI** (interfaz de linea de comandos, como Claude
+> Code o Cursor), **BYOK** (Bring Your Own Key: usas tu propia clave de API) y
+> **MCP** (Model Context Protocol, el estandar para exponer herramientas a un
+> agente).
+
+## Movimiento 1: generadores de artefactos
+
+Son el equivalente open source de Claude Design: le das un prompt y te devuelven
+una UI / prototipo / slide.
+
+[**Open Design**](https://github.com/nexu-io/open-design) es el mas maduro:
+local-first, app de escritorio, BYOK sobre cualquier CLI (Claude Code, Codex,
+Cursor, Qwen, Copilot y mas), con cientos de skills y design systems incluidos
+(mas de 250 skills y mas de 140 design systems segun el repo), y exporta a
+HTML/PDF/PPTX/MP4. Su tesis: el mismo modelo mental de "artefacto primero" que
+Claude Design, pero sin lock-in de modelo, skills ni superficie.
+
+[**open-pencil**](https://github.com/open-pencil/open-pencil) ataca otro flanco:
+un editor de diseno AI-native con filosofia design-as-code. Abre y escribe
+archivos nativos (incluido el formato de Figma), expone mas de 100 operaciones
+(shapes, auto-layout, componentes, variables, tokens, export) y trae un servidor
+MCP para que Claude Code o Cursor manipulen el lienzo como una herramienta mas.
+Todavia en desarrollo activo, no listo para produccion, pero el angulo de "MCP de
+diseno" es el correcto.
+
+## Movimiento 2: contexto de diseno para agentes
+
+Esta es la parte menos obvia y, creo, la mas util a corto plazo. En vez de
+generar el diseno, le dan al agente el lenguaje visual que debe respetar.
+
+[**awesome-design-md**](https://github.com/voltagent/awesome-design-md) (VoltAgent)
+es una coleccion de archivos `DESIGN.md`, un patron que popularizo Google Stitch:
+un archivo Markdown que describe el sistema visual de un sitio (color, tipografia,
+componentes, layout, do's and don'ts). Lo dejas en la raiz del repo y el agente
+de codigo entiende como debe verse lo que construye. Si `AGENTS.md` dice como
+construir, `DESIGN.md` dice como debe lucir.
+
+[**ui-ux-pro-max-skill**](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill)
+lleva la idea a una skill instalable: inteligencia de diseno que se inyecta en el
+agente. Segun su repo trae 67 estilos, 161 paletas, 99 guidelines de UX y 57
+combinaciones de fuentes, con reglas de razonamiento por industria y sus
+anti-patrones. Su arquitectura es deliberadamente simple: nada de embeddings,
+solo CSVs canonicos + un motor de busqueda ligero. El valor real esta en las
+reglas por industria y los anti-patrones; el limite, en que la curacion es
+estatica.
+
+## Movimiento 3: el puente con Figma
+
+[**html.to.design**](https://html.to.design/) resuelve el caso inverso: tomar una
+pagina web que ya existe y convertirla en un archivo editable de Figma,
+importando el DOM como capas. Util para auditar o rehacer UIs sin recrearlas a
+mano, y para meter diseno "real" al flujo de los otros tools.
+
+## Tabla rapida
+
+| Pieza | Que hace | Cuando la quieres |
+|-------|----------|-------------------|
+| [Open Design](https://github.com/nexu-io/open-design) | Genera artefactos (web/slides/imagenes), local-first, BYOK | Alternativa directa a Claude Design sin lock-in |
+| [open-pencil](https://github.com/open-pencil/open-pencil) | Editor AI-native design-as-code + MCP | Que un agente edite el lienzo como tool |
+| [awesome-design-md](https://github.com/voltagent/awesome-design-md) | Patron DESIGN.md (contexto visual en Markdown) | Que tu agente respete tu lenguaje visual |
+| [ui-ux-pro-max-skill](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill) | Skill con reglas de diseno por industria | Piso minimo de calidad UI en MVPs |
+| [html.to.design](https://html.to.design/) | HTML -> Figma editable | Auditar o reimportar UIs existentes |
+
+## Que adoptar
+
+Si vibe-codeas con agentes, lo de mayor ROI inmediato no es el generador
+llamativo, sino el **contexto**: un `DESIGN.md` en tus repos y, si trabajas en
+Claude Code, una skill de diseno. Eso sube el piso de calidad visual de todo lo
+que generes sin cambiar tu flujo.
+
+Para prototipado rapido sin pagar ni quedar atado a un proveedor, Open Design es
+hoy la opcion local-first mas completa. open-pencil aun no para produccion, pero
+si te interesa la idea de agentes que manipulan diseno via MCP, es el proyecto a
+seguir.
+
+El patron de fondo se repite: cada vez que aparece una capability cerrada de IA,
+la comunidad construye en semanas el equivalente abierto, model-agnostic y BYOK.
+Con diseno acaba de pasar otra vez.

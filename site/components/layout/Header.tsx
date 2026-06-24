@@ -20,6 +20,7 @@ const ThemeToggle = dynamic(
 const editorialNav = [
   { href: "/projects", label: "Proyectos" },
   { href: "/til", label: "TIL" },
+  { href: "/blog", label: "Blog" },
   { href: "/diagnostico-ia", label: "Servicios" },
   { href: "/about", label: "About" },
   { href: "/contact", label: "Contacto" },
@@ -28,6 +29,7 @@ const editorialNav = [
 const terminalNav = [
   { href: "/projects", label: "/proyectos" },
   { href: "/til", label: "/til" },
+  { href: "/blog", label: "/blog" },
   { href: "/diagnostico-ia", label: "/servicios" },
   { href: "/about", label: "/about" },
   { href: "/contact", label: "/contacto" },
