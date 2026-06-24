@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.12.1] - 2026-06-24
+
+### Added
+- TIL "HTTP QUERY: el verbo que faltaba entre GET y POST (RFC 10008)"
+  (category architecture). Explica el nuevo metodo HTTP estandarizado en
+  RFC 10008 (jun 2026): lleva body como POST pero es safe + idempotente +
+  cacheable como GET; tabla comparativa GET/POST/QUERY y caveat de soporte.
+
 ## [0.12.0] - 2026-06-16
 
 ### Added

@@ -1,0 +1,58 @@
+---
+title: "HTTP QUERY: el verbo que faltaba entre GET y POST (RFC 10008)"
+slug: http-query-method-rfc-10008
+category: "architecture"
+stack: ["http", "api-design"]
+date: "2026-06-24"
+---
+
+## Contexto
+
+Tarde o temprano una API necesita mandar una busqueda con parametros complejos: filtros anidados, rangos, ordenamientos, un payload tipo GraphQL o JSON-RPC. Y ahi aparece el dilema de siempre:
+
+- **GET** es safe, idempotente y cacheable, pero no lleva body. Los parametros van en la URL, que tiene limite de longitud y termina en logs, historial y referers.
+- **POST** lleva body sin limites, pero **no** es safe ni idempotente. Para un proxy o un CDN, un POST significa "esto muta estado": no lo cachean y no lo reintentan.
+
+El workaround clasico es `POST /search`. Funciona, pero renuncias al cache HTTP justo en el endpoint que mas se beneficiaria de el.
+
+## Lo que aprendi
+
+El **RFC 10008** (publicado el 15 de junio de 2026) estandariza un nuevo metodo: **QUERY**. La idea en una frase: **lleva body como POST, pero es safe + idempotente + cacheable como GET**.
+
+```http
+QUERY /products HTTP/1.1
+Host: api.example.com
+Content-Type: application/json
+
+{"category": "laptops", "price_max": 1500, "sort": "-rating"}
+```
+
+El servidor procesa el contenido del request y devuelve el resultado de esa consulta, sin efectos secundarios. Eso permite que los intermediarios (proxies, CDNs, gateways) apliquen el mismo cache y los mismos reintentos automaticos que ya usan para GET.
+
+### El detalle clave: el body entra en la cache key
+
+Como la consulta vive en el contenido del request y no en la URI, una cache que quiera reutilizar la respuesta **tiene que incluir el body en la clave de cache** (no solo metodo + URI). El RFC lo contempla justo para que dos QUERY identicos compartan respuesta y dos distintos no se pisen.
+
+### GET vs POST vs QUERY
+
+| | GET | POST | QUERY |
+|---|---|---|---|
+| Lleva body | No | Si | Si |
+| Safe (sin efectos) | Si | No | Si |
+| Idempotente | Si | No | Si |
+| Cacheable por defecto | Si | No | Si (body en la cache key) |
+| Reintento automatico seguro | Si | No | Si |
+
+### Por que importa
+
+Resuelve un hueco de mas de una decada para todo lo que es "leer con payload": busquedas con filtros ricos, endpoints estilo JSON-RPC, queries que no caben en una URL. Antes tenias que elegir entre semantica correcta (GET) o capacidad de payload (POST). QUERY te da las dos.
+
+### Caveat (junio 2026)
+
+Sigue siendo Proposed Standard y no es parte del core de HTTP/1.1 o HTTP/2 todavia. El soporte real esta emergiendo: varios frameworks y API gateways ya permiten registrar metodos custom, asi que puedes empezar a exponer `QUERY` hoy, pero valida el soporte de tu stack (cliente, servidor, CDN) antes de depender del cache.
+
+## Referencia
+
+- [RFC 10008 -- The HTTP QUERY Method](https://www.rfc-editor.org/info/rfc10008/)
+- [Draft httpwg: safe method with body](https://httpwg.org/http-extensions/draft-ietf-httpbis-safe-method-w-body.html)
+- [RFC 9110 -- HTTP Semantics](https://www.rfc-editor.org/rfc/rfc9110)
