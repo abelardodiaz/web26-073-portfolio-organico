@@ -1,0 +1,144 @@
+---
+title: "Microanimacion 2026: tres librerias chicas para toasts, texto y layout"
+slug: "microanimacion-librerias-chicas-2026"
+date: "2026-07-04"
+summary: "No todo necesita framer-motion o GSAP. Tres librerias chicas y enfocadas resuelven el 90% de las microinteracciones reales: toasts con fisica (sileo), text roll para labels (slot-text) y FLIP de layout automatico (anime.js createLayout). Cuando usar cada una y que cuesta."
+tags: ["animacion", "react", "frontend", "ui"]
+---
+
+La animacion en la web suele plantearse como una decision binaria: o no animas
+nada, o traes una libreria-motor completa
+([framer-motion](https://github.com/motiondivision/motion),
+[GSAP](https://github.com/greensock/GSAP)) y pagas su bundle. Pero la mayoria de
+lo que mueve una UI de producto no son secuencias cinematograficas: son
+**microinteracciones** -- un toast que aparece, un label que cambia de "Copy" a
+"Copied", un grid que se reordena. Para eso, una libreria chica y enfocada gana
+casi siempre: menos bundle, menos API que aprender, cero pelea con la
+orquestacion.
+
+Probe tres durante junio de 2026, una por cada tipo de microinteraccion que
+aparece una y otra vez. Cada una resuelve un eje distinto y las tres comparten la
+misma filosofia: hacen una cosa, la hacen bien y se quitan del camino.
+
+> Siglas que se repiten abajo: **FLIP** (First, Last, Invert, Play, la tecnica
+> clasica para animar cambios de layout midiendo antes y despues), **gzip**
+> (tamano comprimido con que viaja el bundle por la red) y **peer dependency**
+> (dependencia que tu app debe proveer, como React, en vez de venir empaquetada).
+
+## Eje 1: feedback efimero -> [sileo](https://github.com/hiaaryan/sileo)
+
+Los toasts son el caso mas comun y el mas facil de hacer mediocre. sileo
+(**1.6k** estrellas en su [repo](https://github.com/hiaaryan/sileo)) es un
+componente de toasts para React construido sobre `motion`, con fisica de resortes
+y morphing SVG. El patron es el de sonner: montas **un solo** `<Toaster />` en el
+root y disparas desde cualquier parte con el objeto `sileo`, que infiere el tipo
+(exito, error, promesa, accion con undo):
+
+```tsx
+sileo.promise(saveProfile(), {
+  loading: { title: "Guardando..." },
+  success: (data) => ({ title: "Guardado", description: `v${data.version}` }),
+  error: { title: "No se pudo guardar" },
+});
+```
+
+El gotcha que no agarra el type-check: el CSS se exporta como subpath aparte
+(`import "sileo/styles.css"`). Sin el, los toasts se montan sin estilos -- sin la
+fisica ni el morphing -- y parece que la libreria "no hace nada". Es React-only
+(peer dependency React >= 18). Es tambien la mas pesada de las tres: arrastra
+`motion` como dependencia, asi que el costo se paga si ya no usas esa libreria en
+otro lado. Lo desgloso con demo en
+[mi TIL de sileo](/til/sileo-physics-toasts-react).
+
+## Eje 2: texto que cambia -> [slot-text](https://github.com/Danilaa1/slot-text)
+
+Cuando lo que cambia es un label chico -- un boton Copy/Copied, un contador, un
+badge de estado -- traer un motor de animacion entero es desproporcionado.
+slot-text (**807** estrellas, licencia MIT segun su
+[repo](https://github.com/Danilaa1/slot-text)) hace una sola cosa: una animacion
+"text roll" estilo slot machine, **sin dependencias**, menos de 2KB gzip, con
+puro CSS transforms compuestos en GPU. Cada caracter vive en su celda recortada y
+desliza; el glifo entrante persigue al saliente con un stagger y aterriza con un
+pequeno rebote.
+
+Es la unica de las tres que no es React-only: soporta vanilla JS, React, Vue,
+Solid y Svelte, cada uno como subpath. En React es declarativo -- `<SlotText>`
+rueda al nuevo valor cuando cambia su prop `text`:
+
+```tsx
+import { SlotText } from "slot-text/react";
+import "slot-text/style.css";
+
+<SlotText text={label} options={{ skipUnchanged: true, interrupt: false }} />
+```
+
+`skipUnchanged` evita re-animar si el texto no cambio e `interrupt` decide si un
+nuevo valor corta la animacion en curso o espera a que termine.
+
+Mismos dos gotchas de empaquetado: el componente React vive en `slot-text/react`
+(no en la raiz) y el CSS es un subpath aparte; sin el, las celdas no quedan
+recortadas y el roll se ve roto. Patrones y demo en
+[mi TIL de slot-text](/til/slot-text-text-roll-animation).
+
+## Eje 3: cambios de layout -> [anime.js createLayout](https://animejs.com/documentation/layout/)
+
+El tercer eje es el mas dificil de hacer a mano: animar cambios de **layout**.
+Reordenar items de un grid o alternar entre 2 y 4 columnas no se puede
+transicionar con CSS `transition` porque el navegador salta directo al estado
+final. La solucion clasica es FLIP escrito a mano, codigo tedioso y repetitivo.
+
+Aqui la pieza chica vive **dentro** de una grande: anime.js (**70.4k** estrellas,
+MIT, v4.5.0 al momento de escribir, segun su
+[repo](https://github.com/juliangarnier/anime)) trae en v4 la utilidad
+[`createLayout`](https://animejs.com/documentation/layout/), que hace el FLIP por
+ti. Observas un contenedor y envuelves la mutacion del DOM en `layout.update()`:
+mide antes, ejecuta tu callback, mide despues y anima la diferencia.
+
+```ts
+import { createLayout } from "animejs";
+
+const layout = createLayout(container, { children: ".card", duration: 550 });
+layout.update(() => {
+  // muta el DOM: reordenar, cambiar columnas, filtrar...
+});
+```
+
+El gotcha es especifico de React: `update()` espera una mutacion **sincrona**,
+pero React agenda los renders para despues, asi que anime mide el DOM antes de que
+React lo actualice y la animacion no ocurre. Se arregla forzando el render con
+`flushSync(change)` (importado de `react-dom`) dentro del callback -- usalo solo
+para la mutacion que animas, porque `flushSync` fuerza un render sincrono y
+abusarlo penaliza el rendimiento. Compite con GSAP Flip pero es
+open-source y de menor bundle. Detalle y demo en
+[mi TIL de createLayout](/til/animejs-createlayout-flip).
+
+## Tabla rapida
+
+| Libreria | Eje | Tamano / peso | Frameworks | Cuando la quieres |
+|----------|-----|---------------|------------|-------------------|
+| [sileo](https://github.com/hiaaryan/sileo) | Toasts con fisica | Sobre `motion` | React | Feedback pulido (guardar, undo, sync) sin armar CSS |
+| [slot-text](https://github.com/Danilaa1/slot-text) | Text roll | &lt;2KB gzip, zero-dep | Vanilla, React, Vue, Solid, Svelte | Labels chicos que cambian (Copy/Copied, contadores) |
+| [anime.js createLayout](https://animejs.com/documentation/layout/) | FLIP de layout | Parte de anime.js v4 | Agnostico (gotcha en React) | Grids con filtro/orden, reordenamiento animado |
+
+## El criterio de fondo
+
+Las tres comparten un patron de eleccion: **escala la herramienta al problema, no
+al reves**. framer-motion y GSAP siguen siendo la respuesta correcta cuando
+necesitas orquestar secuencias, scroll-driven o timelines complejos. Pero para la
+microinteraccion suelta -- la que aparece en cada pantalla de producto -- una
+libreria de un solo proposito te da mejor resultado con menos costo: menos KB que
+el usuario descarga, menos superficie de API que mantener, menos formas de
+romperlo.
+
+Un detalle recurrente que vale la pena internalizar: las tres exportan su CSS como
+subpath aparte y las tres "no hacen nada" en silencio si lo olvidas. No es
+tree-shaking -- un import de CSS es un side-effect, no se elimina solo; es que
+dejan el estilo como archivo opcional para no imponerte como lo cargas. Cuando una
+libreria de animacion parezca montada-pero-muerta, el primer sospechoso es el
+`import` del estilo que falta.
+
+Y una ultima cosa que ninguno de los ejemplos de arriba incluye por brevedad pero
+que en produccion no es opcional: respeta `prefers-reduced-motion`. Hay usuarios a
+los que el movimiento les marea o distrae; desactiva o atenua estas animaciones
+cuando el sistema lo pide. Una microinteraccion pulida que ignora la accesibilidad
+no esta pulida.

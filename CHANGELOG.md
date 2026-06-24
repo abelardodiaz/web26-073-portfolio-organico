@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.14.0] - 2026-06-24
+
+### Added
+- Segundo articulo de blog: "Microanimacion 2026: tres librerias chicas para
+  toasts, texto y layout" (programado 2026-07-04). Cierra el cluster de
+  microanimacion combinando los 3 recursos ya publicados (sileo + slot-text +
+  anime.js createLayout) por eje de microinteraccion. Fuentes verificadas en vivo
+  (sileo 1.6k, slot-text 807 MIT, anime.js 70.4k v4.5.0) + links inline a repos,
+  docs y los 3 TILs internos. Revision editorial DeepSeek v4-pro (ticket #2440):
+  corregido claim de tree-shaking en CSS, anadido caveat de flushSync (react-dom)
+  y nota de accesibilidad prefers-reduced-motion.
+
 ## [0.13.1] - 2026-06-24
 
 ### Added
