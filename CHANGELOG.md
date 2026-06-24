@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.13.1] - 2026-06-24
+
+### Added
+- TIL resource: "createLayout de anime.js: FLIP automatico para transiciones de
+  layout imposibles" (programado 2026-07-02). Recurso kind=library + demo_repo
+  animejs-createlayout-demo. Cierra el cluster de microanimacion (sileo +
+  slot-text + anime.js). Documenta layout.update() + el gotcha de flushSync en React.
+- Micro-repo demo publicado: github.com/abelardodiaz/animejs-createlayout-demo
+  (Vite 6 + React 19 + TS estricto, build verificado).
+
 ## [0.13.0] - 2026-06-24
 
 ### Added

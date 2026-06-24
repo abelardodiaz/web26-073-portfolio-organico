@@ -1,0 +1,78 @@
+---
+title: "createLayout de anime.js: FLIP automatico para transiciones de layout imposibles"
+slug: "animejs-createlayout-flip"
+category: "react"
+stack: [react, typescript, animation, ui]
+date: "2026-07-02"
+resource:
+  name: "anime.js (createLayout)"
+  url: "https://github.com/juliangarnier/anime"
+  kind: "library"
+demo_repo: "animejs-createlayout-demo"
+---
+
+## Contexto
+
+Animar cambios de layout con CSS es un dolor: reordenar elementos de un grid,
+alternar entre 2 y 4 columnas o filtrar items no se puede transicionar con
+`transition` porque el navegador salta directo al estado final. La solucion
+clasica es FLIP (First, Last, Invert, Play) a mano, que es codigo tedioso.
+
+## Lo que aprendi
+
+anime.js v4 trae `createLayout`, que hace el FLIP por ti. Observas un contenedor
+y, cuando vas a cambiar el layout, envuelves la mutacion en `layout.update()`:
+mide el estado ANTES, ejecuta tu callback (que muta el DOM), mide DESPUES y anima
+la transicion entre ambos.
+
+```ts
+import { createLayout } from "animejs";
+
+const layout = createLayout(container, {
+  children: ".card",
+  duration: 550,
+  ease: "outExpo",
+});
+
+layout.update(() => {
+  // muta el DOM: reordenar, cambiar grid, filtrar...
+});
+```
+
+Anima cosas que con CSS puro no se podian: reorden de elementos, `flex`/`grid`
+cambiando de columnas, y entrada/salida al filtrar (con `enterFrom` / `leaveTo`).
+
+## El gotcha con React
+
+`update()` espera que el DOM cambie de forma **sincrona** dentro de su callback,
+pero React agenda los renders para despues. Si haces `setState` normal, anime mide
+el DOM ANTES de que React lo actualice y la animacion no ocurre. La solucion es
+forzar el render sincrono con `flushSync`:
+
+```tsx
+import { flushSync } from "react-dom";
+
+function animate(change: () => void) {
+  layoutRef.current?.update(() => flushSync(change));
+}
+
+// uso:
+animate(() => setCards(shuffled));
+animate(() => setCols((c) => (c === 4 ? 2 : 4)));
+```
+
+El `AutoLayout` se crea una vez en un `useEffect` y se limpia con `.revert()`.
+
+## Por que importa
+
+Para grids con filtros/orden animados, modales o reordenamiento drag&drop, te
+ahorra todo el boilerplate de FLIP manual. Compite con GSAP Flip pero es
+open-source y de menor bundle. Lo guardo como recurso para microinteracciones de
+layout sin reinventar la rueda.
+
+Demo con reorden + cambio de columnas + filtro en el micro-repo (link abajo).
+
+## Referencias
+
+- [anime.js (GitHub)](https://github.com/juliangarnier/anime)
+- [Documentacion](https://animejs.com)
