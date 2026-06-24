@@ -1,0 +1,92 @@
+---
+title: "slot-text: animacion text roll sin dependencias para labels (2KB)"
+slug: "slot-text-text-roll-animation"
+category: "react"
+stack: [react, typescript, ui]
+date: "2026-06-28"
+resource:
+  name: "slot-text"
+  url: "https://github.com/Danilaa1/slot-text"
+  kind: "library"
+demo_repo: "slot-text-react-demo"
+---
+
+## Contexto
+
+Para labels chicos que cambian -- un boton Copy -> Copied, un contador, un badge
+de estado -- queria una animacion que se sintiera tactil sin meter una libreria
+de animacion completa (framer-motion, GSAP) solo para eso.
+
+## Lo que aprendi
+
+slot-text es una animacion "text roll" (estilo slot machine) **dependency-free**,
+&lt;2KB gzip, puro CSS transforms (GPU-composited). Cada caracter vive en su
+propia celda recortada y desliza; el glifo entrante persigue al saliente con un
+stagger y aterriza con un pequeno rebote. Soporta vanilla JS, React, Vue, Solid y
+Svelte, cada uno como subpath aparte.
+
+En React es declarativo: el componente `<SlotText>` rueda al nuevo valor cuando
+cambia su prop `text`. Dos gotchas de empaquetado:
+
+1. El componente React vive en el subpath `slot-text/react`, no en la raiz.
+2. El CSS se exporta como subpath aparte (`slot-text/style.css`). Sin el, las
+   celdas no quedan recortadas y el roll se ve roto (los glifos no deslizan).
+
+```ts
+import { SlotText } from "slot-text/react";
+import "slot-text/style.css";
+```
+
+## Ejemplo
+
+El patron clasico copy -> copied, spam-safe (cada click reinicia el revert en vez
+de encolar rolls):
+
+```tsx
+import { SlotText } from "slot-text/react";
+import "slot-text/style.css";
+
+function CopyButton() {
+  const [label, setLabel] = useState("Copy");
+  const timer = useRef<number | null>(null);
+
+  const onCopy = () => {
+    setLabel("Copied!");
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = window.setTimeout(() => setLabel("Copy"), 1400);
+  };
+
+  return (
+    <button onClick={onCopy}>
+      <SlotText text={label} options={{ skipUnchanged: true, interrupt: false }} />
+    </button>
+  );
+}
+```
+
+Barrido cromatico (arcoiris) con el helper `chromatic()`:
+
+```tsx
+import { chromatic } from "slot-text";
+
+<SlotText text="Live" options={{ color: chromatic() }} />
+```
+
+Opciones (`SlotOptions`): `direction`, `stagger`, `duration`, `exitOffset`,
+`easing`, `bounce`, `color`, `colorFade`, `skipUnchanged`, `interrupt`. Para
+vanilla hay un API imperativo: `slotText(el, "Copy")` devuelve un controller con
+`.set()`, `.flash()` y `.destroy()`.
+
+## Por que importa
+
+Es el punto medio justo entre un cambio de texto seco y traer una libreria de
+animacion entera. Lo guardo como recurso para microinteracciones en botones y
+badges, donde 2KB de transforms puros bastan. Peer dependency: React >= 18 < 20.
+
+Demo con tres patrones (copy/copied, contador, estado cromatico) y selector de
+direccion en el micro-repo (link abajo).
+
+## Referencias
+
+- [slot-text (GitHub)](https://github.com/Danilaa1/slot-text)
+- [textmotion.dev](https://textmotion.dev/)

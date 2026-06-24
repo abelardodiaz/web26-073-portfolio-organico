@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.12.3] - 2026-06-24
+
+### Added
+- TIL resource: "slot-text: animacion text roll sin dependencias para labels"
+  (programado para 2026-06-28 via date-filter). Recurso kind=library + demo_repo
+  slot-text-react-demo. Documenta el componente declarativo SlotText, el helper
+  chromatic(), y los dos gotchas de empaquetado (subpath slot-text/react +
+  slot-text/style.css).
+- Micro-repo demo publicado: github.com/abelardodiaz/slot-text-react-demo
+  (Vite 6 + React 19 + TS estricto, build verificado: copy/copied, contador,
+  estado cromatico).
+
 ## [0.12.2] - 2026-06-24
 
 ### Added
