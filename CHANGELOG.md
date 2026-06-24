@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.15.0] - 2026-06-24
+
+### Added
+- Pagina de proyecto: "Agente 080" (case study anonimizado de un agente de IA
+  multicanal para soporte/cobranza/ventas). Framing comercial + tecnico: modo
+  agentico (razonar->actuar->observar), multi-agente especialistas, guardrails,
+  RAG, memoria, antifallas, agendamiento, roles configurables y plantillas de
+  WhatsApp. 3 diagramas SVG inline (bucle agentico, multiagente, bandeja unica) +
+  5 capturas de demo vetadas (datos ficticios, sin cliente/infra/telefonos):
+  dashboard, inbox con chat, ticket de soporte, conversacion agentica WhatsApp,
+  soporte lado cliente. Enlace al sitio live agente80.abelardodiaz.dev. Repo
+  privado (sin codigo publicado). Material extraido via KB 99999 + verificado.
+
+### Fixed
+- Hydration mismatch en Header: el markup dependia del estado JS del tema
+  (editorial/terminal), que difiere entre server (default) y cliente (localStorage).
+  Refactor a variantes CSS `editorial:`/`terminal:` (consistente con el resto del
+  sitio); el markup React queda determinista, sin mismatch ni parpadeo.
+
 ## [0.14.0] - 2026-06-24
 
 ### Added

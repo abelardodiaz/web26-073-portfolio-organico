@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useState } from "react";
 import dynamic from "next/dynamic";
-import { useTheme } from "@/components/shared/ThemeProvider";
 import { WhatsAppIcon } from "@/components/shared/WhatsAppIcon";
 import { whatsappUrl, WHATSAPP_MSG_GENERAL } from "@/lib/whatsapp";
 
@@ -17,44 +16,30 @@ const ThemeToggle = dynamic(
   { ssr: false }
 );
 
-const editorialNav = [
-  { href: "/projects", label: "Proyectos" },
-  { href: "/til", label: "TIL" },
-  { href: "/blog", label: "Blog" },
-  { href: "/diagnostico-ia", label: "Servicios" },
-  { href: "/about", label: "About" },
-  { href: "/contact", label: "Contacto" },
-];
-
-const terminalNav = [
-  { href: "/projects", label: "/proyectos" },
-  { href: "/til", label: "/til" },
-  { href: "/blog", label: "/blog" },
-  { href: "/diagnostico-ia", label: "/servicios" },
-  { href: "/about", label: "/about" },
-  { href: "/contact", label: "/contacto" },
+const navItems = [
+  { href: "/projects", editorial: "Proyectos", terminal: "/proyectos" },
+  { href: "/til", editorial: "TIL", terminal: "/til" },
+  { href: "/blog", editorial: "Blog", terminal: "/blog" },
+  { href: "/diagnostico-ia", editorial: "Servicios", terminal: "/servicios" },
+  { href: "/about", editorial: "About", terminal: "/about" },
+  { href: "/contact", editorial: "Contacto", terminal: "/contacto" },
 ];
 
 export function Header() {
-  const { theme } = useTheme();
   const [menuOpen, setMenuOpen] = useState(false);
-  const navItems = theme === "editorial" ? editorialNav : terminalNav;
   const waUrl = whatsappUrl(WHATSAPP_MSG_GENERAL);
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background">
       <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
         <Link href="/" className="animate-wiggle inline-block shrink-0">
-          {theme === "editorial" ? (
-            <span className="text-base font-bold tracking-tight">
-              abelardodiaz<span className="text-primary">.dev</span>
-            </span>
-          ) : (
-            <span className="font-mono text-sm font-semibold">
-              <span className="text-primary">~$</span> abelardodiaz.dev
-              <span className="text-primary animate-blink">_</span>
-            </span>
-          )}
+          <span className="hidden editorial:inline text-base font-bold tracking-tight">
+            abelardodiaz<span className="text-primary">.dev</span>
+          </span>
+          <span className="hidden terminal:inline font-mono text-sm font-semibold">
+            <span className="text-primary">~$</span> abelardodiaz.dev
+            <span className="text-primary animate-blink">_</span>
+          </span>
         </Link>
 
         {/* Desktop nav */}
@@ -63,13 +48,10 @@ export function Header() {
             <Link
               key={item.href}
               href={item.href}
-              className={
-                theme === "editorial"
-                  ? "px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-                  : "rounded-md px-2.5 py-1.5 font-mono text-xs font-medium text-muted-foreground transition-all hover:bg-secondary hover:text-foreground"
-              }
+              className="text-muted-foreground editorial:px-3 editorial:py-1.5 editorial:text-sm editorial:font-medium editorial:transition-colors editorial:hover:text-foreground terminal:rounded-md terminal:px-2.5 terminal:py-1.5 terminal:font-mono terminal:text-xs terminal:font-medium terminal:transition-all terminal:hover:bg-secondary terminal:hover:text-foreground"
             >
-              {item.label}
+              <span className="hidden editorial:inline">{item.editorial}</span>
+              <span className="hidden terminal:inline">{item.terminal}</span>
             </Link>
           ))}
           <Link
@@ -95,14 +77,11 @@ export function Header() {
             href={waUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className={
-              theme === "editorial"
-                ? "ml-2 inline-flex items-center gap-1.5 rounded-full bg-primary px-3.5 py-1.5 text-xs font-semibold text-primary-foreground transition-colors hover:bg-primary/85"
-                : "ml-2 inline-flex items-center gap-1.5 rounded-md border border-primary bg-primary/10 px-3 py-1.5 font-mono text-xs font-medium text-primary transition-all hover:bg-primary/20 hover:shadow-[0_0_0_3px_var(--accent-glow)]"
-            }
+            className="ml-2 inline-flex items-center gap-1.5 text-xs editorial:rounded-full editorial:bg-primary editorial:px-3.5 editorial:py-1.5 editorial:font-semibold editorial:text-primary-foreground editorial:transition-colors editorial:hover:bg-primary/85 terminal:rounded-md terminal:border terminal:border-primary terminal:bg-primary/10 terminal:px-3 terminal:py-1.5 terminal:font-mono terminal:font-medium terminal:text-primary terminal:transition-all terminal:hover:bg-primary/20 terminal:hover:shadow-[0_0_0_3px_var(--accent-glow)]"
           >
             <WhatsAppIcon className="size-3.5" />
-            {theme === "editorial" ? "Hablemos" : "./whatsapp"}
+            <span className="hidden editorial:inline">Hablemos</span>
+            <span className="hidden terminal:inline">./whatsapp</span>
           </a>
           <div className="ml-1 flex items-center gap-1 border-l border-border pl-3">
             <ThemeSelector />
@@ -156,7 +135,8 @@ export function Header() {
               onClick={() => setMenuOpen(false)}
               className="block py-2 text-sm text-muted-foreground hover:text-foreground"
             >
-              {item.label}
+              <span className="hidden editorial:inline">{item.editorial}</span>
+              <span className="hidden terminal:inline">{item.terminal}</span>
             </Link>
           ))}
           <Link
@@ -164,7 +144,8 @@ export function Header() {
             onClick={() => setMenuOpen(false)}
             className="block py-2 text-sm text-muted-foreground hover:text-foreground"
           >
-            {theme === "editorial" ? "Buscar" : "/buscar"}
+            <span className="hidden editorial:inline">Buscar</span>
+            <span className="hidden terminal:inline">/buscar</span>
           </Link>
           <a
             href={waUrl}
@@ -174,7 +155,8 @@ export function Header() {
             className="mt-2 inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
           >
             <WhatsAppIcon className="size-4" />
-            {theme === "editorial" ? "Hablemos por WhatsApp" : "./whatsapp.sh"}
+            <span className="hidden editorial:inline">Hablemos por WhatsApp</span>
+            <span className="hidden terminal:inline">./whatsapp.sh</span>
           </a>
         </nav>
       )}
