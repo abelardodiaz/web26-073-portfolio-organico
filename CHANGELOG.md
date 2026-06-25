@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.17.1] - 2026-06-25
+
+### Added
+- Domus Rentas: seccion "El panel: gestion del lado SaaS" con 4 capturas del panel
+  multi-tenant (datos demo, sin PII): dashboard, gestion de propiedades, analytics y
+  alta de propiedad. Capturas obtenidas reviviendo el stack docker (9 microservicios
+  + frontend) en server003, con cuenta demo temporal; stack y datos restaurados a su
+  estado original tras capturar.
+
+### Changed
+- Domus Rentas: se suaviza la mencion del chat en tiempo real (servicio existente
+  pero aun en desarrollo) para no presentarlo como feature terminada.
+
 ## [0.17.0] - 2026-06-25
 
 ### Added

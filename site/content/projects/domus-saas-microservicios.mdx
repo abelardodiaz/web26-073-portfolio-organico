@@ -40,7 +40,6 @@ los recordatorios en la cabeza de alguien. Domus junta todo eso en una sola plat
 donde cada cliente trabaja aislado del resto:
 
 - **Catalogo de propiedades** con tipos, estados y agentes asignados.
-- **Chat en tiempo real** con los contactos, multicanal, sin salir de la plataforma.
 - **Notificaciones** por email, SMS, push, WhatsApp, Telegram o dentro de la app.
 - **Multimedia** de cada propiedad (fotos con marca de agua automatica).
 - **Metricas y reportes** del negocio.
@@ -135,9 +134,10 @@ No todos los servicios necesitan lo mismo, asi que no todos usan el mismo framew
 - **Django + DRF** para lo que es CRUD y reglas de negocio con mucho modelo: auth,
   propiedades, agentes, administracion, multimedia, analytics y cron. El admin de
   Django y el ORM aceleran todo eso.
-- **FastAPI** para lo que necesita **concurrencia y baja latencia**: el chat
-  (WebSocket, mensajes en tiempo real) y las notificaciones (envios asincronos a
-  multiples canales). Async de punta a punta con SQLAlchemy.
+- **FastAPI** para lo que necesita **concurrencia y baja latencia**: las
+  notificaciones (envios asincronos a multiples canales) y el servicio de chat por
+  WebSocket -- este ultimo todavia en desarrollo. Async de punta a punta con
+  SQLAlchemy.
 
 La gracia de los microservicios es precisamente esa: **cada servicio elige la
 herramienta adecuada** sin obligar a todo el sistema a casarse con una sola.
@@ -149,6 +149,32 @@ Ser "multi-tenant" no es solo poner un `tenant_id` en una tabla. En Domus, el
 de correo -- de modo que cada cliente personaliza su instancia sin afectar a los demas,
 y los servicios consultan esa configuracion para comportarse distinto segun el tenant.
 El aislamiento es una propiedad del sistema, no un campo que alguien recuerda filtrar.
+
+## El panel: gestion del lado SaaS
+
+Sobre esos microservicios se monta el panel donde cada tenant administra su negocio:
+un dashboard con el resumen, la gestion del catalogo, el alta de propiedades y las
+metricas -- todo sirviendose de los servicios de abajo a traves del gateway.
+
+<figure className="my-8">
+<img src="/projects/domus-saas-microservicios/03-panel-dashboard.png" alt="Dashboard del panel SaaS con tarjetas de resumen: propiedades, conversaciones activas, vistas totales y citas pendientes" className="w-full rounded-lg border border-border" loading="lazy" />
+<figcaption className="text-center text-sm text-muted-foreground">El dashboard del tenant (datos demo): resumen de propiedades, vistas y actividad, alimentado por varios servicios a la vez.</figcaption>
+</figure>
+
+<figure className="my-8">
+<img src="/projects/domus-saas-microservicios/04-panel-propiedades.png" alt="Gestion de propiedades en el panel: tabla con precio, estado, vistas y acciones por propiedad" className="w-full rounded-lg border border-border" loading="lazy" />
+<figcaption className="text-center text-sm text-muted-foreground">Gestion del catalogo (datos demo): cada propiedad con su precio, estado (disponible, inactiva, borrador) y vistas -- servido por properties-service.</figcaption>
+</figure>
+
+<figure className="my-8">
+<img src="/projects/domus-saas-microservicios/05-panel-analytics.png" alt="Analytics del panel: vistas totales, leads generados, tasa de conversion, propiedades mas vistas y fuentes de trafico" className="w-full rounded-lg border border-border" loading="lazy" />
+<figcaption className="text-center text-sm text-muted-foreground">Analytics (datos demo): leads, conversion, propiedades mas vistas y fuentes de trafico -- el trabajo de analytics-service.</figcaption>
+</figure>
+
+<figure className="my-8">
+<img src="/projects/domus-saas-microservicios/06-panel-nueva-propiedad.png" alt="Formulario de alta de propiedad con informacion basica, caracteristicas y ubicacion" className="w-full rounded-lg border border-border" loading="lazy" />
+<figcaption className="text-center text-sm text-muted-foreground">Alta de una propiedad: informacion basica, caracteristicas y ubicacion, que terminan en properties-service y media-service.</figcaption>
+</figure>
 
 ## Stack
 
