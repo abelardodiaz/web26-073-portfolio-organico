@@ -1,11 +1,9 @@
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { WhatsAppIcon } from "@/components/shared/WhatsAppIcon";
-import {
-  whatsappUrl,
-  WHATSAPP_MSG_SERVICIOS,
-} from "@/lib/whatsapp";
+import { whatsappUrl, WHATSAPP_MSG_SERVICIOS } from "@/lib/whatsapp";
 
 export const metadata: Metadata = {
   title: "Servicios de IA y Automatizacion | San Luis Potosi",
@@ -20,53 +18,101 @@ export const metadata: Metadata = {
   },
 };
 
+// ── Iconos (atributo preatentivo: se reconocen antes de leer) ──
+const iconStroke = {
+  fill: "none",
+  stroke: "currentColor",
+  strokeWidth: 1.7,
+  strokeLinecap: "round" as const,
+  strokeLinejoin: "round" as const,
+};
+
+const IconDiagnostico = (
+  <svg viewBox="0 0 24 24" className="size-6" {...iconStroke}>
+    <path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1" />
+    <circle cx="12" cy="12" r="3" />
+  </svg>
+);
+
+const IconAutomatizacion = (
+  <svg viewBox="0 0 24 24" className="size-6" {...iconStroke}>
+    <path d="M13 2L4.5 13.5H11l-1 8.5L19.5 10.5H13z" />
+  </svg>
+);
+
+const IconVps = (
+  <svg viewBox="0 0 24 24" className="size-6" {...iconStroke}>
+    <rect x="3" y="4" width="18" height="6" rx="1.5" />
+    <rect x="3" y="14" width="18" height="6" rx="1.5" />
+    <path d="M7 7h.01M7 17h.01" />
+  </svg>
+);
+
+const IconSitios = (
+  <svg viewBox="0 0 24 24" className="size-6" {...iconStroke}>
+    <rect x="3" y="4" width="18" height="16" rx="2" />
+    <path d="M3 9h18M6.5 6.5h.01M9 6.5h.01" />
+  </svg>
+);
+
 type Service = {
-  // Pagina propia (ready) o, mientras no existe, link directo a WhatsApp para cotizar
-  href?: string;
-  waMessage?: string;
+  href: string;
+  icon?: ReactNode;
+  logo?: string;
   editorialTitle: string;
   terminalTitle: string;
-  desc: string;
-  price: string;
-  logo?: string;
+  micro: string;
+  tag: string;
+  span: string; // bento: tamano segun jerarquia
+  star?: boolean;
 };
 
 const services: Service[] = [
   {
     href: "/diagnostico-ia",
-    editorialTitle: "Diagnostico IA para tu negocio",
+    icon: IconDiagnostico,
+    editorialTitle: "Diagnostico IA",
     terminalTitle: "diagnostico-ia",
-    desc: "Encuentro donde tu empresa pierde tiempo y te entrego un reporte con oportunidades concretas para resolverlo con inteligencia artificial.",
-    price: "$10,000 MXN",
+    micro: "Encuentro donde tu negocio pierde tiempo y dinero, y te entrego un reporte con oportunidades concretas. Sin compromiso.",
+    tag: "$10,000 MXN",
+    span: "sm:col-span-2 sm:row-span-2",
+    star: true,
   },
   {
     href: "/openclaw-slp",
-    editorialTitle: "OpenClaw en San Luis Potosi",
-    terminalTitle: "openclaw-slp",
-    desc: "Un asistente inteligente que trabaja por tu negocio 24/7. Te lo configuro, lo conecto a tus canales y te doy soporte local.",
-    price: "Configuracion + soporte",
     logo: "/openclaw-logo.svg",
+    editorialTitle: "OpenClaw 24/7",
+    terminalTitle: "openclaw-slp",
+    micro: "Un asistente que trabaja solo",
+    tag: "Config + soporte",
+    span: "sm:col-span-1 sm:row-span-1",
   },
   {
     href: "/automatizacion-procesos",
-    editorialTitle: "Automatizacion de procesos",
-    terminalTitle: "automatizacion-procesos",
-    desc: "Bots, cotizadores, reportes automaticos y conexiones entre tus sistemas (CRM, ERP, WhatsApp, n8n). Lo manual deja de comerte el dia.",
-    price: "A cotizar",
+    icon: IconAutomatizacion,
+    editorialTitle: "Automatizacion",
+    terminalTitle: "automatizacion",
+    micro: "Lo manual, hecho solo",
+    tag: "A cotizar",
+    span: "sm:col-span-1 sm:row-span-1",
   },
   {
     href: "/despliegue-vps",
-    editorialTitle: "Despliegue y preparacion de servidores",
+    icon: IconVps,
+    editorialTitle: "Servidores VPS",
     terminalTitle: "despliegue-vps",
-    desc: "Levanto, aseguro y dejo en produccion tu VPS: hardening, deploy, SSL, monitoreo y respaldos. Sin sorpresas a medianoche.",
-    price: "A cotizar",
+    micro: "Seguro y respaldado",
+    tag: "A cotizar",
+    span: "sm:col-span-1 sm:row-span-1",
   },
   {
     href: "/sitios-web",
-    editorialTitle: "Sitios web y landing pages",
+    icon: IconSitios,
+    editorialTitle: "Sitios web",
     terminalTitle: "sitios-web",
-    desc: "Sitios rapidos y bien construidos (Next.js / Astro), multilingues si lo necesitas, con metricas reales de rendimiento y SEO.",
-    price: "A cotizar",
+    micro: "Rapidos y bien posicionados",
+    tag: "A cotizar",
+    span: "sm:col-span-2 sm:row-span-1",
   },
 ];
 
@@ -78,7 +124,7 @@ export default function ServiciosPage() {
       {/* ══════════════════════════════════════ Editorial ══════════════════════════════════════ */}
       <div className="hidden editorial:block">
         {/* Hero */}
-        <section className="mb-12">
+        <section className="mb-10">
           <span className="mb-4 inline-block rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
             San Luis Potosi
           </span>
@@ -87,64 +133,65 @@ export default function ServiciosPage() {
             <em className="text-primary">trabaje menos</em>
           </h1>
           <p className="max-w-2xl text-lg leading-relaxed text-muted-foreground">
-            No vendo consultoria generica ni promesas. Implemento soluciones
-            tecnicas que ya corren en produccion: inteligencia artificial,
-            automatizacion, infraestructura y sitios web. Esto es lo que puedo
-            hacer por ti.
+            Soluciones tecnicas que ya corren en produccion: inteligencia
+            artificial, automatizacion, infraestructura y sitios web.
           </p>
         </section>
 
-        {/* Cards */}
+        {/* Bento */}
         <section className="mb-14">
-          <div className="grid gap-4 sm:grid-cols-2">
-            {services.map((s) => {
-              const cardClass =
-                "group block rounded-lg border border-border bg-card p-6 transition-all hover:border-primary hover:shadow-[0_0_0_1px_var(--primary)]";
-              const inner = (
-                <>
-                  <div className="mb-2 flex items-start justify-between">
-                    <div className="flex items-center gap-2">
-                      {s.logo && (
-                        <Image
-                          src={s.logo}
-                          alt=""
-                          width={20}
-                          height={20}
-                          className="animate-wiggle shrink-0"
-                        />
-                      )}
-                      <h2 className="font-semibold tracking-tight">
-                        {s.editorialTitle}
-                      </h2>
-                    </div>
+          <div className="grid grid-cols-1 gap-3 sm:auto-rows-[11rem] sm:grid-cols-3">
+            {services.map((s) => (
+              <Link
+                key={s.terminalTitle}
+                href={s.href}
+                className={`group relative flex flex-col justify-between overflow-hidden rounded-xl border border-border bg-card p-6 transition-all hover:border-primary hover:shadow-[0_0_0_1px_var(--primary)] ${s.span}`}
+              >
+                <div className="flex items-start justify-between">
+                  <span className="flex size-11 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                    {s.logo ? (
+                      <Image
+                        src={s.logo}
+                        alt=""
+                        width={24}
+                        height={24}
+                        className="animate-wiggle"
+                      />
+                    ) : (
+                      s.icon
+                    )}
+                  </span>
+                  {s.star ? (
+                    <span className="rounded-full bg-primary px-2.5 py-0.5 text-[11px] font-semibold text-primary-foreground">
+                      El mas pedido
+                    </span>
+                  ) : (
                     <span className="text-[var(--fg-subtle)] transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-primary">
                       &#8599;
                     </span>
-                  </div>
-                  <p className="mb-3 text-sm leading-relaxed text-muted-foreground">
-                    {s.desc}
+                  )}
+                </div>
+                <div>
+                  <h2
+                    className={`font-semibold tracking-tight ${
+                      s.star ? "text-2xl" : "text-base"
+                    }`}
+                  >
+                    {s.editorialTitle}
+                  </h2>
+                  <p
+                    className={`mt-1 leading-snug text-muted-foreground ${
+                      s.star ? "max-w-md text-base" : "text-sm"
+                    }`}
+                  >
+                    {s.micro}
                   </p>
-                  <span className="text-xs font-medium text-primary">
-                    {s.price}
+                  <span className="mt-3 inline-block text-xs font-medium text-primary">
+                    {s.tag}
                   </span>
-                </>
-              );
-              return s.href ? (
-                <Link key={s.terminalTitle} href={s.href} className={cardClass}>
-                  {inner}
-                </Link>
-              ) : (
-                <a
-                  key={s.terminalTitle}
-                  href={whatsappUrl(s.waMessage ?? WHATSAPP_MSG_SERVICIOS)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={cardClass}
-                >
-                  {inner}
-                </a>
-              );
-            })}
+                </div>
+              </Link>
+            ))}
           </div>
         </section>
 
@@ -175,7 +222,7 @@ export default function ServiciosPage() {
       {/* ══════════════════════════════════════ Terminal ══════════════════════════════════════ */}
       <div className="hidden terminal:block">
         {/* Hero */}
-        <section className="mb-12">
+        <section className="mb-10">
           <div className="mb-6 flex items-center gap-3">
             <h1 className="font-mono text-xs font-semibold uppercase tracking-widest text-[var(--fg-subtle)]">
               // servicios
@@ -189,61 +236,64 @@ export default function ServiciosPage() {
             Lo que construyo para que tu negocio trabaje menos
           </p>
           <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">
-            No vendo consultoria generica. Implemento soluciones tecnicas que ya
-            corren en produccion: IA, automatizacion, infraestructura y sitios
-            web. Esto es lo que puedo hacer por ti.
+            Soluciones tecnicas que ya corren en produccion: IA, automatizacion,
+            infraestructura y sitios web.
           </p>
         </section>
 
-        {/* Cards */}
+        {/* Bento */}
         <section className="mb-14">
-          <div className="grid gap-3 sm:grid-cols-2">
-            {services.map((s) => {
-              const cardClass =
-                "group grid grid-cols-[4px_1fr] overflow-hidden rounded-md border border-border bg-card transition-all hover:border-primary hover:shadow-[0_0_0_3px_var(--accent-glow)]";
-              const inner = (
-                <>
-                  <div className="bg-transparent transition-colors group-hover:bg-primary" />
-                  <div className="p-5 pl-4">
-                    <div className="mb-1.5 flex items-center gap-2">
-                      {s.logo && (
-                        <Image
-                          src={s.logo}
-                          alt=""
-                          width={16}
-                          height={16}
-                          className="shrink-0"
-                        />
-                      )}
-                      <h2 className="text-[15px] font-semibold tracking-tight">
-                        {s.terminalTitle}
-                      </h2>
-                    </div>
-                    <p className="mb-2 text-[13px] leading-relaxed text-muted-foreground">
-                      {s.desc}
-                    </p>
-                    <span className="font-mono text-[10px] font-medium tracking-wide text-primary">
-                      {s.price}
+          <div className="grid grid-cols-1 gap-3 sm:auto-rows-[11rem] sm:grid-cols-3">
+            {services.map((s) => (
+              <Link
+                key={s.terminalTitle}
+                href={s.href}
+                className={`group relative flex flex-col justify-between overflow-hidden rounded-md border border-border bg-card p-5 transition-all hover:border-primary hover:shadow-[0_0_0_3px_var(--accent-glow)] ${s.span}`}
+              >
+                <div className="flex items-start justify-between">
+                  <span className="flex size-10 items-center justify-center rounded-md border border-border bg-background text-primary">
+                    {s.logo ? (
+                      <Image
+                        src={s.logo}
+                        alt=""
+                        width={20}
+                        height={20}
+                      />
+                    ) : (
+                      s.icon
+                    )}
+                  </span>
+                  {s.star ? (
+                    <span className="rounded border border-primary bg-primary/10 px-2 py-0.5 font-mono text-[10px] font-medium text-primary">
+                      mas_pedido
                     </span>
-                  </div>
-                </>
-              );
-              return s.href ? (
-                <Link key={s.terminalTitle} href={s.href} className={cardClass}>
-                  {inner}
-                </Link>
-              ) : (
-                <a
-                  key={s.terminalTitle}
-                  href={whatsappUrl(s.waMessage ?? WHATSAPP_MSG_SERVICIOS)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={cardClass}
-                >
-                  {inner}
-                </a>
-              );
-            })}
+                  ) : (
+                    <span className="font-mono text-xs text-[var(--fg-subtle)] transition-colors group-hover:text-primary">
+                      &gt;_
+                    </span>
+                  )}
+                </div>
+                <div>
+                  <h2
+                    className={`font-mono font-semibold tracking-tight ${
+                      s.star ? "text-lg" : "text-[13px]"
+                    }`}
+                  >
+                    {s.terminalTitle}
+                  </h2>
+                  <p
+                    className={`mt-1 leading-snug text-muted-foreground ${
+                      s.star ? "max-w-md text-[13px]" : "text-[11px]"
+                    }`}
+                  >
+                    {s.micro}
+                  </p>
+                  <span className="mt-2 inline-block font-mono text-[10px] font-medium tracking-wide text-primary">
+                    {s.tag}
+                  </span>
+                </div>
+              </Link>
+            ))}
           </div>
         </section>
 
