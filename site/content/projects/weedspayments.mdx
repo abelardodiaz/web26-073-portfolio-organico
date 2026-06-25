@@ -1,0 +1,103 @@
+---
+title: "WeedsPayments: un sitio de marketing multilingue en Astro para un nicho dificil"
+slug: "weedspayments"
+description: "Caso de estudio del sitio publico de WeedsPayments -- una pasarela de pagos para tiendas de Cannabis y CBD en Europa. Un landing multilingue (6 idiomas) construido con Astro e islas de React: estatico, rapido y con un mapa de Europa hecho a medida. Trabajo de sitio, no de backend."
+stack: ["astro", "react", "typescript", "tailwind"]
+category: "portfolio"
+featured: false
+date: "2026-06-25"
+thumbnail: "/projects/weedspayments/00-thumb.webp"
+---
+
+## Que es
+
+El sitio publico de **WeedsPayments**, una pasarela de pagos especializada en un
+nicho que la banca tradicional suele rechazar: tiendas de **Cannabis y CBD** en
+Europa. La pagina no procesa pagos -- eso vive en otro lado -- sino que es la cara
+comercial: explica el producto, genera confianza y capta comercios en seis idiomas.
+
+<figure className="my-8">
+<img src="/projects/weedspayments/01-hero.webp" alt="Hero del sitio WeedsPayments en tema oscuro: titular 'Pagos para Cannabis y CBD. Cobra online sin que tu banco te bloquee', subtitulo sobre Visa, Mastercard, Apple Pay y compatibilidad con Shopify/WooCommerce/PrestaShop, y botones de solicitar instalacion y WhatsApp" className="w-full rounded-lg border border-border" loading="lazy" />
+<figcaption className="text-center text-sm text-muted-foreground">El hero: una sola promesa clara ("cobra online sin que tu banco te bloquee") sobre un tema oscuro con acento verde. La tipografia y el gradiente cargan toda la identidad.</figcaption>
+</figure>
+
+[**Ver el sitio en vivo →**](https://weedspayments.com)
+
+## Para quien es y que resuelve
+
+Para un negocio que vende algo legal pero **mal visto por los bancos**, el sitio no
+solo tiene que verse bien: tiene que **vencer la desconfianza**. Un comercio de CBD
+ha sido rechazado antes, le han congelado fondos, le han cerrado cuentas. El landing
+esta construido para responder justo a ese miedo:
+
+- **Una promesa directa** arriba del todo, sin rodeos.
+- **Prueba social y numeros** -- tiendas activas, paises, tiempo de activacion --
+  para demostrar que el servicio ya opera, no es una promesa.
+- **Comparativa honesta** contra los procesadores genericos, que es donde el nicho
+  se gana o se pierde.
+
+<figure className="my-8">
+<img src="/projects/weedspayments/02-europa.webp" alt="Seccion 'Una pasarela que crece donde tu creces' con estadisticas (mas de 232 tiendas activas en 8 paises, 7 dias de activacion, 24/7 soporte, 97% gestionado) y un mapa de Europa hecho a medida con puntos verdes por pais mostrando el numero de tiendas en Alemania, Espana, Suiza, Francia, Italia, Chequia, Reino Unido e Irlanda" className="w-full rounded-lg border border-border" loading="lazy" />
+<figcaption className="text-center text-sm text-muted-foreground">La seccion de alcance: estadisticas + un mapa de Europa dibujado a medida (SVG) con un punto por pais. Comunica "ya operamos en toda Europa" de un vistazo.</figcaption>
+</figure>
+
+<figure className="my-8">
+<img src="/projects/weedspayments/03-showcase.webp" alt="Seccion 'Cobra online y gestiona desde un solo lugar' con dos tarjetas: un mockup de checkout (Shopify/WooCommerce/PrestaShop con Visa, Apple Pay, Google Pay) y un mockup de panel con volumen procesado, grafica de ventas y desglose por metodo de pago" className="w-full rounded-lg border border-border" loading="lazy" />
+<figcaption className="text-center text-sm text-muted-foreground">El producto, mostrado con mockups: checkout multi-plataforma y un panel de ventas y payouts. Vende la experiencia sin exponer el backend real.</figcaption>
+</figure>
+
+<figure className="my-8">
+<img src="/projects/weedspayments/04-compara.webp" alt="Tabla comparativa 'WeedsPayments vs procesadores genericos' por filas: tiendas de Cannabis/CBD, retencion de fondos, catalogo completo, activacion, soporte y contrato, con la ventaja de WeedsPayments en verde frente al procesador generico" className="w-full rounded-lg border border-border" loading="lazy" />
+<figcaption className="text-center text-sm text-muted-foreground">La comparativa: fila por fila contra un procesador generico. En un nicho de confianza, esta tabla es la que cierra.</figcaption>
+</figure>
+
+## La parte tecnica
+
+El sitio es **estatico por diseno** -- no hay servidor que renderice en cada visita
+-- pero con interactividad puntual donde hace falta. Esa es la arquitectura de
+**Astro con islas de React**: el HTML se genera en build y se sirve plano; solo los
+componentes que necesitan estado (el carrusel de testimonios, el FAQ, el formulario
+de onboarding, el switch de idioma) cargan JavaScript. El resto es cero JS.
+
+- **Astro + islas de React** -- paginas estaticas y rapidas; React solo en los
+  fragmentos interactivos, no en toda la pagina.
+- **Internacionalizacion real, 6 idiomas** -- es, de, fr, it, en y cs, con rutas por
+  idioma (`/es`, `/de`, ...) y un sitemap multilingue. El mercado es Europa, asi que
+  el idioma no es un adorno: es parte del producto.
+- **Mapa de Europa a medida** -- no es una imagen ni una libreria de mapas pesada,
+  sino un SVG propio con un punto posicionado por pais. Liviano y exactamente con el
+  estilo del sitio.
+- **Animaciones en CSS** -- microinteracciones y transiciones hechas con CSS (no
+  librerias de animacion pesadas), que dan vida a la pagina sin costar rendimiento.
+- **Tailwind CSS v4** para el sistema visual (el tema oscuro, el acento verde, la
+  tipografia) y **TypeScript** en todo el codigo.
+- **Blog con RSS** y paginas legales generadas desde contenido.
+
+Sobre esa base se cuidan las dos cosas que de verdad mueven la aguja en un landing de
+captacion:
+
+- **Rendimiento y SEO.** Al ser estatico, el sitio carga al instante y obtiene
+  **puntajes altos en Lighthouse** y buenas metricas de Core Web Vitals -- lo que
+  importa cuando llega trafico internacional desde anuncios y cuando Google rankea.
+  Sitemap multilingue, metadatos por idioma y HTML semantico completan el SEO.
+- **Medicion real.** Integracion con **Google Analytics** y **Microsoft Clarity**
+  (mapas de calor y grabaciones de sesion) para ver no solo cuanta gente llega, sino
+  que hace en la pagina y donde se traba.
+- **Onboarding conectado al seguimiento.** El formulario de alta no es un `mailto`:
+  los datos del prospecto entran a un sistema propio de seguimiento, de modo que cada
+  solicitud de instalacion queda registrada para darle continuidad comercial -- la
+  pieza del sitio que lo vuelve una herramienta de captacion, no solo un folleto.
+
+El resultado es un sitio que **carga al instante**, rankea, mide lo que pasa y
+**convierte** trafico en prospectos con seguimiento -- y que se mantiene como
+contenido, sin un CMS pesado detras.
+
+## La leccion
+
+Para un landing de conversion, la tentacion es alcanzar un framework full-stack y
+renderizar todo en el servidor. Aqui el camino fue el contrario: **estatico por
+defecto, JavaScript solo donde aporta**. Astro con islas da exactamente eso -- la
+velocidad de una pagina plana con la interactividad de una app justo en los puntos
+que la necesitan. En un nicho donde la primera impresion tiene que vencer anos de
+desconfianza, que el sitio cargue al instante y se vea impecable en seis idiomas no
+es un detalle: es parte del argumento de venta.

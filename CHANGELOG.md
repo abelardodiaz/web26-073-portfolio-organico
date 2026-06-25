@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.20.0] - 2026-06-25
+
+### Added
+- Pagina de proyecto: "WeedsPayments" (categoria portfolio), case study del sitio
+  publico de una pasarela de pagos para Cannabis/CBD en Europa. Framing "sitio como
+  cliente": solo la web de marketing, sin tocar el backend de pagos ni la infra.
+  Landing multilingue (6 idiomas) en Astro + islas de React + Tailwind v4, con mapa
+  de Europa SVG a medida, animaciones CSS, SEO/sitemap multilingue, alto Lighthouse,
+  GA + Microsoft Clarity, blog/RSS y onboarding conectado a seguimiento de prospectos.
+  4 capturas del sitio en vivo + thumbnail. Enlace a weedspayments.com.
+
 ## [0.19.0] - 2026-06-25
 
 ### Added
