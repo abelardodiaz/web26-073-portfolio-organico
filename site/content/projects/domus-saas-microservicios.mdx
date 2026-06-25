@@ -1,0 +1,171 @@
+---
+title: "Domus Rentas: de un sitio de rentas a un SaaS multi-tenant en 9 microservicios"
+slug: "domus-saas-microservicios"
+description: "Caso de estudio de Domus Rentas, una plataforma de renta de propiedades en produccion, y su evolucion a un SaaS multi-tenant construido como una arquitectura de 9 microservicios poliglota -- Django donde conviene, FastAPI donde el tiempo real importa -- con un frontend Next.js que actua de gateway. PostgreSQL, Redis y Docker."
+stack: ["django", "fastapi", "nextjs", "postgresql", "redis", "docker"]
+category: "portfolio"
+featured: false
+date: "2026-06-25"
+thumbnail: "/projects/domus-saas-microservicios/01-home-thumb.webp"
+links:
+  - label: "Sitio: domusrentas.com"
+    url: "https://domusrentas.com"
+---
+
+## Que es
+
+**Domus Rentas** es una plataforma de renta de propiedades **en produccion**: la cara
+publica es un sitio donde la gente busca casas amuebladas para estancias largas, ve
+fotos, precios y servicios incluidos, y agenda una cita. Por debajo, esa plataforma se
+construyo como un **SaaS multi-tenant**: cada inmobiliaria o administrador es un
+inquilino (tenant) aislado dentro del mismo sistema, con sus propiedades, sus agentes,
+sus contactos y su configuracion.
+
+Pero lo interesante no es el CRUD de propiedades -- es **como esta construido por
+dentro**: no es un monolito, son **nueve microservicios** que se reparten el trabajo,
+cada uno con su propia responsabilidad, su propio framework y su propia base de datos
+logica.
+
+<figure className="my-8">
+<img src="/projects/domus-saas-microservicios/01-home.png" alt="Pagina principal de Domus Rentas: hero con casas para renta de larga estancia y navegacion a propiedades y agendar cita" className="w-full rounded-lg border border-border" loading="lazy" />
+<figcaption className="text-center text-sm text-muted-foreground">La cara publica del producto en produccion: el sitio donde se buscan y agendan rentas.</figcaption>
+</figure>
+
+## Para quien es y que resuelve
+
+Para una inmobiliaria o un administrador de propiedades, el dolor no es tener un
+formulario de "alta de propiedad" -- es que **todo vive en lugares distintos**: las
+propiedades en una hoja, los contactos en el telefono, las conversaciones en WhatsApp,
+los recordatorios en la cabeza de alguien. Domus junta todo eso en una sola plataforma
+donde cada cliente trabaja aislado del resto:
+
+- **Catalogo de propiedades** con tipos, estados y agentes asignados.
+- **Chat en tiempo real** con los contactos, multicanal, sin salir de la plataforma.
+- **Notificaciones** por email, SMS, push, WhatsApp, Telegram o dentro de la app.
+- **Multimedia** de cada propiedad (fotos con marca de agua automatica).
+- **Metricas y reportes** del negocio.
+- **Tareas programadas** que corren solas (recordatorios, limpiezas, sincronizaciones).
+
+Todo eso, **separado por tenant**: lo que ve y configura una inmobiliaria nunca se
+mezcla con el de otra.
+
+<figure className="my-8">
+<img src="/projects/domus-saas-microservicios/02-propiedades.png" alt="Listado publico de propiedades en Domus Rentas: tarjetas con foto, precio mensual, recamaras, banos, metros y servicios incluidos" className="w-full rounded-lg border border-border" loading="lazy" />
+<figcaption className="text-center text-sm text-muted-foreground">El catalogo publico: cada propiedad con foto (marca de agua automatica del media-service), precio, caracteristicas y servicios incluidos.</figcaption>
+</figure>
+
+## La arquitectura: nueve microservicios
+
+En lugar de un solo backend que lo hace todo, Domus parte el problema en servicios
+independientes. Un frontend Next.js actua de **gateway**: reescribe cada llamada al
+microservicio que corresponde, asi el navegador habla con una sola URL y por dentro el
+trafico se reparte.
+
+<figure className="my-8">
+<svg viewBox="0 0 680 400" className="w-full h-auto text-primary" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Arquitectura de microservicios: frontend Next.js como gateway sobre nueve servicios backend, con PostgreSQL y Redis">
+  <rect x="180" y="14" width="320" height="44" rx="8" stroke="currentColor" strokeWidth="2" fill="currentColor" fillOpacity="0.06" />
+  <text x="340" y="34" textAnchor="middle" fill="currentColor" fontSize="14" fontWeight="700">Frontend Next.js</text>
+  <text x="340" y="50" textAnchor="middle" fill="currentColor" fontSize="11" opacity="0.7">gateway: rewrites a cada servicio</text>
+
+  <line x1="340" y1="58" x2="340" y2="78" stroke="currentColor" strokeWidth="2" opacity="0.5" />
+
+  <text x="60" y="96" fill="currentColor" fontSize="10" fontWeight="700" opacity="0.7">DJANGO + DRF</text>
+  <text x="500" y="96" fill="currentColor" fontSize="10" fontWeight="700" opacity="0.7">FASTAPI</text>
+
+  <g fontSize="11" fontWeight="600">
+    <rect x="20" y="104" width="125" height="40" rx="6" stroke="currentColor" strokeWidth="1.5" fill="currentColor" fillOpacity="0.04" />
+    <text x="82" y="122" textAnchor="middle" fill="currentColor">auth</text>
+    <text x="82" y="136" textAnchor="middle" fill="currentColor" fontSize="9" opacity="0.6">JWT, usuarios, roles</text>
+
+    <rect x="155" y="104" width="125" height="40" rx="6" stroke="currentColor" strokeWidth="1.5" fill="currentColor" fillOpacity="0.04" />
+    <text x="217" y="122" textAnchor="middle" fill="currentColor">properties</text>
+    <text x="217" y="136" textAnchor="middle" fill="currentColor" fontSize="9" opacity="0.6">propiedades</text>
+
+    <rect x="20" y="152" width="125" height="40" rx="6" stroke="currentColor" strokeWidth="1.5" fill="currentColor" fillOpacity="0.04" />
+    <text x="82" y="170" textAnchor="middle" fill="currentColor">agents</text>
+    <text x="82" y="184" textAnchor="middle" fill="currentColor" fontSize="9" opacity="0.6">agentes inmobiliarios</text>
+
+    <rect x="155" y="152" width="125" height="40" rx="6" stroke="currentColor" strokeWidth="1.5" fill="currentColor" fillOpacity="0.04" />
+    <text x="217" y="170" textAnchor="middle" fill="currentColor">admin</text>
+    <text x="217" y="184" textAnchor="middle" fill="currentColor" fontSize="9" opacity="0.6">config por tenant</text>
+
+    <rect x="20" y="200" width="125" height="40" rx="6" stroke="currentColor" strokeWidth="1.5" fill="currentColor" fillOpacity="0.04" />
+    <text x="82" y="218" textAnchor="middle" fill="currentColor">media</text>
+    <text x="82" y="232" textAnchor="middle" fill="currentColor" fontSize="9" opacity="0.6">archivos, watermark</text>
+
+    <rect x="155" y="200" width="125" height="40" rx="6" stroke="currentColor" strokeWidth="1.5" fill="currentColor" fillOpacity="0.04" />
+    <text x="217" y="218" textAnchor="middle" fill="currentColor">analytics</text>
+    <text x="217" y="232" textAnchor="middle" fill="currentColor" fontSize="9" opacity="0.6">metricas, reportes</text>
+
+    <rect x="155" y="248" width="125" height="40" rx="6" stroke="currentColor" strokeWidth="1.5" fill="currentColor" fillOpacity="0.04" />
+    <text x="217" y="266" textAnchor="middle" fill="currentColor">cron</text>
+    <text x="217" y="280" textAnchor="middle" fill="currentColor" fontSize="9" opacity="0.6">tareas programadas</text>
+
+    <rect x="400" y="104" width="135" height="40" rx="6" stroke="currentColor" strokeWidth="1.5" fill="currentColor" fillOpacity="0.09" />
+    <text x="467" y="122" textAnchor="middle" fill="currentColor">chat</text>
+    <text x="467" y="136" textAnchor="middle" fill="currentColor" fontSize="9" opacity="0.6">WebSocket, tiempo real</text>
+
+    <rect x="400" y="152" width="135" height="40" rx="6" stroke="currentColor" strokeWidth="1.5" fill="currentColor" fillOpacity="0.09" />
+    <text x="467" y="170" textAnchor="middle" fill="currentColor">notifications</text>
+    <text x="467" y="184" textAnchor="middle" fill="currentColor" fontSize="9" opacity="0.6">email, push, WhatsApp...</text>
+  </g>
+
+  <rect x="20" y="320" width="260" height="44" rx="8" stroke="currentColor" strokeWidth="2" fill="currentColor" fillOpacity="0.06" />
+  <text x="150" y="347" textAnchor="middle" fill="currentColor" fontSize="13" fontWeight="700">PostgreSQL</text>
+
+  <rect x="400" y="320" width="260" height="44" rx="8" stroke="currentColor" strokeWidth="2" fill="currentColor" fillOpacity="0.06" />
+  <text x="530" y="347" textAnchor="middle" fill="currentColor" fontSize="13" fontWeight="700">Redis</text>
+
+  <line x1="150" y1="300" x2="150" y2="320" stroke="currentColor" strokeWidth="2" opacity="0.4" />
+  <line x1="530" y1="300" x2="530" y2="320" stroke="currentColor" strokeWidth="2" opacity="0.4" />
+</svg>
+<figcaption className="text-center text-sm text-muted-foreground">Nueve servicios, dos frameworks, un gateway. El frontend Next.js reescribe cada peticion al servicio que corresponde; abajo, PostgreSQL y Redis compartidos.</figcaption>
+</figure>
+
+Cada servicio se puede desplegar, escalar y actualizar **por separado**: si el chat
+recibe mucho trafico, se escala solo el chat, sin tocar el resto. Y cada uno sigue la
+misma **arquitectura limpia** por dentro -- modelos, servicios (logica de negocio) y
+routers separados -- asi el codigo de un servicio se lee igual que el de cualquier
+otro.
+
+## Poliglota: Django donde conviene, FastAPI donde el tiempo real importa
+
+No todos los servicios necesitan lo mismo, asi que no todos usan el mismo framework:
+
+- **Django + DRF** para lo que es CRUD y reglas de negocio con mucho modelo: auth,
+  propiedades, agentes, administracion, multimedia, analytics y cron. El admin de
+  Django y el ORM aceleran todo eso.
+- **FastAPI** para lo que necesita **concurrencia y baja latencia**: el chat
+  (WebSocket, mensajes en tiempo real) y las notificaciones (envios asincronos a
+  multiples canales). Async de punta a punta con SQLAlchemy.
+
+La gracia de los microservicios es precisamente esa: **cada servicio elige la
+herramienta adecuada** sin obligar a todo el sistema a casarse con una sola.
+
+## Multi-tenant de verdad
+
+Ser "multi-tenant" no es solo poner un `tenant_id` en una tabla. En Domus, el
+**admin-service** centraliza la configuracion por tenant -- ajustes, SMTP, plantillas
+de correo -- de modo que cada cliente personaliza su instancia sin afectar a los demas,
+y los servicios consultan esa configuracion para comportarse distinto segun el tenant.
+El aislamiento es una propiedad del sistema, no un campo que alguien recuerda filtrar.
+
+## Stack
+
+- **Backend (CRUD + dominio):** Django + Django REST Framework -- auth, propiedades,
+  agentes, admin, media, analytics, cron.
+- **Backend (tiempo real):** FastAPI con SQLAlchemy async -- chat (WebSocket) y
+  notificaciones multicanal.
+- **Frontend / gateway:** Next.js, que reescribe cada llamada al microservicio
+  correspondiente.
+- **Datos:** PostgreSQL como base principal y Redis para cache y mensajeria.
+- **Infra:** Docker -- cada servicio en su contenedor, orquestados juntos.
+
+## La leccion
+
+Partir un sistema en microservicios no es gratis: hay mas piezas que coordinar, mas
+despliegues, mas observabilidad que cuidar. Pero para un SaaS multi-tenant que tiene
+que crecer por partes -- mas chat aqui, mas reportes alla -- pagar ese costo compra dos
+cosas dificiles de conseguir en un monolito: **escalar solo lo que lo necesita** y
+**elegir la herramienta correcta para cada problema** (Django para el dominio, FastAPI
+para el tiempo real) sin que una decision arrastre a todo el sistema.

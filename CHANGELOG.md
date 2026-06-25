@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.17.0] - 2026-06-25
+
+### Added
+- Pagina de proyecto: "Domus Rentas" (web25-031), case study de una plataforma de
+  renta de propiedades en produccion y su evolucion a un SaaS multi-tenant construido
+  como 9 microservicios poliglota (Django+DRF para CRUD/dominio, FastAPI para chat
+  WebSocket y notificaciones), frontend Next.js como gateway, PostgreSQL + Redis +
+  Docker. Diagrama SVG inline de la arquitectura + 2 capturas del sitio publico en
+  vivo (home y propiedades). category: portfolio, con link vivo a domusrentas.com y
+  thumbnail webp.
+
+### Changed
+- sanitize_check.py: se retira la regla `domusrentas` (era "Client domain"). Es un
+  sitio publico, en produccion y propiedad del autor -> permitido en el portfolio.
+  Se mantienen bloqueados los identificadores de infra interna (hostnames, IPs,
+  codigos de proyecto), que no son visibles desde el sitio publico.
+
 ## [0.16.2] - 2026-06-25
 
 ### Added

@@ -28,7 +28,7 @@ SENSITIVE_PATTERNS = [
     (r"server00[2-9]", "Internal server hostname"),
     (r"srv\d{3}", "Internal server hostname"),
     (r"redv6\.com", "Internal domain"),
-    (r"domusrentas", "Client domain"),
+    # domusrentas.com: sitio publico y en produccion, propiedad del autor -> permitido en portfolio
     (r"quierounenlace", "Client domain"),
 
     # API Keys
