@@ -3,7 +3,7 @@ title: "Tienda Django Sync: un ecommerce que se sincroniza solo con Syscom"
 slug: "tienda-django-sync"
 description: "Caso de estudio de una tienda online cuyo verdadero motor no es el storefront, sino la sincronizacion automatica de catalogo, precios, inventario y tipo de cambio contra Syscom, un mayorista de tecnologia. Django + Next.js + Docker."
 stack: ["django", "nextjs", "docker", "postgresql", "celery"]
-category: "fullstack"
+category: "portfolio"
 featured: false
 date: "2026-06-24"
 ---
@@ -110,9 +110,10 @@ solo hasta que un dia dejo de hacerlo y nadie se entero".
 
 ## Stack
 
-- **Backend:** Django (Python) -- modelos de catalogo, los jobs de sincronizacion
-  y la integracion con la API de Syscom.
-- **Frontend:** Next.js -- el panel de administracion y el storefront.
+- **Backend + panel admin:** Django (Python) -- modelos de catalogo, los jobs de
+  sincronizacion, la integracion con la API de Syscom y el panel de administracion
+  (server-rendered con templates de Django).
+- **Storefront:** Next.js -- la vitrina publica, que consume la API de Django.
 - **Infra:** Docker para empaquetar y desplegar de forma reproducible.
 - **Datos:** PostgreSQL para el catalogo e historial de sincronizaciones.
 

@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.16.1] - 2026-06-24
+
+### Changed
+- Categoria "portfolio" como agrupador compartible de los case studies de proyectos
+  reales: agente-080 y tienda-django-sync pasan a `category: portfolio` (antes ai /
+  fullstack) y multi-ai-provider-patterns tambien; se suman a portfolio-organico.
+  Quedan listables en https://abelardodiaz.dev/projects/categoria/portfolio. Las tech
+  tags reales siguen en el campo `stack`.
+- Fix de fidelidad en el Stack de Tienda Django Sync: el panel de administracion es
+  Django server-rendered (no Next.js). Ahora: backend + panel admin = Django;
+  storefront = Next.js que consume la API de Django.
+
 ## [0.16.0] - 2026-06-24
 
 ### Added
