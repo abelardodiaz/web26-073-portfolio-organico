@@ -1,38 +1,98 @@
 ---
-title: "Portfolio Organico"
+title: "abelardodiaz.dev: este portfolio, construido como producto"
 slug: "portfolio-organico"
-description: "Portfolio site + micro-repos + content pipeline para construir presencia publica tecnica de forma organica."
-stack: ["next.js", "typescript", "tailwind", "python", "vercel"]
-github: "https://github.com/abelardodiaz"
+description: "El sitio que estas viendo. Un portfolio tecnico en Next.js 16 con un sistema de temas dual (editorial y terminal), contenido como codigo (MDX/YAML, sin CMS ni base de datos) y un pipeline de publicacion seguro. Privado, desplegado en Vercel."
+stack: ["nextjs", "react", "typescript", "tailwind", "mdx", "vercel"]
 category: "portfolio"
 featured: false
 date: "2026-03-17"
+thumbnail: "/projects/portfolio-organico/00-thumb.webp"
+links:
+  - label: "Sitio en vivo: abelardodiaz.dev"
+    url: "https://abelardodiaz.dev"
 ---
 
 ## Que es
 
-Un sistema completo para construir presencia publica tecnica de forma organica:
+El sitio que estas viendo ahora mismo. **abelardodiaz.dev** es un portfolio tecnico
+tratado como un producto de verdad: codigo privado, desplegado en Vercel, con su
+propio sistema de diseno, su pipeline de contenido y sus controles de seguridad antes
+de cada publicacion. No es una plantilla generica ni un perfil de LinkedIn: es una
+pieza de ingenieria en si misma.
 
-- **Portfolio site** con Next.js 16, Tailwind v4 y shadcn/ui
-- **Python tools** para extraccion y sanitizacion de contenido
-- **Templates** reutilizables para micro-repos, TILs y posts sociales
-- **Content pipeline** basado en archivos (MDX/YAML, sin CMS ni base de datos)
+<figure className="my-8">
+<img src="/projects/portfolio-organico/01-hero-editorial.webp" alt="Home de abelardodiaz.dev en tema editorial (oscuro, acento naranja): titular 'Construyo agentes de IA que trabajan mientras tu duermes' con navegacion, CTA y secciones de proyectos" className="w-full rounded-lg border border-border" loading="lazy" />
+<figcaption className="text-center text-sm text-muted-foreground">El home en su tema "editorial": tipografia serif, acento calido, lectura tipo revista.</figcaption>
+</figure>
 
-## Decisiones tecnicas
+## El detalle que lo distingue: dos temas, no uno
 
-- **Next.js 16 App Router** con Server Components por defecto para maximo performance
-- **Tailwind CSS v4** con tokens OKLCH para dark mode nativo
-- **Contenido como codigo**: MDX y YAML en git, versionado junto al sitio
-- **Seguridad**: Pre-commit hooks con gitleaks + sanitize_check.py customizado (30+ regex patterns)
-- **Hybrid deploy**: sitio en Vercel, tools locales en Python
+El sitio tiene **dos personalidades completas** que el visitante puede alternar:
 
-## Stack completo
+- **Editorial** -- serif, tonos calidos, aire de revista. Para quien quiere leer.
+- **Terminal** -- monospace, verde sobre negro, prompts `~$` y botones como
+  `git clone proyectos`. Para quien vive en la consola.
+
+No es un simple dark/light: son dos sistemas de diseno distintos (tipografia, color,
+copy, microcomponentes) que conviven sobre el mismo contenido, implementados con
+variantes de Tailwind (`editorial:` / `terminal:`) y tokens de color en OKLCH. El
+mismo HTML, dos lecturas.
+
+<figure className="my-8">
+<img src="/projects/portfolio-organico/02-hero-terminal.webp" alt="El mismo home en tema terminal: monospace, verde sobre negro, prompt '~$ abelardodiaz.dev', titular 'Agentes de IA que trabajan mientras tu duermes. Zero downtime.' y botones estilo consola" className="w-full rounded-lg border border-border" loading="lazy" />
+<figcaption className="text-center text-sm text-muted-foreground">El mismo home en tema "terminal": monospace, verde, prompts de consola. Mismo contenido, otra identidad por completo.</figcaption>
+</figure>
+
+## Contenido como codigo, sin CMS
+
+Detras no hay base de datos ni CMS. Todo el contenido -- los **case studies** de
+proyectos, los **TILs** (today I learned) y el **blog** -- vive como archivos
+**MDX/YAML en git**, versionado junto al sitio. Eso permite escribir prosa con
+componentes (figuras, tablas, diagramas SVG) y que cada pieza se prerenderice estatica
+en build: rapida de servir y trivial de cachear.
+
+Sobre ese contenido el sitio arma vistas: una portada con lo destacado, un **catalogo
+de proyectos filtrable por categoria**, paginas de case study, e indices de TILs y
+blog. Las tarjetas de proyecto muestran miniatura, stack y categoria.
+
+<figure className="my-8">
+<img src="/projects/portfolio-organico/03-portfolio-grid.webp" alt="Catalogo de proyectos en la categoria portfolio: grid de tarjetas con miniatura, titulo, descripcion, stack y categoria para Domus Rentas, WeedsPayments, Agente 080, SimulaBnB, Tienda Django Sync, Call Blocker y mas" className="w-full rounded-lg border border-border" loading="lazy" />
+<figcaption className="text-center text-sm text-muted-foreground">El catalogo de proyectos (categoria "portfolio"): cada case study es un archivo MDX con su miniatura, stack y enlaces.</figcaption>
+</figure>
+
+<figure className="my-8">
+<img src="/projects/portfolio-organico/04-project-page.webp" alt="Una pagina de case study renderizada: titulo, descripcion, badges de categoria y 'Repo Privado', tags de stack, y el cuerpo MDX con figuras" className="w-full rounded-lg border border-border" loading="lazy" />
+<figcaption className="text-center text-sm text-muted-foreground">Una pagina de case study: el frontmatter alimenta badges, stack y enlaces; el cuerpo MDX mezcla prosa, figuras y tablas.</figcaption>
+</figure>
+
+## Publicar sin romper nada
+
+Un portfolio que se actualiza seguido necesita un proceso, no improvisacion. El flujo
+de publicacion es deliberado:
+
+- **Build local obligatorio** antes de cada push: Vercel prerendea cada pieza, asi que
+  un error de MDX en un solo archivo tumba todo el deploy. El build local lo atrapa
+  antes.
+- **Sanitizacion de seguridad**: un script propio (`sanitize_check.py`) con decenas de
+  patrones (IPs internas, hostnames, claves, codigos de proyecto) corre antes de
+  publicar, complementado con gitleaks. Nada sensible llega al repo publico.
+- **Doble remoto** (GitHub + GitLab) y deploy automatico en Vercel.
+
+## Stack
 
 | Capa | Tecnologia |
 |------|-----------|
-| Framework | Next.js 16 + Turbopack |
-| UI | React 19 + shadcn/ui + Tailwind v4 |
-| Content | MDX + gray-matter |
-| Deploy | Vercel |
-| Tools | Python 3.12 + httpx + rich |
-| Security | gitleaks + sanitize_check.py |
+| Framework | Next.js 16 (App Router) + Turbopack |
+| UI | React 19 + Tailwind CSS v4 (tokens OKLCH) + shadcn/ui |
+| Temas | Sistema dual editorial/terminal con variantes Tailwind |
+| Contenido | MDX + YAML + gray-matter (sin CMS, sin BD) |
+| Deploy | Vercel (privado), doble remoto Git |
+| Seguridad | sanitize_check.py + gitleaks pre-publicacion |
+
+## La leccion
+
+Lo facil habria sido tomar una plantilla de portfolio y rellenarla. En vez de eso, el
+sitio se trata como cualquier otro proyecto serio del catalogo: decisiones de diseno
+propias (dos temas, no uno), contenido versionado como codigo, y un pipeline que evita
+deploys rotos y fugas de datos. Un portfolio que se construye con el mismo rigor que
+muestra es, en si mismo, el mejor argumento.

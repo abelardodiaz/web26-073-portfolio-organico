@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.23.0] - 2026-06-25
+
+### Changed
+- portfolio-organico reusado como case study del SITIO abelardodiaz.dev (privado, en
+  Vercel, badge "Repo Privado", link al sitio). Antes describia el sistema open-source;
+  ahora es la web en si, con 4 capturas (hero editorial, hero terminal -> tema dual,
+  grid de portfolio, pagina de case study) + thumbnail. El template open-source se
+  queda como entrada aparte (categoria template).
+- weedspayments y simulabnb: agregado boton de link en el encabezado ("Sitio en vivo" /
+  "Demo en vivo") via frontmatter `links` (antes el enlace solo estaba en el cuerpo).
+
 ## [0.22.0] - 2026-06-25
 
 ### Changed
