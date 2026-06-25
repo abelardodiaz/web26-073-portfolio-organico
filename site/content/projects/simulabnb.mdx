@@ -1,0 +1,111 @@
+---
+title: "SimulaBnB: cuanto te queda REALMENTE de tu Airbnb (Regimen 625)"
+slug: "simulabnb"
+description: "Caso de estudio de una calculadora fiscal para anfitriones de Airbnb en Mexico bajo el Regimen 625 de Plataformas Tecnologicas. Traduce la maraña de retenciones (ISR, IVA, tarifa de servicio) en una sola cifra: tu ganancia neta. Next.js, 100% offline, instalable como app."
+stack: ["nextjs", "typescript", "tailwind", "pwa"]
+category: "portfolio"
+featured: false
+date: "2026-06-24"
+thumbnail: "/projects/simulabnb/00-thumb.webp"
+---
+
+## Que es
+
+Una calculadora que responde una pregunta que casi ningun anfitrion de Airbnb en
+Mexico tiene clara: **de lo que paga el huesped, ¿cuanto te queda a ti?** Entre la
+tarifa de servicio de la plataforma, el IVA y las retenciones de ISR e IVA del
+**Regimen 625 (Plataformas Tecnologicas)**, el numero que ves en la app de Airbnb
+y el que llega a tu cuenta no se parecen. SimulaBnB hace ese calculo completo y lo
+resume en una sola cifra verde: tu ganancia neta.
+
+<figure className="my-8">
+<img src="/projects/simulabnb/01-landing.webp" alt="Landing de SimulaBnB con el titulo 'Calcula tus ganancias reales' y cuatro features: calcula ganancias, multiples propiedades, historial completo y exporta datos" className="w-full rounded-lg border border-border" loading="lazy" />
+<figcaption className="text-center text-sm text-muted-foreground">SimulaBnB: un simulador de costos y ganancias para el Regimen 625, pensado para anfitriones mexicanos.</figcaption>
+</figure>
+
+[**Ver el demo en vivo →**](https://simulabnb-053.vercel.app/)
+
+## Para quien es y que resuelve
+
+Para alguien que renta una o varias propiedades en Airbnb y quiere saber, **antes
+de aceptar una reserva o fijar una tarifa**, cuanto va a ganar de verdad. El dolor
+no es la falta de datos: es que estan dispersos y nadie los suma bien.
+
+- La tarifa por noche se ve grande, pero hay que restarle la comision de la
+  plataforma (que ademas varia, 12.5% / 15% / 15.5% segun el tipo de anfitrion).
+- El Regimen 625 retiene **ISR e IVA** sobre cada cobro, y casi nadie sabe de
+  memoria los porcentajes.
+- El IVA del cliente, el IVA de la tarifa de servicio y la limpieza enturbian aun
+  mas la cuenta.
+
+SimulaBnB tiene **dos modos** para cubrir los dos perfiles:
+
+<figure className="my-8">
+<img src="/projects/simulabnb/02-calc-simple.webp" alt="Calculadora en modo Simple: tarifa por noche 1800, 3 noches, reserva via Airbnb, y un panel de resultados con ganancia neta de 4,609.40 pesos y el desglose de subtotal, limpieza, total con IVA, deducciones y pago al anfitrion" className="w-full rounded-lg border border-border" loading="lazy" />
+<figcaption className="text-center text-sm text-muted-foreground">Modo Simple: tarifa, noches, ¿es via Airbnb? y listo. La ganancia neta sale al instante, con el desglose basico al lado.</figcaption>
+</figure>
+
+- **Modo Simple** para quien solo quiere un numero rapido: tarifa, noches y si la
+  reserva entra por Airbnb. Una cifra clara y un mini desglose.
+- **Modo Avanzado** para quien quiere ver toda la mecanica fiscal: comision exacta,
+  limpieza, descuentos, comision de administracion y el desglose completo del
+  Regimen 625, retencion por retencion.
+
+## La parte interesante: el desglose fiscal completo
+
+Lo que distingue a esta herramienta de "una multiplicacion en una servilleta" es
+que modela **todo** el Regimen 625, no una aproximacion. El modo Avanzado muestra,
+para cada reserva, las cinco lineas fiscales que normalmente quedan invisibles:
+
+<figure className="my-8">
+<img src="/projects/simulabnb/03-calc-avanzado.webp" alt="Calculadora en modo Avanzado: formulario con comision Airbnb seleccionable, costo de limpieza, descuento y comision de administracion; panel de resultados con ganancia neta y un desglose fiscal del Regimen 625 que lista IVA cliente 16%, retencion ISR 4%, retencion IVA 8%, tarifa servicio 15% e IVA de la tarifa de servicio" className="w-full rounded-lg border border-border" loading="lazy" />
+<figcaption className="text-center text-sm text-muted-foreground">Modo Avanzado: el desglose fiscal del Regimen 625 linea por linea. Cada retencion deja de ser un misterio.</figcaption>
+</figure>
+
+| Concepto | Tasa |
+|---|---|
+| IVA cliente | 16% |
+| Retencion ISR | 4% |
+| Retencion IVA | 8% |
+| Tarifa de servicio Airbnb | 15% (variable) |
+| IVA sobre la tarifa de servicio | 16% de la tarifa |
+
+Toda esa logica vive en un **modulo de calculo puro y testeado** (`calculator.ts`),
+separado de la interfaz: las formulas del Regimen 625 son funciones sin estado, con
+cobertura de pruebas, de modo que el numero en pantalla siempre cuadra al centavo.
+La UI solo pinta lo que el motor calcula.
+
+## Diseñada para vivir en el telefono
+
+Un anfitrion decide tarifas desde el celular, muchas veces sin buena señal. Por eso
+SimulaBnB es **100% offline**: no hay servidor ni base de datos detras de la
+calculadora. Todo corre en el navegador y los datos (propiedades guardadas,
+historial de simulaciones) se quedan en el `localStorage` del dispositivo. Ademas
+es una **PWA instalable**, asi que se comporta como una app nativa en la pantalla
+de inicio.
+
+Sobre esa base offline se montan las comodidades: guardar varias **propiedades**
+con su tarifa y limpieza para no recapturar, un **historial** de simulaciones para
+comparar escenarios, y **exportar** todo a JSON o CSV para respaldo o para abrirlo
+en Excel.
+
+## Stack
+
+- **Framework:** Next.js (App Router) + TypeScript estricto.
+- **Estilos:** Tailwind CSS.
+- **Arquitectura:** monorepo con pnpm workspaces, separando el **core** de calculo
+  fiscal del paquete **web**. El core no sabe nada de React; se puede testear y
+  reusar solo.
+- **Datos:** sin backend. `localStorage` para persistencia, lo que hace la app
+  offline-first e instalable como PWA.
+- **Testing:** Vitest + React Testing Library, con el `calculator.ts` cubierto al
+  100%.
+
+## La leccion
+
+La tentacion en una herramienta asi es meter las formulas directo en los
+componentes "porque es solo una multiplicacion". Aqui la decision fue la contraria:
+**el calculo fiscal es el producto**, la UI es un cliente mas de ese motor. Aislarlo
+en un modulo puro y testeado es lo que permite confiar en la cifra verde —
+y lo que convierte una calculadora bonita en una en la que de verdad te apoyas para
+decidir una tarifa.

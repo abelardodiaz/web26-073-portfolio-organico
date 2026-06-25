@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.18.0] - 2026-06-24
+
+### Added
+- Pagina de proyecto: "SimulaBnB" (categoria portfolio), case study de una calculadora
+  fiscal para anfitriones de Airbnb en Mexico bajo el Regimen 625 (Plataformas
+  Tecnologicas). Encuadre solo de la cara publica del producto (el simulador offline),
+  sin tocar la cara privada de gestion. 3 capturas reales del demo en vivo (landing,
+  calculadora Simple, calculadora Avanzado con desglose fiscal completo) + thumbnail
+  16:9. Enlace al demo publico en Vercel. Stack: Next.js + TypeScript, monorepo pnpm,
+  core de calculo puro testeado, 100% offline (localStorage) e instalable como PWA.
+
+### Tooling
+- Skill `/capturar-pantallas`: receta para tomar screenshots con el Playwright ya
+  montado en WSL (/home/wrr/pw-test) y procesarlos a webp, evitando reconfigurar
+  chromium en Windows. Capturar el elemento `<main>` para recortar navs/footers.
+
 ## [0.17.1] - 2026-06-25
 
 ### Added
