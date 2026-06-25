@@ -6,7 +6,6 @@ import {
   whatsappUrl,
   WHATSAPP_MSG_SERVICIOS,
   WHATSAPP_MSG_AUTOMATIZACION,
-  WHATSAPP_MSG_VPS,
   WHATSAPP_MSG_SITIOS,
 } from "@/lib/whatsapp";
 
@@ -58,7 +57,7 @@ const services: Service[] = [
     price: "A cotizar",
   },
   {
-    waMessage: WHATSAPP_MSG_VPS,
+    href: "/despliegue-vps",
     editorialTitle: "Despliegue y preparacion de servidores",
     terminalTitle: "despliegue-vps",
     desc: "Levanto, aseguro y dejo en produccion tu VPS: hardening, deploy, SSL, monitoreo y respaldos. Sin sorpresas a medianoche.",
