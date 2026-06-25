@@ -71,26 +71,40 @@ de onboarding, el switch de idioma) cargan JavaScript. El resto es cero JS.
   librerias de animacion pesadas), que dan vida a la pagina sin costar rendimiento.
 - **Tailwind CSS v4** para el sistema visual (el tema oscuro, el acento verde, la
   tipografia) y **TypeScript** en todo el codigo.
-- **Blog con RSS** y paginas legales generadas desde contenido.
+- **Blog multilingue como motor de SEO** -- no un blog de adorno, sino un sistema de
+  contenido con las *Content Collections* de Astro: posts en Markdown validados con
+  esquema (Zod), traducidos a los seis idiomas, con paginas de listado, **etiquetas**,
+  paginacion, posts individuales y **RSS por idioma**. Los temas atacan justo las
+  busquedas del nicho (chargebacks CBD, compliance bancario, pagos de cannabis en
+  Europa, WooCommerce vs Shopify), que es como entra trafico organico cualificado.
+- **Paginas legales** generadas desde contenido (sin hardcodear).
 
 Sobre esa base se cuidan las dos cosas que de verdad mueven la aguja en un landing de
 captacion:
 
-- **Rendimiento y SEO.** Al ser estatico, el sitio carga al instante y obtiene
-  **puntajes altos en Lighthouse** y buenas metricas de Core Web Vitals -- lo que
-  importa cuando llega trafico internacional desde anuncios y cuando Google rankea.
-  Sitemap multilingue, metadatos por idioma y HTML semantico completan el SEO.
+- **Rendimiento y SEO.** Al ser estatico, el sitio carga al instante: en Lighthouse
+  (desktop) da **99 en Performance y 100 en Accessibility, Best Practices y SEO**, con
+  un LCP de ~0.9 s y un CLS de 0.004 (practicamente cero salto de layout). Eso importa
+  cuando llega trafico internacional desde anuncios y cuando Google rankea. Sitemap
+  multilingue, metadatos por idioma y HTML semantico completan el SEO.
 - **Medicion real.** Integracion con **Google Analytics** y **Microsoft Clarity**
   (mapas de calor y grabaciones de sesion) para ver no solo cuanta gente llega, sino
   que hace en la pagina y donde se traba.
-- **Onboarding conectado al seguimiento.** El formulario de alta no es un `mailto`:
-  los datos del prospecto entran a un sistema propio de seguimiento, de modo que cada
-  solicitud de instalacion queda registrada para darle continuidad comercial -- la
-  pieza del sitio que lo vuelve una herramienta de captacion, no solo un folleto.
+- **Onboarding por etapas, conectado a un panel interno.** El alta no es un `mailto`:
+  es un formulario **multi-paso** que valida cada etapa antes de avanzar y **registra
+  el embudo** (que paso vio el prospecto, donde abandona). Al completarse, envia los
+  datos a un **panel interno propio** para darle seguimiento comercial -- la pieza del
+  sitio que lo convierte en una herramienta de captacion con continuidad, no solo un
+  folleto. (El panel en si es otro proyecto; aqui solo importa el extremo del sitio.)
 
 El resultado es un sitio que **carga al instante**, rankea, mide lo que pasa y
 **convierte** trafico en prospectos con seguimiento -- y que se mantiene como
 contenido, sin un CMS pesado detras.
+
+<figure className="my-8">
+<img src="/projects/weedspayments/05-lighthouse.webp" alt="Resultado de Lighthouse (desktop) del sitio: 99 en Performance, 100 en Accessibility, 100 en Best Practices y 100 en SEO" className="w-full rounded-lg border border-border bg-white" loading="lazy" />
+<figcaption className="text-center text-sm text-muted-foreground">Lighthouse (desktop) sobre weedspayments.com/es: 99 / 100 / 100 / 100. La arquitectura estatica se paga en metricas.</figcaption>
+</figure>
 
 ## La leccion
 

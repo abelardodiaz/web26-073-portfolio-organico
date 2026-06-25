@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.21.0] - 2026-06-25
+
+### Changed
+- Nav principal: el link "Proyectos" ahora apunta a `/projects/categoria/portfolio`
+  (los case studies, lo que mas interesa) en vez de `/projects`.
+- WeedsPayments: enriquecido el case study -- blog multilingue como motor de SEO
+  (Content Collections + tags + RSS por idioma), onboarding por etapas conectado a
+  un panel interno con tracking de embudo, y **Lighthouse real** (desktop 99/100/100/100,
+  LCP ~0.9s, CLS 0.004) con captura de los gauges.
+
 ## [0.20.0] - 2026-06-25
 
 ### Added

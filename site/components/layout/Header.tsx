@@ -17,7 +17,7 @@ const ThemeToggle = dynamic(
 );
 
 const navItems = [
-  { href: "/projects", editorial: "Proyectos", terminal: "/proyectos" },
+  { href: "/projects/categoria/portfolio", editorial: "Proyectos", terminal: "/proyectos" },
   { href: "/til", editorial: "TIL", terminal: "/til" },
   { href: "/blog", editorial: "Blog", terminal: "/blog" },
   { href: "/diagnostico-ia", editorial: "Servicios", terminal: "/servicios" },
