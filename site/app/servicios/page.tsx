@@ -5,8 +5,6 @@ import { WhatsAppIcon } from "@/components/shared/WhatsAppIcon";
 import {
   whatsappUrl,
   WHATSAPP_MSG_SERVICIOS,
-  WHATSAPP_MSG_AUTOMATIZACION,
-  WHATSAPP_MSG_SITIOS,
 } from "@/lib/whatsapp";
 
 export const metadata: Metadata = {
@@ -50,7 +48,7 @@ const services: Service[] = [
     logo: "/openclaw-logo.svg",
   },
   {
-    waMessage: WHATSAPP_MSG_AUTOMATIZACION,
+    href: "/automatizacion-procesos",
     editorialTitle: "Automatizacion de procesos",
     terminalTitle: "automatizacion-procesos",
     desc: "Bots, cotizadores, reportes automaticos y conexiones entre tus sistemas (CRM, ERP, WhatsApp, n8n). Lo manual deja de comerte el dia.",
@@ -64,7 +62,7 @@ const services: Service[] = [
     price: "A cotizar",
   },
   {
-    waMessage: WHATSAPP_MSG_SITIOS,
+    href: "/sitios-web",
     editorialTitle: "Sitios web y landing pages",
     terminalTitle: "sitios-web",
     desc: "Sitios rapidos y bien construidos (Next.js / Astro), multilingues si lo necesitas, con metricas reales de rendimiento y SEO.",
