@@ -1,0 +1,165 @@
+---
+title: "El orden importa: como preparo un VPS de produccion (y por que el hardening va primero)"
+slug: "preparar-vps-produccion-hardening-primero"
+date: "2026-06-25"
+summary: "Un VPS recien creado recibe ataques de fuerza bruta desde el primer minuto. El error mas comun es instalar el stack primero y asegurar despues. Aqui esta el orden que sigo en produccion: endurecer el acceso antes de instalar nada, con los snippets reales que dejo configurados."
+tags: ["vps", "seguridad", "infraestructura", "devops", "nginx"]
+---
+
+La primera vez que revisas `lastb` en un servidor fresco que llevaba unas horas
+encendido, el numero asusta: **docenas de intentos de login fallidos por minuto**,
+de IPs de medio mundo, probando `root`, `admin`, `ubuntu`, `test`. Nadie sabe que
+tu servidor existe y aun asi ya lo estan tocando. Los bots escanean rangos enteros
+de IP de los proveedores de VPS conocidos y prueban credenciales sin parar.
+
+Por eso el error mas comun al levantar un servidor es el orden: la gente instala
+primero su stack (panel, base de datos, app) y deja la seguridad "para despues".
+Cada servicio que instalas es mas superficie expuesta mientras el servidor sigue
+con la puerta abierta. La regla que sigo es al reves: **endurecer el acceso antes
+de instalar nada**. Asi se ve ese orden.
+
+## Paso 1: SSH, la puerta principal
+
+Lo primero y lo mas importante. Un servidor con login por contrasena habilitado es
+un servidor que, con suficiente tiempo, alguien va a adivinar. La solucion no es
+una contrasena mas larga: es quitar las contrasenas del SSH por completo y dejar
+solo llaves.
+
+Dejo un archivo en `/etc/ssh/sshd_config.d/99-hardening.conf` con lo esencial:
+
+```ini
+PasswordAuthentication no
+PermitRootLogin prohibit-password
+MaxAuthTries 3
+MaxSessions 3
+X11Forwarding no
+AllowAgentForwarding no
+ClientAliveInterval 300
+ClientAliveCountMax 2
+AllowUsers tu-usuario
+```
+
+`PasswordAuthentication no` apaga el vector que los bots explotan todo el dia.
+`PermitRootLogin prohibit-password` evita el login directo de root. `AllowUsers`
+es una lista blanca: aunque alguien tuviera una llave de otra cuenta, no entra si
+no esta aqui. Tambien restrinjo los algoritmos de cifrado a los modernos
+(curve25519, ed25519), pero eso es afinar; lo que de verdad cambia el riesgo es
+apagar las contrasenas.
+
+> **La leccion que se aprende una sola vez:** antes de recargar el SSH, abre una
+> SEGUNDA terminal y comprueba que entras con tu llave: `ssh tu-usuario@tu-servidor 'echo OK'`.
+> Si recargas con la config rota y las contrasenas ya estan apagadas, te quedas
+> fuera de tu propio servidor. Validar primero, recargar despues:
+>
+> ```bash
+> sudo sshd -t && sudo systemctl reload ssh
+> ```
+
+## Paso 2: el firewall, todo cerrado salvo lo necesario
+
+Por defecto un servidor acepta conexiones en cualquier puerto donde haya algo
+escuchando. La postura correcta es la inversa: **negar todo lo entrante y abrir
+solo lo que de verdad usas.**
+
+```bash
+sudo ufw default deny incoming
+sudo ufw default allow outgoing
+sudo ufw allow 22/tcp   comment "SSH"
+sudo ufw allow 80/tcp   comment "HTTP"
+sudo ufw allow 443/tcp  comment "HTTPS"
+sudo ufw enable
+```
+
+Tres puertos. Nada mas. La base de datos no se abre al publico: si vive en otro
+servidor, se llega por una red privada (VPN), no por internet. El panel de
+administracion, si lo hay, se restringe a la VPN en lugar de exponerlo. Cada
+puerto cerrado es una pregunta menos que tienes que responder cuando algo sale
+mal.
+
+Mismo consejo que con SSH: ten una segunda sesion abierta antes de `ufw enable`,
+por si la regla del 22 fallara por algun motivo raro.
+
+## Paso 3: Fail2ban, el portero que aprende
+
+El firewall decide que puertos estan abiertos; Fail2ban decide quien abusa de los
+que estan abiertos. Lee los logs y banea automaticamente las IPs que fallan login
+varias veces seguidas.
+
+```bash
+sudo apt install -y fail2ban nftables
+```
+
+En la configuracion dejo una lista de IPs de confianza que nunca se banean (tu
+propia red, la VPN) y subo el tiempo de baneo para los reincidentes. Es la
+diferencia entre que un bot pruebe 10 veces y se vaya, o que pruebe 10,000 veces
+toda la noche.
+
+Hasta aqui, sin haber instalado todavia tu aplicacion, el servidor ya paso de
+"puerta abierta" a "puerta blindada con camara". **Recien ahora** instalo el
+stack: el servidor web, la version de lenguaje que toque, la base de datos, los
+contenedores.
+
+## Paso 4: HTTPS y cabeceras de seguridad
+
+Con el stack arriba, el sitio sale a internet con certificado SSL valido (Let's
+Encrypt, con renovacion automatica) y un set de cabeceras que aplican a todos los
+sitios del servidor. Las dejo en un archivo global de nginx:
+
+```nginx
+server_tokens off;
+add_header X-Frame-Options "SAMEORIGIN" always;
+add_header X-Content-Type-Options "nosniff" always;
+add_header X-XSS-Protection "1; mode=block" always;
+add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+```
+
+`server_tokens off` deja de anunciar tu version de servidor (menos pistas para un
+atacante). `X-Frame-Options` evita que metan tu sitio en un iframe ajeno
+(clickjacking). `Strict-Transport-Security` obliga a HTTPS y bloquea el downgrade
+a HTTP. Son lineas baratas que cierran clases enteras de ataque.
+
+## Paso 5: bloquear scanners y bots de raspado
+
+Buena parte del trafico automatizado no busca hackearte: busca escanear rutas
+sensibles que nunca deberian ser publicas (`/.git`, `/.env`, paneles de
+administracion) o raspar tu contenido. Con un mapa de user-agents en nginx
+devuelvo un 403 a los scrapers de IA y a los bots de SEO agresivos, y bloqueo las
+rutas que solo sirven para que te tomen huella del sistema.
+
+Tambien dejo, por sitio, un `robots.txt` restrictivo y un `.well-known/security.txt`
+con el contacto de seguridad. No es glamoroso, pero es el tipo de detalle que
+separa un servidor "que funciona" de uno "preparado".
+
+## Paso 6: respaldos, lo unico que importa cuando todo falla
+
+Todo lo anterior reduce la probabilidad de un desastre. Los respaldos son lo que
+te salva cuando el desastre ocurre igual. La configuracion que dejo corriendo:
+
+- **Volcado diario** de archivos y bases de datos.
+- **Copia fuera del servidor**: el backup no sirve de nada si vive en el mismo
+  disco que se corrompio. Se sube a almacenamiento externo (tipo S3).
+- **Rotacion**: varios respaldos diarios mas algunos semanales, para poder volver
+  no solo a ayer, sino a la semana pasada si el problema venia de antes.
+- **Alertas** de disco y memoria, para enterarte de que algo va mal antes de que
+  sea una caida.
+
+Un respaldo que nunca se probo restaurando no es un respaldo: es una esperanza.
+Por eso la entrega incluye una restauracion de prueba.
+
+## El orden, en una linea
+
+```
+SSH (llaves) -> firewall -> fail2ban -> [instalar stack] -> HTTPS + headers -> bloqueo bots -> backups
+```
+
+La tentacion siempre es empezar por el paso 4, porque es el que se ve. Pero los
+tres primeros pasos son los que evitan que tu servidor sea parte de una botnet la
+proxima semana. El hardening no es la parte aburrida que va al final: es el
+cimiento que va al principio.
+
+Este es, resumido y sin los detalles especificos de cada cliente, el mismo proceso
+que aplico cuando alguien me pide
+[dejar un VPS listo para produccion](/despliegue-vps): no un checklist de manual,
+sino el orden que he afinado administrando servidores reales donde una caida
+cuesta dinero.
