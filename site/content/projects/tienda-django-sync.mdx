@@ -1,0 +1,125 @@
+---
+title: "Tienda Django Sync: un ecommerce que se sincroniza solo con Syscom"
+slug: "tienda-django-sync"
+description: "Caso de estudio de una tienda online cuyo verdadero motor no es el storefront, sino la sincronizacion automatica de catalogo, precios, inventario y tipo de cambio contra Syscom, un mayorista de tecnologia. Django + Next.js + Docker."
+stack: ["django", "nextjs", "docker", "postgresql", "celery"]
+category: "fullstack"
+featured: false
+date: "2026-06-24"
+---
+
+## Que es
+
+Una tienda online que revende productos de tecnologia. Pero la parte interesante no
+es la vitrina: es que **revende el catalogo de Syscom** -- un mayorista de
+tecnologia -- y mantiene miles de productos, precios, inventarios y marcas
+sincronizados **solos**, sin que nadie capture datos a mano. El storefront es la
+punta del iceberg; debajo hay un motor de sincronizacion.
+
+<figure className="my-8">
+<img src="/projects/tienda-django-sync/08-front-catalogo.png" alt="Catalogo completo del storefront con filtros laterales por categoria y grid de productos con precio y existencia" className="w-full rounded-lg border border-border" loading="lazy" />
+<figcaption className="text-center text-sm text-muted-foreground">El storefront (datos demo): catalogo completo con filtros por categoria. Cada producto, precio y existencia sale del catalogo sincronizado, no de captura manual.</figcaption>
+</figure>
+
+<figure className="my-8">
+<img src="/projects/tienda-django-sync/09-front-producto.png" alt="Ficha de producto con galeria de imagenes, precio con descuento, existencia, garantia y categorias" className="w-full rounded-lg border border-border" loading="lazy" />
+<figcaption className="text-center text-sm text-muted-foreground">Ficha de producto (datos demo): imagenes, precio con descuento, existencia y garantia, todo heredado del mayorista.</figcaption>
+</figure>
+
+## Para quien es y que resuelve
+
+Para un negocio que revende el catalogo de un distribuidor, el dolor no es vender
+-- es **mantener la tienda al dia**. Hacerlo a mano significa:
+
+- Capturar producto por producto (nombre, modelo, imagenes, descripcion).
+- Revisar precios e inventario que cambian todos los dias del lado del mayorista.
+- Recalcular precios cada vez que se mueve el tipo de cambio, porque Syscom factura
+  en dolares.
+
+Cualquiera de esos tres, hecho a mano, se desactualiza en horas. Esta tienda lo
+automatiza de punta a punta:
+
+- **Alta de productos en un clic.** Busca en el catalogo de Syscom por nombre,
+  modelo o SKU, ve un preview con imagenes, selecciona varios y los importa con
+  toda su informacion -- sin salir del panel.
+- **Precios e inventario siempre frescos.** Una sincronizacion diaria trae precios
+  e inventario del mayorista; la tienda nunca vende algo agotado ni a un precio
+  viejo.
+- **Tipo de cambio automatico.** Cada manana sincroniza el tipo de cambio oficial
+  de Syscom, asi los precios en dolares se convierten a la moneda local con el
+  valor correcto -- sin recalcular nada a mano.
+
+El resultado para el negocio: **una tienda que se mantiene sola**, con catalogo
+completo, precios correctos y cero captura manual.
+
+<figure className="my-8">
+<img src="/projects/tienda-django-sync/05-admin-sincronizar.png" alt="Centro de sincronizacion: busqueda en el catalogo de Syscom con resultados, casillas para seleccionar e importar productos con su ID, marca, existencia y precio en dolares" className="w-full rounded-lg border border-border" loading="lazy" />
+<figcaption className="text-center text-sm text-muted-foreground">Alta en un clic (datos demo): se busca en el catalogo de Syscom, se seleccionan productos y se importan con toda su informacion. Los precios llegan en dolares -- la tienda los convierte con el tipo de cambio del dia.</figcaption>
+</figure>
+
+<figure className="my-8">
+<img src="/projects/tienda-django-sync/11-admin-prueba-syscom.png" alt="Herramienta de prueba que muestra el JSON crudo devuelto por la API de Syscom para un producto: datos basicos e inventarios lado a lado" className="w-full rounded-lg border border-border" loading="lazy" />
+<figcaption className="text-center text-sm text-muted-foreground">La integracion en vivo: el JSON crudo que devuelve la API de Syscom para un producto (datos basicos e inventarios). De aqui salen titulo, modelo, marca, garantia, existencias y categorias que la tienda mapea a su catalogo.</figcaption>
+</figure>
+
+<figure className="my-8">
+<img src="/projects/tienda-django-sync/10-front-categoria.png" alt="Pagina de categoria Videovigilancia con grid de productos, precios con descuento y existencias por modelo" className="w-full rounded-lg border border-border" loading="lazy" />
+<figcaption className="text-center text-sm text-muted-foreground">Una categoria del storefront (datos demo): precios e inventario frescos por modelo, sin captura manual.</figcaption>
+</figure>
+
+## El verdadero motor: orquestacion de sincronizaciones
+
+Lo dificil de "sincronizar todo" es hacerlo **sin saturar** ni al sistema ni a la
+API del mayorista. La tienda trae un **centro de sincronizacion** que orquesta los
+distintos trabajos en horarios escalonados:
+
+<figure className="my-8">
+<img src="/projects/tienda-django-sync/04-admin-gestion.png" alt="Panel de gestion de productos con estado Conectado, boton Sincronizar Inventario y tabla de productos con ID de Syscom, marca, existencia y precio" className="w-full rounded-lg border border-border" loading="lazy" />
+<figcaption className="text-center text-sm text-muted-foreground">Gestion de productos: estado <strong>Conectado</strong> a la API del mayorista y <strong>Sincronizar Inventario</strong> a un clic. Cada fila trae el ID de Syscom, marca, existencia y precio (datos demo).</figcaption>
+</figure>
+
+| Sincronizacion | Horario | Que hace |
+|---|---|---|
+| Productos | 2:00 AM | Precios e inventario desde Syscom |
+| Marcas | 3:00 AM | Logos y descripciones actualizadas |
+| Tipo de cambio | 6:00 AM | Valor oficial del proveedor |
+| Limpieza | Domingos 4:00 AM | Elimina historial antiguo |
+
+Escalonarlos evita empalmes y picos de carga. Y como toda sincronizacion
+automatica termina fallando algun dia, el centro no es una caja negra:
+
+- **Panel de estado en vivo** -- syncs en curso con barra de progreso e items
+  procesados.
+- **Ejecucion manual** -- dispara cualquier sincronizacion cuando haga falta, sin
+  esperar al horario.
+- **Historial con contexto** -- ultimos 30 dias de ejecuciones, con el detalle de
+  cada error para poder diagnosticarlo.
+
+Esa observabilidad es la diferencia entre "se sincroniza solo" y "se sincronizaba
+solo hasta que un dia dejo de hacerlo y nadie se entero".
+
+<figure className="my-8">
+<img src="/projects/tienda-django-sync/07-admin-config.png" alt="Configuracion de la integracion con Syscom: credenciales de la API, token de acceso con estado y fecha de expiracion, y boton para renovar el token" className="w-full rounded-lg border border-border" loading="lazy" />
+<figcaption className="text-center text-sm text-muted-foreground">Configuracion de la integracion (datos demo, credenciales y token ocultos): gestiona las credenciales de Syscom y renueva el token de acceso antes de que expire -- otra pieza que mantiene viva la sincronizacion.</figcaption>
+</figure>
+
+<figure className="my-8">
+<img src="/projects/tienda-django-sync/03-admin-dashboard.png" alt="Panel de administracion con tarjetas de metricas (usuarios, productos, ordenes, ingresos) y gestion de usuarios" className="w-full rounded-lg border border-border" loading="lazy" />
+<figcaption className="text-center text-sm text-muted-foreground">Panel de administracion (datos demo): metricas del negocio y gestion de usuarios sobre el mismo catalogo sincronizado.</figcaption>
+</figure>
+
+## Stack
+
+- **Backend:** Django (Python) -- modelos de catalogo, los jobs de sincronizacion
+  y la integracion con la API de Syscom.
+- **Frontend:** Next.js -- el panel de administracion y el storefront.
+- **Infra:** Docker para empaquetar y desplegar de forma reproducible.
+- **Datos:** PostgreSQL para el catalogo e historial de sincronizaciones.
+
+## La leccion
+
+Muchos ecommerce de reventa se construyen como "una tienda" y la sincronizacion se
+deja para despues, a mano, con un Excel. Aqui el orden es al reves: el producto
+**es** el motor de sincronizacion, y el storefront es lo que sale gratis encima.
+Para un catalogo que cambia todos los dias, esa inversion de prioridades es la
+diferencia entre una tienda viva y una desactualizada.

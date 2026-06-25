@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.16.0] - 2026-06-24
+
+### Added
+- Pagina de proyecto: "Tienda Django Sync" (web25-0019), case study de un ecommerce
+  cuyo motor real es la sincronizacion automatica de catalogo, precios, inventario y
+  tipo de cambio contra Syscom (mayorista, nombrado explicito por decision del autor).
+  Framing comercial + tecnico: alta de productos en un clic, precios/inventario
+  frescos, tipo de cambio automatico, centro de sincronizacion con horarios
+  escalonados y observabilidad. Stack Django + Next.js + Docker + PostgreSQL + Celery.
+- 8 capturas reales vetadas (datos demo, token Syscom enmascarado, sin telefonos
+  reales ni hostnames): catalogo completo, ficha de producto, centro de
+  sincronizacion (busqueda Syscom), JSON crudo de la API de Syscom, pagina de
+  categoria, gestion de productos (Conectado + Sincronizar Inventario), configuracion
+  Syscom, dashboard. Capturas obtenidas reviviendo el stack en server003 (servicios
+  restaurados a su estado original tras capturar).
+
 ## [0.15.0] - 2026-06-24
 
 ### Added
