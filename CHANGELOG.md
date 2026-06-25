@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.16.2] - 2026-06-25
+
+### Added
+- Miniaturas (thumbnails) en las cards de proyectos: campo opcional `thumbnail` en
+  el frontmatter; la card lo renderiza (16:9, object-top) solo si existe. Con portada:
+  agente-080 y tienda-django-sync; el resto se muestra sin imagen, igual que antes.
+- Thumbnails redimensionados al tamano de display real (1024x576 webp, ~20-35 KB)
+  en vez de servir el screenshot full -- mejor calidad y mucho menos peso.
+  Proporciones mantenidas (recorte desde arriba, sin distorsion).
+
 ## [0.16.1] - 2026-06-24
 
 ### Changed

@@ -95,8 +95,19 @@ export function ProjectGrid({ projects, categories, activeCategory }: Props) {
               <Link
                 key={project.slug}
                 href={`/projects/${project.slug}`}
-                className="group block rounded-lg border border-border bg-card p-6 transition-all hover:border-primary hover:shadow-[0_0_0_1px_var(--primary)]"
+                className="group block overflow-hidden rounded-lg border border-border bg-card transition-all hover:border-primary hover:shadow-[0_0_0_1px_var(--primary)]"
               >
+                {project.thumbnail && (
+                  <div className="aspect-video overflow-hidden border-b border-border bg-muted">
+                    <img
+                      src={project.thumbnail}
+                      alt={`Vista previa de ${project.title}`}
+                      className="h-full w-full object-cover object-top transition-transform duration-300 group-hover:scale-[1.03]"
+                      loading="lazy"
+                    />
+                  </div>
+                )}
+                <div className="p-6">
                 <div className="flex items-start justify-between mb-2">
                   <h2 className="text-xl font-semibold tracking-tight">
                     {project.title}
@@ -128,6 +139,7 @@ export function ProjectGrid({ projects, categories, activeCategory }: Props) {
                     {project.date}
                   </span>
                 </div>
+                </div>
               </Link>
             ))}
           </div>
@@ -141,6 +153,17 @@ export function ProjectGrid({ projects, categories, activeCategory }: Props) {
                 className="group grid grid-cols-[4px_1fr] overflow-hidden rounded-md border border-border bg-card transition-all hover:border-primary hover:shadow-[0_0_0_3px_var(--accent-glow)]"
               >
                 <div className="bg-transparent transition-colors group-hover:bg-primary" />
+                <div>
+                {project.thumbnail && (
+                  <div className="aspect-video overflow-hidden border-b border-border bg-muted">
+                    <img
+                      src={project.thumbnail}
+                      alt={`Vista previa de ${project.title}`}
+                      className="h-full w-full object-cover object-top transition-transform duration-300 group-hover:scale-[1.03]"
+                      loading="lazy"
+                    />
+                  </div>
+                )}
                 <div className="p-5 pl-4">
                   <h2 className="text-[15px] font-semibold tracking-tight mb-1.5">
                     {project.title}
@@ -168,6 +191,7 @@ export function ProjectGrid({ projects, categories, activeCategory }: Props) {
                       {project.date}
                     </span>
                   </div>
+                </div>
                 </div>
               </Link>
             ))}

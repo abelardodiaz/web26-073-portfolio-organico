@@ -19,6 +19,7 @@ export type Project = {
   category: string;
   featured: boolean;
   date: string;
+  thumbnail?: string;
   body: string;
 };
 
@@ -173,6 +174,7 @@ export function getAllProjects(): Project[] {
       category: data.category ?? "general",
       featured: data.featured ?? false,
       date: data.date ?? "",
+      thumbnail: data.thumbnail ?? undefined,
       body: content,
     } satisfies Project;
   });
