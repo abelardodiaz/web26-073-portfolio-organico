@@ -20,7 +20,7 @@ const navItems = [
   { href: "/projects/categoria/portfolio", editorial: "Proyectos", terminal: "/proyectos" },
   { href: "/til", editorial: "TIL", terminal: "/til" },
   { href: "/blog", editorial: "Blog", terminal: "/blog" },
-  { href: "/diagnostico-ia", editorial: "Servicios", terminal: "/servicios" },
+  { href: "/servicios", editorial: "Servicios", terminal: "/servicios" },
   { href: "/about", editorial: "About", terminal: "/about" },
   { href: "/contact", editorial: "Contacto", terminal: "/contacto" },
 ];
