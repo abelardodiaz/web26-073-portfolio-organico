@@ -131,7 +131,9 @@ export default function DiagnosticoIAPage() {
   const waUrl = whatsappUrl(WHATSAPP_MSG_DIAGNOSTICO);
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-16">
+    <div className="relative">
+      <div aria-hidden className="hero-bg" />
+      <div className="relative mx-auto max-w-5xl px-4 py-16">
       {/* ══════════════════════════════════════ Editorial ══════════════════════════════════════ */}
       <div className="hidden editorial:block">
         {/* Hero */}
@@ -708,6 +710,7 @@ export default function DiagnosticoIAPage() {
         note={"Sin compromiso · 4 lugares por mes"}
         label="Agendar"
       />
+      </div>
     </div>
   );
 }

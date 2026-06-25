@@ -148,7 +148,9 @@ export default function OpenClawSLPPage() {
   const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${WHATSAPP_MSG}`;
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-16">
+    <div className="relative">
+      <div aria-hidden className="hero-bg" />
+      <div className="relative mx-auto max-w-5xl px-4 py-16">
       {/* ══════════════════════════════════════ Editorial ══════════════════════════════════════ */}
       <div className="hidden editorial:block">
         {/* Hero */}
@@ -527,6 +529,7 @@ export default function OpenClawSLPPage() {
             </ButtonLink>
           </div>
         </section>
+      </div>
       </div>
     </div>
   );
