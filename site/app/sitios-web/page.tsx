@@ -125,7 +125,9 @@ export default function SitiosWebPage() {
   const waUrl = whatsappUrl(WHATSAPP_MSG_SITIOS);
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-16">
+    <div className="relative">
+      <div aria-hidden className="hero-bg" />
+      <div className="relative mx-auto max-w-5xl px-4 py-16">
       {/* ══════════════════════════════════════ Editorial ══════════════════════════════════════ */}
       <div className="hidden editorial:block">
         {/* Hero */}
@@ -384,6 +386,7 @@ export default function SitiosWebPage() {
         note={"Next.js / Astro · Multilingue · SEO"}
         label="Cotizar"
       />
+      </div>
     </div>
   );
 }

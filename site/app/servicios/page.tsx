@@ -3,6 +3,12 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { WhatsAppIcon } from "@/components/shared/WhatsAppIcon";
+import {
+  IconDiagnostico,
+  IconAutomatizacion,
+  IconVps,
+  IconSitios,
+} from "@/components/shared/ServiceIcons";
 import { whatsappUrl, WHATSAPP_MSG_SERVICIOS } from "@/lib/whatsapp";
 
 export const metadata: Metadata = {
@@ -17,43 +23,6 @@ export const metadata: Metadata = {
     type: "website",
   },
 };
-
-// ── Iconos (atributo preatentivo: se reconocen antes de leer) ──
-const iconStroke = {
-  fill: "none",
-  stroke: "currentColor",
-  strokeWidth: 1.7,
-  strokeLinecap: "round" as const,
-  strokeLinejoin: "round" as const,
-};
-
-const IconDiagnostico = (
-  <svg viewBox="0 0 24 24" className="size-6" {...iconStroke}>
-    <path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1" />
-    <circle cx="12" cy="12" r="3" />
-  </svg>
-);
-
-const IconAutomatizacion = (
-  <svg viewBox="0 0 24 24" className="size-6" {...iconStroke}>
-    <path d="M13 2L4.5 13.5H11l-1 8.5L19.5 10.5H13z" />
-  </svg>
-);
-
-const IconVps = (
-  <svg viewBox="0 0 24 24" className="size-6" {...iconStroke}>
-    <rect x="3" y="4" width="18" height="6" rx="1.5" />
-    <rect x="3" y="14" width="18" height="6" rx="1.5" />
-    <path d="M7 7h.01M7 17h.01" />
-  </svg>
-);
-
-const IconSitios = (
-  <svg viewBox="0 0 24 24" className="size-6" {...iconStroke}>
-    <rect x="3" y="4" width="18" height="16" rx="2" />
-    <path d="M3 9h18M6.5 6.5h.01M9 6.5h.01" />
-  </svg>
-);
 
 type Service = {
   href: string;
@@ -70,7 +39,7 @@ type Service = {
 const services: Service[] = [
   {
     href: "/diagnostico-ia",
-    icon: IconDiagnostico,
+    icon: <IconDiagnostico />,
     editorialTitle: "Diagnostico IA",
     terminalTitle: "diagnostico-ia",
     micro: "Encuentro donde tu negocio pierde tiempo y dinero, y te entrego un reporte con oportunidades concretas. Sin compromiso.",
@@ -89,7 +58,7 @@ const services: Service[] = [
   },
   {
     href: "/automatizacion-procesos",
-    icon: IconAutomatizacion,
+    icon: <IconAutomatizacion />,
     editorialTitle: "Automatizacion",
     terminalTitle: "automatizacion",
     micro: "Lo manual, hecho solo",
@@ -98,7 +67,7 @@ const services: Service[] = [
   },
   {
     href: "/despliegue-vps",
-    icon: IconVps,
+    icon: <IconVps />,
     editorialTitle: "Servidores VPS",
     terminalTitle: "despliegue-vps",
     micro: "Seguro y respaldado",
@@ -107,7 +76,7 @@ const services: Service[] = [
   },
   {
     href: "/sitios-web",
-    icon: IconSitios,
+    icon: <IconSitios />,
     editorialTitle: "Sitios web",
     terminalTitle: "sitios-web",
     micro: "Rapidos y bien posicionados",
@@ -120,7 +89,9 @@ export default function ServiciosPage() {
   const waUrl = whatsappUrl(WHATSAPP_MSG_SERVICIOS);
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-16">
+    <div className="relative">
+      <div aria-hidden className="hero-bg" />
+      <div className="relative mx-auto max-w-5xl px-4 py-16">
       {/* ══════════════════════════════════════ Editorial ══════════════════════════════════════ */}
       <div className="hidden editorial:block">
         {/* Hero */}
@@ -319,6 +290,7 @@ export default function ServiciosPage() {
             </a>
           </div>
         </section>
+      </div>
       </div>
     </div>
   );

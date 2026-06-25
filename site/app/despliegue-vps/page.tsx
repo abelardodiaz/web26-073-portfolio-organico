@@ -116,7 +116,9 @@ export default function DespliegueVpsPage() {
   const waUrl = whatsappUrl(WHATSAPP_MSG_VPS);
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-16">
+    <div className="relative">
+      <div aria-hidden className="hero-bg" />
+      <div className="relative mx-auto max-w-5xl px-4 py-16">
       {/* ══════════════════════════════════════ Editorial ══════════════════════════════════════ */}
       <div className="hidden editorial:block">
         {/* Hero */}
@@ -420,6 +422,7 @@ export default function DespliegueVpsPage() {
         note={"Cualquier proveedor · Hardening + backups"}
         label="Cotizar"
       />
+      </div>
     </div>
   );
 }

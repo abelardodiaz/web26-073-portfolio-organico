@@ -4,6 +4,7 @@ import { ButtonLink } from "@/components/shared/ButtonLink";
 import { RotatingLabel } from "@/components/shared/RotatingLabel";
 import { SocialProof } from "@/components/shared/SocialProof";
 import { WhatsAppIcon } from "@/components/shared/WhatsAppIcon";
+import { IconDiagnostico } from "@/components/shared/ServiceIcons";
 import { getAllTils, getAllProjects } from "@/lib/content";
 import { whatsappUrl, WHATSAPP_MSG_GENERAL } from "@/lib/whatsapp";
 
@@ -144,9 +145,14 @@ export default function Home() {
             className="group block rounded-lg border border-border bg-card p-6 transition-all hover:border-primary hover:shadow-[0_0_0_1px_var(--primary)]"
           >
             <div className="flex items-start justify-between mb-2">
-              <h3 className="font-semibold tracking-tight">
-                Diagnostico IA para tu negocio
-              </h3>
+              <div className="flex items-center gap-2">
+                <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+                  <IconDiagnostico className="size-4" />
+                </span>
+                <h3 className="font-semibold tracking-tight">
+                  Diagnostico IA para tu negocio
+                </h3>
+              </div>
               <span className="text-[var(--fg-subtle)] transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-primary">
                 &#8599;
               </span>
@@ -198,9 +204,14 @@ export default function Home() {
           >
             <div className="bg-transparent transition-colors group-hover:bg-primary" />
             <div className="p-5 pl-4">
-              <h3 className="text-[15px] font-semibold tracking-tight mb-1.5">
-                diagnostico-ia
-              </h3>
+              <div className="mb-1.5 flex items-center gap-2">
+                <span className="flex size-6 shrink-0 items-center justify-center rounded border border-border bg-background text-primary">
+                  <IconDiagnostico className="size-3.5" />
+                </span>
+                <h3 className="text-[15px] font-semibold tracking-tight">
+                  diagnostico-ia
+                </h3>
+              </div>
               <p className="mb-2 text-[13px] leading-relaxed text-muted-foreground">
                 Encuentro donde tu empresa pierde tiempo y te muestro como
                 resolverlo con IA. San Luis Potosi.
