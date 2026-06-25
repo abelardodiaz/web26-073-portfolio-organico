@@ -4,6 +4,7 @@ import { Timeline } from "@/components/shared/Timeline";
 import { FaqAccordion } from "@/components/shared/FaqAccordion";
 import { StickyWhatsAppBar } from "@/components/shared/StickyWhatsAppBar";
 import { WhatsAppIcon } from "@/components/shared/WhatsAppIcon";
+import { ArtSitios } from "@/components/shared/ServiceArt";
 import { whatsappUrl, WHATSAPP_MSG_SITIOS } from "@/lib/whatsapp";
 
 export const metadata: Metadata = {
@@ -131,7 +132,10 @@ export default function SitiosWebPage() {
       {/* ══════════════════════════════════════ Editorial ══════════════════════════════════════ */}
       <div className="hidden editorial:block">
         {/* Hero */}
-        <section className="mb-16">
+        <section className="relative mb-16">
+          <div aria-hidden className="pointer-events-none absolute right-0 top-1/2 hidden -translate-y-1/2 text-primary/70 lg:block">
+            <ArtSitios className="size-48" />
+          </div>
           <span className="mb-4 inline-block rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
             Sitios web
           </span>
@@ -251,7 +255,10 @@ export default function SitiosWebPage() {
       {/* ══════════════════════════════════════ Terminal ══════════════════════════════════════ */}
       <div className="hidden terminal:block">
         {/* Hero */}
-        <section className="mb-14">
+        <section className="relative mb-14">
+          <div aria-hidden className="pointer-events-none absolute right-0 top-1/2 hidden -translate-y-1/2 text-primary/55 lg:block">
+            <ArtSitios className="size-44" />
+          </div>
           <div className="mb-6 flex items-center gap-3">
             <h1 className="font-mono text-xs font-semibold uppercase tracking-widest text-[var(--fg-subtle)]">
               // sitios-web
