@@ -28,6 +28,8 @@ type Service = {
   href: string;
   icon?: ReactNode;
   logo?: string;
+  image: string;
+  color: string; // tono por servicio (duotono)
   editorialTitle: string;
   terminalTitle: string;
   micro: string;
@@ -40,6 +42,8 @@ const services: Service[] = [
   {
     href: "/diagnostico-ia",
     icon: <IconDiagnostico />,
+    image: "/services/diagnostico.jpg",
+    color: "#10b981",
     editorialTitle: "Diagnostico IA",
     terminalTitle: "diagnostico-ia",
     micro: "Encuentro donde tu negocio pierde tiempo y dinero, y te entrego un reporte con oportunidades concretas. Sin compromiso.",
@@ -50,6 +54,8 @@ const services: Service[] = [
   {
     href: "/openclaw-slp",
     logo: "/openclaw-logo.svg",
+    image: "/services/openclaw.jpg",
+    color: "#f97316",
     editorialTitle: "OpenClaw 24/7",
     terminalTitle: "openclaw-slp",
     micro: "Un asistente que trabaja solo",
@@ -59,6 +65,8 @@ const services: Service[] = [
   {
     href: "/automatizacion-procesos",
     icon: <IconAutomatizacion />,
+    image: "/services/automatizacion.jpg",
+    color: "#f59e0b",
     editorialTitle: "Automatizacion",
     terminalTitle: "automatizacion",
     micro: "Lo manual, hecho solo",
@@ -68,6 +76,8 @@ const services: Service[] = [
   {
     href: "/despliegue-vps",
     icon: <IconVps />,
+    image: "/services/vps.jpg",
+    color: "#3b82f6",
     editorialTitle: "Servidores VPS",
     terminalTitle: "despliegue-vps",
     micro: "Seguro y respaldado",
@@ -77,6 +87,8 @@ const services: Service[] = [
   {
     href: "/sitios-web",
     icon: <IconSitios />,
+    image: "/services/sitios.jpg",
+    color: "#8b5cf6",
     editorialTitle: "Sitios web",
     terminalTitle: "sitios-web",
     micro: "Rapidos y bien posicionados",
@@ -85,6 +97,91 @@ const services: Service[] = [
   },
 ];
 
+// Card con foto en duotono (color por servicio). Compartida por ambos temas.
+function ServiceCard({ s, terminal }: { s: Service; terminal?: boolean }) {
+  const title = terminal ? s.terminalTitle : s.editorialTitle;
+  return (
+    <Link
+      href={s.href}
+      className={`group relative flex flex-col justify-between overflow-hidden rounded-xl border border-white/10 p-6 transition-all hover:border-white/40 hover:shadow-lg ${s.span}`}
+    >
+      {/* Foto (escala de grises, base del duotono) */}
+      <Image
+        src={s.image}
+        alt=""
+        fill
+        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+        className={`object-cover grayscale transition-transform duration-500 group-hover:scale-105 ${
+          terminal ? "brightness-[.42]" : "brightness-90"
+        }`}
+      />
+      {/* Capa de color (recolorea la foto al tono del servicio) */}
+      <span
+        aria-hidden
+        className="absolute inset-0"
+        style={{ backgroundColor: s.color, mixBlendMode: "color", opacity: 0.62 }}
+      />
+      <span
+        aria-hidden
+        className="absolute inset-0"
+        style={{
+          backgroundColor: s.color,
+          mixBlendMode: terminal ? "multiply" : "soft-light",
+          opacity: terminal ? 0.45 : 0.55,
+        }}
+      />
+      {/* Degradado de legibilidad */}
+      <span
+        aria-hidden
+        className={`absolute inset-0 bg-gradient-to-b ${
+          terminal ? "from-black/25 to-black/65" : "from-black/10 to-black/55"
+        }`}
+      />
+
+      {/* Top: icono + badge/flecha */}
+      <div className="relative z-10 flex items-start justify-between">
+        <span className="flex size-11 items-center justify-center rounded-lg bg-white/15 text-white backdrop-blur-sm">
+          {s.logo ? (
+            <Image src={s.logo} alt="" width={24} height={24} className="animate-wiggle" />
+          ) : (
+            s.icon
+          )}
+        </span>
+        {s.star ? (
+          <span className="rounded-full bg-white px-2.5 py-0.5 text-[11px] font-semibold text-black">
+            El mas pedido
+          </span>
+        ) : (
+          <span className="text-white/70 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-white">
+            &#8599;
+          </span>
+        )}
+      </div>
+
+      {/* Bottom: titulo + microcopy + tag */}
+      <div className="relative z-10">
+        <h2
+          className={`font-semibold tracking-tight text-white ${
+            terminal ? "font-mono" : ""
+          } ${s.star ? "text-2xl" : "text-base"}`}
+        >
+          {title}
+        </h2>
+        <p
+          className={`mt-1 leading-snug text-white/85 ${
+            terminal ? "font-mono text-[13px]" : ""
+          } ${s.star ? "max-w-md text-base" : "text-sm"}`}
+        >
+          {s.micro}
+        </p>
+        <span className="mt-3 inline-block text-xs font-semibold text-white drop-shadow">
+          {s.tag}
+        </span>
+      </div>
+    </Link>
+  );
+}
+
 export default function ServiciosPage() {
   const waUrl = whatsappUrl(WHATSAPP_MSG_SERVICIOS);
 
@@ -92,205 +189,110 @@ export default function ServiciosPage() {
     <div className="relative">
       <div aria-hidden className="hero-bg" />
       <div className="relative mx-auto max-w-5xl px-4 py-16">
-      {/* ══════════════════════════════════════ Editorial ══════════════════════════════════════ */}
-      <div className="hidden editorial:block">
-        {/* Hero */}
-        <section className="mb-10">
-          <span className="mb-4 inline-block rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
-            San Luis Potosi
-          </span>
-          <h1 className="mb-4 font-display text-3xl font-semibold tracking-tight sm:text-[2.75rem] sm:leading-[1.12]">
-            Lo que construyo para que tu negocio{" "}
-            <em className="text-primary">trabaje menos</em>
-          </h1>
-          <p className="max-w-2xl text-lg leading-relaxed text-muted-foreground">
-            Soluciones tecnicas que ya corren en produccion: inteligencia
-            artificial, automatizacion, infraestructura y sitios web.
-          </p>
-        </section>
-
-        {/* Bento */}
-        <section className="mb-14">
-          <div className="grid grid-cols-1 gap-3 sm:auto-rows-[11rem] sm:grid-cols-3">
-            {services.map((s) => (
-              <Link
-                key={s.terminalTitle}
-                href={s.href}
-                className={`group relative flex flex-col justify-between overflow-hidden rounded-xl border border-border bg-card p-6 transition-all hover:border-primary hover:shadow-[0_0_0_1px_var(--primary)] ${s.span}`}
-              >
-                <div className="flex items-start justify-between">
-                  <span className="flex size-11 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                    {s.logo ? (
-                      <Image
-                        src={s.logo}
-                        alt=""
-                        width={24}
-                        height={24}
-                        className="animate-wiggle"
-                      />
-                    ) : (
-                      s.icon
-                    )}
-                  </span>
-                  {s.star ? (
-                    <span className="rounded-full bg-primary px-2.5 py-0.5 text-[11px] font-semibold text-primary-foreground">
-                      El mas pedido
-                    </span>
-                  ) : (
-                    <span className="text-[var(--fg-subtle)] transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-primary">
-                      &#8599;
-                    </span>
-                  )}
-                </div>
-                <div>
-                  <h2
-                    className={`font-semibold tracking-tight ${
-                      s.star ? "text-2xl" : "text-base"
-                    }`}
-                  >
-                    {s.editorialTitle}
-                  </h2>
-                  <p
-                    className={`mt-1 leading-snug text-muted-foreground ${
-                      s.star ? "max-w-md text-base" : "text-sm"
-                    }`}
-                  >
-                    {s.micro}
-                  </p>
-                  <span className="mt-3 inline-block text-xs font-medium text-primary">
-                    {s.tag}
-                  </span>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </section>
-
-        {/* CTA */}
-        <section className="mb-8">
-          <div className="flex flex-col items-start gap-4 rounded-lg border border-border bg-card p-6 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h2 className="mb-1 font-semibold tracking-tight">
-                No sabes cual necesitas?
-              </h2>
-              <p className="text-sm text-muted-foreground">
-                Cuentame que hace tu negocio y te digo por donde empezar.
-              </p>
-            </div>
-            <a
-              href={waUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-primary px-5 py-3 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/85"
-            >
-              <WhatsAppIcon className="size-4" />
-              Hablemos por WhatsApp
-            </a>
-          </div>
-        </section>
-      </div>
-
-      {/* ══════════════════════════════════════ Terminal ══════════════════════════════════════ */}
-      <div className="hidden terminal:block">
-        {/* Hero */}
-        <section className="mb-10">
-          <div className="mb-6 flex items-center gap-3">
-            <h1 className="font-mono text-xs font-semibold uppercase tracking-widest text-[var(--fg-subtle)]">
-              // servicios
-            </h1>
-            <span className="h-px flex-1 bg-border" />
-            <span className="rounded bg-primary/15 px-2 py-0.5 font-mono text-[10px] font-medium text-primary">
-              SLP
+        {/* ══════════════════════════════════════ Editorial ══════════════════════════════════════ */}
+        <div className="hidden editorial:block">
+          {/* Hero */}
+          <section className="mb-10">
+            <span className="mb-4 inline-block rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+              San Luis Potosi
             </span>
-          </div>
-          <p className="mb-3 text-xl font-bold tracking-tight sm:text-2xl">
-            Lo que construyo para que tu negocio trabaje menos
-          </p>
-          <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">
-            Soluciones tecnicas que ya corren en produccion: IA, automatizacion,
-            infraestructura y sitios web.
-          </p>
-        </section>
+            <h1 className="mb-4 font-display text-3xl font-semibold tracking-tight sm:text-[2.75rem] sm:leading-[1.12]">
+              Lo que construyo para que tu negocio{" "}
+              <em className="text-primary">trabaje menos</em>
+            </h1>
+            <p className="max-w-2xl text-lg leading-relaxed text-muted-foreground">
+              Soluciones tecnicas que ya corren en produccion: inteligencia
+              artificial, automatizacion, infraestructura y sitios web.
+            </p>
+          </section>
 
-        {/* Bento */}
-        <section className="mb-14">
-          <div className="grid grid-cols-1 gap-3 sm:auto-rows-[11rem] sm:grid-cols-3">
-            {services.map((s) => (
-              <Link
-                key={s.terminalTitle}
-                href={s.href}
-                className={`group relative flex flex-col justify-between overflow-hidden rounded-md border border-border bg-card p-5 transition-all hover:border-primary hover:shadow-[0_0_0_3px_var(--accent-glow)] ${s.span}`}
-              >
-                <div className="flex items-start justify-between">
-                  <span className="flex size-10 items-center justify-center rounded-md border border-border bg-background text-primary">
-                    {s.logo ? (
-                      <Image
-                        src={s.logo}
-                        alt=""
-                        width={20}
-                        height={20}
-                      />
-                    ) : (
-                      s.icon
-                    )}
-                  </span>
-                  {s.star ? (
-                    <span className="rounded border border-primary bg-primary/10 px-2 py-0.5 font-mono text-[10px] font-medium text-primary">
-                      mas_pedido
-                    </span>
-                  ) : (
-                    <span className="font-mono text-xs text-[var(--fg-subtle)] transition-colors group-hover:text-primary">
-                      &gt;_
-                    </span>
-                  )}
-                </div>
-                <div>
-                  <h2
-                    className={`font-mono font-semibold tracking-tight ${
-                      s.star ? "text-lg" : "text-[13px]"
-                    }`}
-                  >
-                    {s.terminalTitle}
-                  </h2>
-                  <p
-                    className={`mt-1 leading-snug text-muted-foreground ${
-                      s.star ? "max-w-md text-[13px]" : "text-[11px]"
-                    }`}
-                  >
-                    {s.micro}
-                  </p>
-                  <span className="mt-2 inline-block font-mono text-[10px] font-medium tracking-wide text-primary">
-                    {s.tag}
-                  </span>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </section>
-
-        {/* CTA */}
-        <section className="mb-8">
-          <div className="flex flex-col items-start gap-4 rounded-md border border-border bg-card p-5 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="mb-1 font-mono text-sm font-semibold">
-                // no_sabes_cual_necesitas
-              </p>
-              <p className="text-[13px] text-muted-foreground">
-                Cuentame que hace tu negocio y te digo por donde empezar.
-              </p>
+          {/* Bento */}
+          <section className="mb-14">
+            <div className="grid grid-cols-1 gap-3 sm:auto-rows-[11rem] sm:grid-cols-3">
+              {services.map((s) => (
+                <ServiceCard key={s.terminalTitle} s={s} />
+              ))}
             </div>
-            <a
-              href={waUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex shrink-0 items-center gap-2 rounded-md border border-primary bg-primary/10 px-5 py-3 font-mono text-sm font-medium text-primary transition-all hover:bg-primary/20 hover:shadow-[0_0_0_3px_var(--accent-glow)]"
-            >
-              <WhatsAppIcon className="size-4" />
-              ./hablemos.sh
-            </a>
-          </div>
-        </section>
-      </div>
+          </section>
+
+          {/* CTA */}
+          <section className="mb-8">
+            <div className="flex flex-col items-start gap-4 rounded-lg border border-border bg-card p-6 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2 className="mb-1 font-semibold tracking-tight">
+                  No sabes cual necesitas?
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  Cuentame que hace tu negocio y te digo por donde empezar.
+                </p>
+              </div>
+              <a
+                href={waUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-primary px-5 py-3 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/85"
+              >
+                <WhatsAppIcon className="size-4" />
+                Hablemos por WhatsApp
+              </a>
+            </div>
+          </section>
+        </div>
+
+        {/* ══════════════════════════════════════ Terminal ══════════════════════════════════════ */}
+        <div className="hidden terminal:block">
+          {/* Hero */}
+          <section className="mb-10">
+            <div className="mb-6 flex items-center gap-3">
+              <h1 className="font-mono text-xs font-semibold uppercase tracking-widest text-[var(--fg-subtle)]">
+                // servicios
+              </h1>
+              <span className="h-px flex-1 bg-border" />
+              <span className="rounded bg-primary/15 px-2 py-0.5 font-mono text-[10px] font-medium text-primary">
+                SLP
+              </span>
+            </div>
+            <p className="mb-3 text-xl font-bold tracking-tight sm:text-2xl">
+              Lo que construyo para que tu negocio trabaje menos
+            </p>
+            <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">
+              Soluciones tecnicas que ya corren en produccion: IA, automatizacion,
+              infraestructura y sitios web.
+            </p>
+          </section>
+
+          {/* Bento */}
+          <section className="mb-14">
+            <div className="grid grid-cols-1 gap-3 sm:auto-rows-[11rem] sm:grid-cols-3">
+              {services.map((s) => (
+                <ServiceCard key={s.terminalTitle} s={s} terminal />
+              ))}
+            </div>
+          </section>
+
+          {/* CTA */}
+          <section className="mb-8">
+            <div className="flex flex-col items-start gap-4 rounded-md border border-border bg-card p-5 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="mb-1 font-mono text-sm font-semibold">
+                  // no_sabes_cual_necesitas
+                </p>
+                <p className="text-[13px] text-muted-foreground">
+                  Cuentame que hace tu negocio y te digo por donde empezar.
+                </p>
+              </div>
+              <a
+                href={waUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex shrink-0 items-center gap-2 rounded-md border border-primary bg-primary/10 px-5 py-3 font-mono text-sm font-medium text-primary transition-all hover:bg-primary/20 hover:shadow-[0_0_0_3px_var(--accent-glow)]"
+              >
+                <WhatsAppIcon className="size-4" />
+                ./hablemos.sh
+              </a>
+            </div>
+          </section>
+        </div>
       </div>
     </div>
   );
