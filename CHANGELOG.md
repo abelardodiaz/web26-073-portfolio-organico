@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.22.0] - 2026-06-25
+
+### Changed
+- Call Blocker: movido a categoria portfolio + 5 capturas oficiales de F-Droid
+  (datos demo) y thumbnail (montaje de 3 pantallas). Antes no tenia imagenes.
+
 ## [0.21.0] - 2026-06-25
 
 ### Changed

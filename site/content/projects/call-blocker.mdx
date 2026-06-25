@@ -7,9 +7,10 @@ github: "https://github.com/abelardodiaz/web26-050-call-blocker"
 gitlab: "https://gitlab.com/abelardodiaz/web26-050-call-blocker"
 fdroid: "https://f-droid.org/packages/com.callblocker/"
 license: "GPL-3.0"
-category: "mobile"
+category: "portfolio"
 featured: true
 date: "2026-05-18"
+thumbnail: "/projects/call-blocker/00-thumb.webp"
 ---
 
 ## El Problema
@@ -19,6 +20,15 @@ Las apps de bloqueo de llamadas en el Play Store estan llenas de tracking, ads y
 ## La App
 
 App Android nativa que bloquea llamadas con criterios configurables: numeros exactos, prefijos, numeros privados (oculto). Soporta multi-SIM con bloqueo independiente por slot. Backups encriptados con AES-256-GCM derivado de password. UI en espanol/ingles con seleccion in-app. Todo open source bajo GPL-3.
+
+<div className="flex flex-wrap justify-center gap-4 my-8">
+<img src="/projects/call-blocker/01-blocked-calls.webp" alt="Pantalla de llamadas bloqueadas con lista de numeros demo bloqueados, fecha y motivo" className="w-40 rounded-xl border border-border" loading="lazy" />
+<img src="/projects/call-blocker/02-block-list.webp" alt="Lista de bloqueo con reglas por prefijo (800, 553, 442) y numeros exactos, con etiquetas" className="w-40 rounded-xl border border-border" loading="lazy" />
+<img src="/projects/call-blocker/03-settings-sim.webp" alt="Ajustes con bloqueo activo, opciones de desconocidos y privados, servicio persistente y deteccion de tarjetas SIM (numeros redactados)" className="w-40 rounded-xl border border-border" loading="lazy" />
+<img src="/projects/call-blocker/04-settings-backup.webp" alt="Pantalla de backup encriptado con opciones de exportar e importar respaldo protegido por password" className="w-40 rounded-xl border border-border" loading="lazy" />
+<img src="/projects/call-blocker/05-settings-about.webp" alt="Pantalla About con version, licencia GPL-3 y enlaces del proyecto open source" className="w-40 rounded-xl border border-border" loading="lazy" />
+</div>
+<p className="text-center text-sm text-muted-foreground -mt-4 mb-8">Capturas oficiales de F-Droid (datos demo): llamadas bloqueadas, lista de reglas por prefijo, ajustes con multi-SIM, backup encriptado y About.</p>
 
 ### Features tecnicas
 
