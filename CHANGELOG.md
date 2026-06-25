@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.19.0] - 2026-06-25
+
+### Added
+- SimulaBnB: seccion "El motor real: el panel de gestion" con 4 capturas del panel
+  privado del manager (dashboard con desglose en cascada del Regimen 625 + ocupacion
+  por casa, reservaciones, reporte contable mensual, liquidacion al dueno). Reframing:
+  la calculadora publica es la punta del iceberg de un sistema completo de gestion
+  Airbnb; todo cuelga del mismo calculator.ts.
+- Capturas obtenidas con un dataset 100% FICTICIO: se restauro una copia de la BD en
+  un proyecto Supabase temporal y se anonimizo por completo (nombres, RFC, emails,
+  cuentas, codigos Airbnb -> valores demo; montos preservados para coherencia).
+  Produccion solo se leyo, nunca se modifico; proyecto demo destruido tras capturar.
+  Verificacion: scan de tokens reales = 0, vetado visual de cada imagen.
+
 ## [0.18.0] - 2026-06-24
 
 ### Added

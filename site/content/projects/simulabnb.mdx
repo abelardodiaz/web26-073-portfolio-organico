@@ -101,6 +101,50 @@ en Excel.
 - **Testing:** Vitest + React Testing Library, con el `calculator.ts` cubierto al
   100%.
 
+## El motor real: el panel de gestion
+
+La calculadora publica es la **punta del iceberg**. Detras hay un panel de gestion
+completo —privado, con login— que convierte el mismo motor fiscal en un sistema de
+administracion de propiedades de Airbnb de punta a punta. Las capturas que siguen
+son del panel corriendo con un **dataset 100% ficticio** (nombres, propiedades y
+montos inventados); ningun dato real de terceros aparece aqui.
+
+<figure className="my-8">
+<img src="/projects/simulabnb/04-manager-dashboard.webp" alt="Dashboard del panel: tarjetas de payout neto, retenciones, ocupacion y CFDI pendientes; un desglose financiero en cascada del Regimen 625; ocupacion por casa con barras de porcentaje; y graficas de payout por mes y Airbnb vs directo" className="w-full rounded-lg border border-border" loading="lazy" />
+<figcaption className="text-center text-sm text-muted-foreground">Dashboard (datos demo): el desglose en cascada del Regimen 625 —de lo que paga el huesped a la ganancia final— mas ocupacion por propiedad y tendencias. El mismo calculo de la calculadora publica, pero sobre datos reales de operacion.</figcaption>
+</figure>
+
+Sobre el motor fiscal se construye un sistema con varias piezas:
+
+- **Reservaciones** — el registro de cada estancia (plataforma, noches, payout,
+  estado fiscal del CFDI) con filtros por propiedad, plataforma, estado y periodo.
+- **Reporte contable mensual** — ingresos, IVA trasladado, retenciones de ISR e IVA,
+  IVA acreditable de comisiones e IVA a cargo, mes por mes. La materia prima de la
+  declaracion.
+- **Liquidacion al dueno** — para propiedades de terceros, calcula el statement del
+  mes: ingresos, IVA pendiente al SAT, comision de administracion, gastos y el saldo
+  neto a transferir al propietario.
+
+<figure className="my-8">
+<img src="/projects/simulabnb/05-manager-reservaciones.webp" alt="Tabla de reservaciones con columnas de propiedad, huesped, check-in, check-out, cobro, noches, plataforma, estado, tipo, CFDI y payout; con totales de noches y payout al pie" className="w-full rounded-lg border border-border" loading="lazy" />
+<figcaption className="text-center text-sm text-muted-foreground">Reservaciones (datos demo): cada estancia con su estado fiscal y payout, filtrable por propiedad, plataforma y periodo.</figcaption>
+</figure>
+
+<figure className="my-8">
+<img src="/projects/simulabnb/06-manager-contable.webp" alt="Reporte contable mensual: tabla por mes con base gravable, IVA trasladado 16%, retencion de IVA e ISR de Airbnb, IVA acreditable de comision, IVA a cargo, gastos y payout neto, con totales del ano" className="w-full rounded-lg border border-border" loading="lazy" />
+<figcaption className="text-center text-sm text-muted-foreground">Reporte contable (datos demo): el resumen fiscal mensual que alimenta la declaracion —base gravable, IVA trasladado y retenido, IVA a cargo— derivado de las mismas formulas del Regimen 625.</figcaption>
+</figure>
+
+<figure className="my-8">
+<img src="/projects/simulabnb/07-manager-liquidacion.webp" alt="Liquidacion mensual al dueno: reservas con payout del periodo, calculo de ingresos brutos, IVA pendiente al SAT, comision de administracion, gastos reembolsables, neto al dueno y saldo a transferir, con acciones para guardar, cerrar, marcar pagada y enviar" className="w-full rounded-lg border border-border" loading="lazy" />
+<figcaption className="text-center text-sm text-muted-foreground">Liquidacion al dueno (datos demo): el statement automatico de un mes para una propiedad de terceros, del ingreso bruto al saldo neto a transferir.</figcaption>
+</figure>
+
+La pieza clave es que **todo cuelga del mismo `calculator.ts`**: la cifra que un
+anfitrion ve en la calculadora publica y la que sustenta una liquidacion o un reporte
+fiscal salen del mismo motor puro y testeado. Una sola fuente de verdad para el
+calculo, muchas superficies encima.
+
 ## La leccion
 
 La tentacion en una herramienta asi es meter las formulas directo en los
