@@ -24,7 +24,7 @@ const socialLinks = [
 
 export function Footer() {
   return (
-    <footer className="border-t border-border py-8 mt-12">
+    <footer id="site-footer" className="border-t border-border py-8 mt-12">
       <div className="mx-auto flex max-w-5xl flex-col items-center gap-4 px-4 sm:flex-row sm:justify-between">
         <p className="hidden editorial:block text-sm text-muted-foreground">
           &copy; {new Date().getFullYear()} Abelardo Diaz

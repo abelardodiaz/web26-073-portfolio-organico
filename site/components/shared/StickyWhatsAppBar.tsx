@@ -15,6 +15,7 @@ export function StickyWhatsAppBar({
   label?: string;
 }) {
   const [visible, setVisible] = useState(false);
+  const [footerVisible, setFooterVisible] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setVisible(window.scrollY > 480);
@@ -23,10 +24,21 @@ export function StickyWhatsAppBar({
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  useEffect(() => {
+    const footer = document.getElementById("site-footer");
+    if (!footer) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setFooterVisible(entry.isIntersecting),
+      { rootMargin: "0px 0px -8px 0px" },
+    );
+    observer.observe(footer);
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <div
       className={`fixed inset-x-0 bottom-0 z-40 sm:hidden transition-transform duration-300 ${
-        visible ? "translate-y-0" : "translate-y-full"
+        visible && !footerVisible ? "translate-y-0" : "translate-y-full"
       }`}
     >
       <div className="border-t border-border bg-background/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur">
