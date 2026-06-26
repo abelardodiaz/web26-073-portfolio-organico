@@ -10,6 +10,7 @@ import {
   IconSitios,
 } from "@/components/shared/ServiceIcons";
 import { whatsappUrl, WHATSAPP_MSG_SERVICIOS } from "@/lib/whatsapp";
+import { StickyWhatsAppBar } from "@/components/shared/StickyWhatsAppBar";
 
 export const metadata: Metadata = {
   title: "Servicios de IA y Automatizacion | San Luis Potosi",
@@ -287,6 +288,14 @@ export default function ServiciosPage() {
           </section>
         </div>
       </div>
+
+      {/* Sticky mobile CTA */}
+      <StickyWhatsAppBar
+        href={waUrl}
+        price="Cotiza tu servicio"
+        note={"Respuesta el mismo dia, sin compromiso"}
+        label="WhatsApp"
+      />
     </div>
   );
 }

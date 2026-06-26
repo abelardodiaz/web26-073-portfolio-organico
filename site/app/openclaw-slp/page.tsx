@@ -8,6 +8,7 @@ import { SocialProof } from "@/components/shared/SocialProof";
 import { ScrollReveal } from "@/components/shared/ScrollReveal";
 import { Timeline } from "@/components/shared/Timeline";
 import { AutonomyMeter } from "@/components/shared/AutonomyMeter";
+import { StickyWhatsAppBar } from "@/components/shared/StickyWhatsAppBar";
 
 export const metadata: Metadata = {
   title: "OpenClaw en San Luis Potosi",
@@ -530,6 +531,14 @@ export default function OpenClawSLPPage() {
           </div>
         </section>
       </div>
+
+      {/* Sticky mobile CTA */}
+      <StickyWhatsAppBar
+        href={whatsappUrl}
+        price="OpenClaw para tu negocio"
+        note={"Configuracion en SLP, sin compromiso"}
+        label="WhatsApp"
+      />
       </div>
     </div>
   );

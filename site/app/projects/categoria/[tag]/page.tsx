@@ -3,6 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getAllProjects, getAllProjectCategories } from "@/lib/content";
 import { ProjectGrid } from "@/components/projects/ProjectGrid";
+import { StickyWhatsAppBar } from "@/components/shared/StickyWhatsAppBar";
+import { whatsappUrl, WHATSAPP_MSG_GENERAL } from "@/lib/whatsapp";
 
 type Props = {
   params: Promise<{ tag: string }>;
@@ -80,6 +82,14 @@ export default async function ProjectsCategoriaPage({ params }: Props) {
         projects={filtered}
         categories={categories}
         activeCategory={tag}
+      />
+
+      {/* Sticky mobile CTA */}
+      <StickyWhatsAppBar
+        href={whatsappUrl(WHATSAPP_MSG_GENERAL)}
+        price="Te late algo similar?"
+        note={"Cuentame tu proyecto por WhatsApp"}
+        label="WhatsApp"
       />
     </div>
   );

@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.24.1] - 2026-06-26
+
+### Added
+- **StickyWhatsAppBar (CTA flotante movil) extendido** a mas paginas. Antes solo
+  estaba en 4 landings de servicio; no aparecia al navegar el portfolio. Ahora
+  tambien en: `/openclaw-slp` (completa las 5 landings), hub `/servicios`, Home,
+  y las paginas de proyectos (`/projects`, `/projects/categoria/[tag]`,
+  `/projects/[slug]`). Sigue siendo `sm:hidden` (solo movil) y aparece al scroll.
+  Mensaje de WhatsApp contextual: `WHATSAPP_MSG_GENERAL` en proyectos/home,
+  `WHATSAPP_MSG_SERVICIOS` en el hub. Excluido a proposito de contenido (TIL/blog).
+
 ## [0.24.0] - 2026-06-25
 
 ### Added

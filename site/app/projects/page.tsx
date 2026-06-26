@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { getAllProjects, getAllProjectCategories } from "@/lib/content";
 import { ProjectGrid } from "@/components/projects/ProjectGrid";
+import { StickyWhatsAppBar } from "@/components/shared/StickyWhatsAppBar";
+import { whatsappUrl, WHATSAPP_MSG_GENERAL } from "@/lib/whatsapp";
 
 export const revalidate = 86400;
 
@@ -37,6 +39,14 @@ export default function ProjectsPage() {
       </div>
 
       <ProjectGrid projects={projects} categories={categories} />
+
+      {/* Sticky mobile CTA */}
+      <StickyWhatsAppBar
+        href={whatsappUrl(WHATSAPP_MSG_GENERAL)}
+        price="Te late algo similar?"
+        note={"Cuentame tu proyecto por WhatsApp"}
+        label="WhatsApp"
+      />
     </div>
   );
 }

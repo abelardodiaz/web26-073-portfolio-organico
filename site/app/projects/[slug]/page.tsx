@@ -3,6 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getAllProjects, getProjectBySlug, type ProjectLink } from "@/lib/content";
 import { MdxContent } from "@/components/shared/MdxContent";
+import { StickyWhatsAppBar } from "@/components/shared/StickyWhatsAppBar";
+import { whatsappUrl, WHATSAPP_MSG_GENERAL } from "@/lib/whatsapp";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -155,6 +157,14 @@ export default async function ProjectPage({ params }: Props) {
       <article className="prose max-w-none">
         <MdxContent source={project.body} />
       </article>
+
+      {/* Sticky mobile CTA */}
+      <StickyWhatsAppBar
+        href={whatsappUrl(WHATSAPP_MSG_GENERAL)}
+        price="Te late algo similar?"
+        note={"Cuentame tu proyecto por WhatsApp"}
+        label="WhatsApp"
+      />
     </div>
   );
 }

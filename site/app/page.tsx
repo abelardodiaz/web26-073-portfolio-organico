@@ -4,6 +4,7 @@ import { ButtonLink } from "@/components/shared/ButtonLink";
 import { RotatingLabel } from "@/components/shared/RotatingLabel";
 import { SocialProof } from "@/components/shared/SocialProof";
 import { WhatsAppIcon } from "@/components/shared/WhatsAppIcon";
+import { StickyWhatsAppBar } from "@/components/shared/StickyWhatsAppBar";
 import { IconDiagnostico } from "@/components/shared/ServiceIcons";
 import { getAllTils, getAllProjects } from "@/lib/content";
 import { whatsappUrl, WHATSAPP_MSG_GENERAL } from "@/lib/whatsapp";
@@ -490,6 +491,14 @@ export default function Home() {
         )}
       </section>
       </div>
+
+      {/* Sticky mobile CTA */}
+      <StickyWhatsAppBar
+        href={heroWhatsappUrl}
+        price="Tienes un proyecto?"
+        note={"Cuentame por WhatsApp, sin compromiso"}
+        label="WhatsApp"
+      />
     </div>
   );
 }
