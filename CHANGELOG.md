@@ -2,6 +2,39 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.24.0] - 2026-06-25
+
+### Added
+- **Catalogo de servicios**: nueva pagina `/servicios` como hub real (antes el menu
+  "Servicios" apuntaba directo a `/diagnostico-ia`, una sola oferta). El menu del
+  Header ahora apunta a `/servicios`.
+- **3 landings de servicio nuevas** (editorial + terminal, reusan Timeline/FaqAccordion/
+  StickyWhatsAppBar):
+  - `/despliegue-vps` (Despliegue VPS): checklist real de hardening derivado del proceso
+    de produccion del proyecto 602, sanitizado (sin IPs/dominios/hostnames/codigos).
+    Ubuntu 26.04 LTS como base por defecto.
+  - `/automatizacion-procesos`: bots, n8n, CRM/ERP; prueba con proyectos reales
+    (agente-080, citas-bot-universal, tienda-django-sync, flask-survey-referral).
+  - `/sitios-web`: Next.js/Astro; prueba con weedspayments, simulabnb, este portfolio.
+- **Blog**: guia general de preparacion/hardening de VPS de produccion
+  (`/blog/preparar-vps-produccion-hardening-primero`), enlazada desde `/despliegue-vps`.
+- **Banners OG dinamicos** por ruta de servicio (`lib/og-service.tsx` + opengraph-image
+  en servicios, despliegue-vps, automatizacion-procesos, sitios-web).
+- **Sistema de iconos** compartido (`ServiceIcons.tsx`) y **spot illustrations** SVG por
+  servicio (`ServiceArt.tsx`): isometrico para diagnostico/vps, motivo-de-icono para
+  automatizacion/sitios.
+
+### Changed
+- **Bento grid** en `/servicios` (glanceability): Diagnostico IA como card estrella 2x2
+  con badge "El mas pedido", iconos + microcopy en vez de parrafos.
+- **Fotos en duotono por servicio** en las cards del bento (Unsplash, licencia libre,
+  optimizadas en `public/services`): un color por servicio para dar variedad tonal
+  (verde/naranja/ambar/azul/violeta). Tono oscuro unificado entre editorial y terminal
+  via `isolate`.
+- **Fondos con profundidad** (`hero-bg`) aplicado a todas las paginas de servicio.
+- Home: card de Diagnostico IA con su icono.
+- **Selector de temas** (ThemeControls) movido del Header al **Footer**.
+
 ## [0.23.0] - 2026-06-25
 
 ### Changed
