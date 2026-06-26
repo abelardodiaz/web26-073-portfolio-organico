@@ -2,19 +2,8 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import dynamic from "next/dynamic";
 import { WhatsAppIcon } from "@/components/shared/WhatsAppIcon";
 import { whatsappUrl, WHATSAPP_MSG_GENERAL } from "@/lib/whatsapp";
-
-const ThemeSelector = dynamic(
-  () => import("@/components/shared/ThemeSelector").then((m) => ({ default: m.ThemeSelector })),
-  { ssr: false }
-);
-
-const ThemeToggle = dynamic(
-  () => import("@/components/shared/ThemeToggle").then((m) => ({ default: m.ThemeToggle })),
-  { ssr: false }
-);
 
 const navItems = [
   { href: "/projects/categoria/portfolio", editorial: "Proyectos", terminal: "/proyectos" },
@@ -83,16 +72,10 @@ export function Header() {
             <span className="hidden editorial:inline">Hablemos</span>
             <span className="hidden terminal:inline">./whatsapp</span>
           </a>
-          <div className="ml-1 flex items-center gap-1 border-l border-border pl-3">
-            <ThemeSelector />
-            <ThemeToggle />
-          </div>
         </nav>
 
         {/* Mobile controls */}
         <div className="flex items-center gap-1 sm:hidden">
-          <ThemeSelector />
-          <ThemeToggle />
           <button
             onClick={() => setMenuOpen(!menuOpen)}
             className="ml-1 rounded-md p-2 text-muted-foreground hover:text-foreground"

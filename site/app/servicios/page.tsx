@@ -42,7 +42,7 @@ const services: Service[] = [
   {
     href: "/diagnostico-ia",
     icon: <IconDiagnostico />,
-    image: "/services/diagnostico.jpg",
+    image: "/services/diagnostico-v2.jpg",
     color: "#10b981",
     editorialTitle: "Diagnostico IA",
     terminalTitle: "diagnostico-ia",
@@ -54,7 +54,7 @@ const services: Service[] = [
   {
     href: "/openclaw-slp",
     logo: "/openclaw-logo.svg",
-    image: "/services/openclaw.jpg",
+    image: "/services/openclaw-v2.jpg",
     color: "#f97316",
     editorialTitle: "OpenClaw 24/7",
     terminalTitle: "openclaw-slp",
@@ -103,39 +103,32 @@ function ServiceCard({ s, terminal }: { s: Service; terminal?: boolean }) {
   return (
     <Link
       href={s.href}
-      className={`group relative flex flex-col justify-between overflow-hidden rounded-xl border border-white/10 p-6 transition-all hover:border-white/40 hover:shadow-lg ${s.span}`}
+      className={`group relative isolate flex flex-col justify-between overflow-hidden rounded-xl border border-white/10 p-6 transition-all hover:border-white/40 hover:shadow-lg ${s.span}`}
     >
-      {/* Foto (escala de grises, base del duotono) */}
+      {/* Foto (escala de grises, base del duotono). Terminal = mas oscuro;
+          editorial = un poco mas claro (la foto se ve mas). */}
       <Image
         src={s.image}
         alt=""
         fill
         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-        className={`object-cover grayscale transition-transform duration-500 group-hover:scale-105 ${
-          terminal ? "brightness-[.42]" : "brightness-90"
-        }`}
+        className="object-cover grayscale brightness-[.45] transition-transform duration-500 group-hover:scale-105"
       />
       {/* Capa de color (recolorea la foto al tono del servicio) */}
       <span
         aria-hidden
         className="absolute inset-0"
-        style={{ backgroundColor: s.color, mixBlendMode: "color", opacity: 0.62 }}
+        style={{ backgroundColor: s.color, mixBlendMode: "color", opacity: 0.6 }}
       />
       <span
         aria-hidden
         className="absolute inset-0"
-        style={{
-          backgroundColor: s.color,
-          mixBlendMode: terminal ? "multiply" : "soft-light",
-          opacity: terminal ? 0.45 : 0.55,
-        }}
+        style={{ backgroundColor: s.color, mixBlendMode: "multiply", opacity: 0.5 }}
       />
       {/* Degradado de legibilidad */}
       <span
         aria-hidden
-        className={`absolute inset-0 bg-gradient-to-b ${
-          terminal ? "from-black/25 to-black/65" : "from-black/10 to-black/55"
-        }`}
+        className="absolute inset-0 bg-gradient-to-b from-black/25 to-black/65"
       />
 
       {/* Top: icono + badge/flecha */}

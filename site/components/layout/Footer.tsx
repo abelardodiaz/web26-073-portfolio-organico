@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ThemeControls } from "@/components/shared/ThemeControls";
 
 function GitHubIcon({ className }: { className?: string }) {
   return (
@@ -31,20 +32,24 @@ export function Footer() {
         <p className="hidden terminal:block font-mono text-xs text-[var(--fg-subtle)]">
           // abelardodiaz.dev &copy; {new Date().getFullYear()}
         </p>
-        <nav aria-label="Redes sociales" className="flex items-center gap-4">
-          {socialLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label={link.label}
-              className="text-muted-foreground transition-colors hover:text-foreground"
-            >
-              <link.icon className="size-5" />
-            </Link>
-          ))}
-        </nav>
+        <div className="flex items-center gap-4">
+          <nav aria-label="Redes sociales" className="flex items-center gap-4">
+            {socialLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={link.label}
+                className="text-muted-foreground transition-colors hover:text-foreground"
+              >
+                <link.icon className="size-5" />
+              </Link>
+            ))}
+          </nav>
+          <span className="h-4 w-px bg-border" />
+          <ThemeControls />
+        </div>
       </div>
     </footer>
   );
