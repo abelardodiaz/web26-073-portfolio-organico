@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.25.0] - 2026-07-20
+
+### Added
+- **CV online bilingue**: nuevas rutas `/cv` (espanol) y `/cv/en` (ingles), estaticas,
+  con diseno sobrio imprimible (boton Print/PDF, print CSS que oculta header/footer).
+  Contenido en `site/lib/cv-data.ts` (fuente unica ES/EN), vista compartida
+  `components/cv/CvView.tsx`. Entrada "CV" visible en el menu del Header y rutas
+  agregadas al sitemap. 8 proyectos seleccionados + experiencia completa (REDV6,
+  WSI, AT&T/Axtel, docencia) + certificaciones MikroTik/Cambium/Altai.
+- **Borrador local del CV** en `docs/cv/` (`cv.json` formato JSON Resume como fuente
+  de verdad + `cv.html` standalone imprimible).
+
+### Fixed
+- **pnpm 11.14**: `pnpm-workspace.yaml` con `allowBuilds` explicito (msw, sharp,
+  unrs-resolver en false) — el campo `pnpm` de package.json ya no se lee y el dep
+  nuevo `msw` bloqueaba `pnpm build` con ERR_PNPM_IGNORED_BUILDS.
+
 ## [0.24.1] - 2026-06-26
 
 ### Added

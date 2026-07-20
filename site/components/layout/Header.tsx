@@ -11,6 +11,7 @@ const navItems = [
   { href: "/blog", editorial: "Blog", terminal: "/blog" },
   { href: "/servicios", editorial: "Servicios", terminal: "/servicios" },
   { href: "/about", editorial: "About", terminal: "/about" },
+  { href: "/cv", editorial: "CV", terminal: "/cv" },
   { href: "/contact", editorial: "Contacto", terminal: "/contacto" },
 ];
 
