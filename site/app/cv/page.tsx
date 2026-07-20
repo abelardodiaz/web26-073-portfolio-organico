@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { CvView } from "@/components/cv/CvView";
+import { ForceLightMode } from "@/components/cv/ForceLightMode";
 
 export const metadata: Metadata = {
   title: "CV",
@@ -15,6 +16,7 @@ export default function CvPage() {
   return (
     <>
       <style>{`@media print { header, footer { display: none !important; } }`}</style>
+      <ForceLightMode />
       <CvView locale="es" />
     </>
   );

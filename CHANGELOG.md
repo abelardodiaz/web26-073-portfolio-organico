@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.25.1] - 2026-07-20
+
+### Changed
+- **CV siempre en modo claro**: componente ForceLightMode quita la clase dark al
+  entrar a /cv o /cv/en (script inline sin flash) y restaura la preferencia del
+  usuario al salir.
+
 ## [0.25.0] - 2026-07-20
 
 ### Added
