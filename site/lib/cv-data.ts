@@ -81,12 +81,13 @@ export const cvData: Record<CvLocale, CvData> = {
         url: "/projects/agente-080",
       },
       {
-        name: "Plataforma interna Multi-IA + Project Manager",
+        name: "Plataforma interna: Debates IA + Manager",
         note: "uso interno, en produccion",
         dates: "2025-2026",
         description:
           "Dos APIs que gobiernan mi operacion: (1) gateway unificado sobre 8 providers de IA (OpenAI, Gemini, DeepSeek, Grok, Groq, Qwen, Kimi + busqueda web) con conversaciones persistentes, debates multi-IA con consenso automatico, knowledge base que intercepta consultas, auth por proyecto con rotacion de keys y servidor MCP consumible desde Claude Code; (2) project manager centralizado: catalogo y health checks de toda la flota, tracking de progreso git, gestion de Cloudflare (DNS/SSL/cache) con permisos granulares por key, y RAG con pgvector (busqueda hibrida vector + full-text con fusion RRF).",
         chips: ["Python", "PostgreSQL + pgvector", "MCP", "REST APIs", "Cloudflare API"],
+        url: "/projects/debates-ia-manager",
       },
       {
         name: "citas-bot-universal",
@@ -245,12 +246,13 @@ export const cvData: Record<CvLocale, CvData> = {
         url: "/projects/agente-080",
       },
       {
-        name: "Internal Multi-AI Platform + Project Manager",
+        name: "Internal platform: Debates IA + Manager",
         note: "internal use, in production",
         dates: "2025-2026",
         description:
           "Two APIs that govern my operation: (1) a unified gateway over 8 AI providers (OpenAI, Gemini, DeepSeek, Grok, Groq, Qwen, Kimi + web search) with persistent conversations, multi-AI debates with automatic consensus, a knowledge base that intercepts queries, per-project auth with key rotation, and an MCP server consumable from Claude Code; (2) a centralized project manager: fleet-wide catalog and health checks, git progress tracking, Cloudflare management (DNS/SSL/cache) with granular per-key permissions, and RAG on pgvector (hybrid vector + full-text search with RRF fusion).",
         chips: ["Python", "PostgreSQL + pgvector", "MCP", "REST APIs", "Cloudflare API"],
+        url: "/projects/debates-ia-manager",
       },
       {
         name: "citas-bot-universal",

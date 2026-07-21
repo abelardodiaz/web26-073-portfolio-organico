@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.27.1] - 2026-07-20
+
+### Changed
+- CV: la entrada de la plataforma interna ahora se llama "Plataforma interna:
+  Debates IA + Manager" y linkea a su case study /projects/debates-ia-manager
+  (web ES/EN, HTMLs sobrios y PDFs regenerados).
+
 ## [0.27.0] - 2026-07-20
 
 ### Added
