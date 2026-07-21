@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.25.4] - 2026-07-20
+
+### Changed
+- About: link al CV en linea (/cv, es/en + pdf) en la seccion Trabajemos,
+  variantes editorial y terminal.
+
 ## [0.25.3] - 2026-07-20
 
 ### Fixed

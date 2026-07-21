@@ -79,7 +79,12 @@ export default function AboutPage() {
             proyectos
           </Link>{" "}
           open-source, ayudo a negocios locales a implementar inteligencia
-          artificial de forma segura y practica.
+          artificial de forma segura y practica. Si buscas mi perfil formal,
+          mi{" "}
+          <Link href="/cv" className="font-medium text-primary hover:underline">
+            CV esta en linea
+          </Link>{" "}
+          (espanol e ingles, con PDF descargable).
         </p>
         <div className="flex gap-3">
           <ButtonLink href="/diagnostico-ia">Solicitar diagnostico</ButtonLink>
@@ -153,7 +158,11 @@ export default function AboutPage() {
             /proyectos
           </Link>{" "}
           open-source, ayudo a negocios locales a implementar inteligencia
-          artificial de forma segura y practica.
+          artificial de forma segura y practica. Perfil formal en{" "}
+          <Link href="/cv" className="font-medium text-primary hover:underline">
+            /cv
+          </Link>{" "}
+          (es/en + pdf).
         </p>
         <div className="flex gap-3">
           <ButtonLink href="/diagnostico-ia">./diagnostico.sh</ButtonLink>
