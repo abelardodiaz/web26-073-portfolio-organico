@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.27.0] - 2026-07-20
+
+### Added
+- Pagina de proyecto: "Plataforma interna: Debates IA + Manager" (categoria
+  portfolio, featured). Case study combinado y sanitizado de las dos APIs
+  internas: gateway multi-IA (debates con consenso, KB interceptora, ciclos de
+  automejora, MCP server, keys por proyecto) y manager de flota (health checks,
+  progreso git, Cloudflare con permisos por key, RAG pgvector HNSW + RRF).
+  Sin codigos internos, IPs ni hostnames; capacidades, no infraestructura.
+
 ## [0.26.0] - 2026-07-20
 
 ### Added

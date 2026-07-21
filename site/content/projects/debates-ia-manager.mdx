@@ -1,0 +1,65 @@
+---
+title: "Plataforma interna: Debates IA + Manager"
+slug: "debates-ia-manager"
+description: "Dos APIs internas en produccion que gobiernan mi operacion de desarrollo: un gateway multi-IA con debates entre 8 modelos y consenso automatico, y un manager de flota con RAG sobre pgvector, health checks y gestion de Cloudflare con permisos por key."
+stack: ["python", "postgresql", "pgvector", "mcp", "rest", "cloudflare-api"]
+category: "portfolio"
+featured: true
+date: "2026-07-20"
+---
+
+## Que es
+
+Dos APIs internas, en produccion, que uso todos los dias como capa de gobierno de mi propia operacion de desarrollo. No son demos: son la infraestructura con la que construyo todo lo demas del portfolio. Repos privados; los patterns destilados estan publicados en [Multi-AI Provider Patterns](/projects/multi-ai-provider-patterns).
+
+```
+   agentes (Claude Code, skills, scripts)
+        |                    |
+        v                    v
+  +-----------+        +-----------+
+  | DEBATES IA|        |  MANAGER  |
+  | gateway   |        | flota de  |
+  | multi-IA  |        | proyectos |
+  +-----------+        +-----------+
+   8 providers          health checks
+   debates+consenso     progreso git
+   KB interceptora      Cloudflare por key
+   MCP server           RAG pgvector
+```
+
+## Debates IA: el gateway multi-IA
+
+Un solo endpoint para hablar con 8 providers (OpenAI, Gemini, DeepSeek, Grok, Groq, Qwen, Kimi + busqueda web), con memoria organizacional encima:
+
+- **Casos, tickets y turnos**: cada consulta queda registrada y se puede continuar; un caso agrupa tickets de varios proyectos sobre un mismo tema.
+- **Debates multi-IA**: 2-5 modelos debaten un tema por rondas. El umbral de consenso se calcula solo (mas IAs, umbral mas bajo), un moderador detecta estancamiento, y si no hay consenso se genera una sintesis final con decisiones extraidas.
+- **Ciclos de automejora**: el modelo A responde y pide busquedas concretas; el modelo B las ejecuta con web search; A mejora su respuesta. Itera hasta quedar satisfecho.
+- **Knowledge base interceptora**: si hay match semantico, la KB responde antes de gastar tokens en el provider (con opt-out por request para consultas creativas).
+- **Web search integrado**: busca e inyecta resultados al LLM, con cache, rate limits y degradacion automatica tras fallos consecutivos.
+- **Gobernanza**: API key por proyecto, rotacion con periodo de gracia, y todo request atribuido a su proyecto de origen.
+- **Servidor MCP**: las mismas capacidades expuestas como tools MCP, consumibles directo desde Claude Code u otro cliente.
+
+## Manager: la torre de control de la flota
+
+Dashboard programatico de todos los proyectos de la operacion:
+
+- **Catalogo y salud**: metadata de cada proyecto (server, stack, version, status) y health checks de servers y servicios.
+- **Progreso git**: commits, insertions/deletions y dias activos por proyecto, fecha o rango. Responde "en que se trabajo esta semana" con datos, no con memoria.
+- **Cloudflare gobernado**: DNS, SSL, cache y analytics via API, con permisos granulares por key (dns:write, cache:purge...) y restricciones por subdominio. Un agente puede crear un registro DNS sin poder tocar el resto de la zona.
+- **RAG sobre la documentacion**: embeddings de 768 dimensiones en pgvector (indice HNSW), busqueda hibrida vector + full-text en espanol con fusion RRF, e indexacion programada 2 veces al dia de READMEs, changelogs y commits.
+
+## Como lo usan los agentes
+
+Cada proyecto tiene una skill portable que detecta su identidad desde un archivo de metadata y consulta la plataforma con su propia key. El resultado practico: cualquier sesion de Claude Code puede preguntar "que es el proyecto X", pedir un debate entre dos modelos sobre una decision de arquitectura, o crear un subdominio con certificado — todo auditado y dentro de los limites de su key.
+
+## Decisiones tecnicas
+
+- **Tickets como memoria compartida**: las consultas a IAs dejan rastro consultable; el conocimiento no muere en la sesion que lo genero.
+- **Consenso calculado, no negociado**: los debates terminan por umbral de similitud o sintesis forzada, nunca en loop infinito.
+- **Permisos por key, no por confianza**: los agentes de IA operan infraestructura real (DNS, cache) solo dentro del alcance exacto de su key.
+- **pgvector antes que un vector DB dedicado**: la flota ya corre PostgreSQL; HNSW + RRF cubren la escala real sin una pieza mas que operar.
+- **MCP como interfaz de futuro**: lo que hoy consume una skill por REST, manana lo consume cualquier agente por MCP sin cambiar el backend.
+
+## Relacion con lo publico
+
+Este es el sistema privado del que ya se destilaron repos publicos: [Multi-AI Provider Patterns](/projects/multi-ai-provider-patterns) (gateways, circuit breakers, context windows reales vs marketing) y la familia de patterns de agentes. La formula es la misma de siempre en este portfolio: el sistema completo es privado, los patterns que aprendi operandolo son publicos.
