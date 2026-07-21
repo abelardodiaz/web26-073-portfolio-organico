@@ -1,0 +1,49 @@
+---
+title: "Gmail MCP Config: multi-cuenta para agentes"
+slug: "gmail-mcp-config"
+description: "Configuracion multi-cuenta del servidor MCP de Gmail en WSL: una instancia por cuenta con HOME propio, skill de uso para Claude Code y fallback JSON-RPC. Sin forks ni credenciales mezcladas."
+stack: ["mcp", "wsl", "bash", "python", "claude-code"]
+github: "https://github.com/abelardodiaz/web26-091-gmail-mcp-config"
+category: "tools"
+featured: false
+date: "2026-07-20"
+---
+
+## Que es
+
+Configuracion para correr DOS (o mas) cuentas de Gmail como servidores MCP separados desde WSL, usables por Claude Code u otro cliente MCP en Windows. Incluye los wrappers de arranque, una skill de uso para agentes y un script de fallback JSON-RPC.
+
+## El truco central
+
+El servidor [@gongrzhe/server-gmail-autoauth-mcp](https://github.com/GongRzhe/Gmail-MCP-Server) guarda sus credenciales en `$HOME/.gmail-mcp/`. En vez de forkear el paquete o inventar variables de entorno, cada instancia corre con un `HOME` distinto:
+
+```
+wrappers/run-mcp.sh          -> cuenta 1 (HOME por defecto)
+wrappers/run-mcp-cuenta2.sh  -> cuenta 2 (HOME alterno)
+```
+
+Multi-cuenta real sin mezclar tokens: cada proceso lee y escribe sus propias credenciales OAuth, y el cliente MCP ve dos servidores independientes (`gmail-cuenta1`, `gmail-cuenta2`) con las mismas herramientas.
+
+## La capa de uso: skill para agentes
+
+El repo incluye `skills/enviar-correos/SKILL.md`, una skill para Claude Code que codifica las reglas aprendidas en uso real:
+
+- **Confirmacion obligatoria antes de enviar**, mostrando el correo COMPLETO y literal (nunca "el mismo de arriba")
+- Eleccion explicita de cuenta (un envio desde la cuenta equivocada no se deshace)
+- Adjuntos con ruta WSL (`/mnt/c/...`, no `C:\...`)
+- Verificar destinatarios contra `in:sent` antes de escribir a alguien nuevo
+
+## Fallback JSON-RPC
+
+Si el servidor MCP se registro con la sesion del agente ya abierta, sus herramientas no aparecen. En vez de reiniciar la sesion, `scripts/ejemplo-send-mcp-directo.py` habla el protocolo MCP por stdio directamente: `initialize` -> `notifications/initialized` -> `tools/call send_email`. Mismo resultado, cero fricciones.
+
+## Decisiones tecnicas
+
+- **HOME alterno en vez de fork**: cero mantenimiento del paquete upstream
+- **Un proyecto OAuth de GCP por cuenta** (o compartido si ambas son test users)
+- **Credenciales fuera de git**: el .gitignore bloquea `credentials.json` y `gcp-oauth.keys.json`; todo lo bloqueado es regenerable
+- **Skill con placeholders**: publicada sin datos reales, se adapta editando cuentas y rutas
+
+## Roadmap
+
+El patron aplica a cualquier servidor MCP de Google Workspace: siguen wrappers y skills equivalentes para **Google Calendar** y **Google Drive** multi-cuenta, para manejar varias cuentas Workspace desde Claude Code y otros agentes de IA sin mezclar credenciales.

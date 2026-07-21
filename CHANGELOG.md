@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.26.0] - 2026-07-20
+
+### Added
+- Pagina de proyecto: "Gmail MCP Config: multi-cuenta para agentes" (categoria
+  tools, micro-repo publico web26-091-gmail-mcp-config). Truco HOME alterno por
+  instancia, skill enviar-correos publicada y fallback JSON-RPC; roadmap
+  Calendar/Drive multi-cuenta.
+
 ## [0.25.4] - 2026-07-20
 
 ### Changed
