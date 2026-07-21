@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.25.3] - 2026-07-20
+
+### Fixed
+- **Fecha de educacion corregida**: Ingenieria en Sistemas (ITZ) es 2000-2004, no
+  1997-2000 (1997-2000 fue preparatoria). Corregido en cv-data.ts (ES/EN),
+  docs/cv/*.html, cv.json y PDFs regenerados.
+
 ## [0.25.2] - 2026-07-20
 
 ### Changed

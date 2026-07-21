@@ -214,7 +214,7 @@ export const cvData: Record<CvLocale, CvData> = {
       { name: "Supercobertura WiFi", issuer: "Altai Technologies, 2018" },
     ],
     education:
-      "Ingenieria en Sistemas Computacionales -- Instituto Tecnologico de Zacatecas (cursada parcialmente), 1997-2000",
+      "Ingenieria en Sistemas Computacionales -- Instituto Tecnologico de Zacatecas (cursada parcialmente), 2000-2004",
     languagesLine: "Espanol: nativo · Ingles: tecnico -- lectura fluida, conversacion funcional",
   },
   en: {
@@ -378,7 +378,7 @@ export const cvData: Record<CvLocale, CvData> = {
       { name: "Super-coverage WiFi", issuer: "Altai Technologies, 2018" },
     ],
     education:
-      "Computer Systems Engineering -- Instituto Tecnologico de Zacatecas (partial coursework), 1997-2000",
+      "Computer Systems Engineering -- Instituto Tecnologico de Zacatecas (partial coursework), 2000-2004",
     languagesLine: "Spanish: native · English: technical -- fluent reading, working conversation",
   },
 };
