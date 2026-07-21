@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.27.2] - 2026-07-20
+
+### Changed
+- gmail-mcp-config movido de categoria tools a portfolio (el nav Proyectos
+  apunta a categoria/portfolio; en tools quedaba invisible desde el menu).
+
 ## [0.27.1] - 2026-07-20
 
 ### Changed
