@@ -36,6 +36,7 @@ export interface CvData {
     certifications: string;
     educationLanguages: string;
     print: string;
+    pdfHref: string;
     otherLocale: string;
     otherLocaleHref: string;
   };
@@ -61,6 +62,7 @@ export const cvData: Record<CvLocale, CvData> = {
       certifications: "Certificaciones",
       educationLanguages: "Educacion e idiomas",
       print: "Imprimir / PDF",
+      pdfHref: "/abelardo-diaz-cv.pdf",
       otherLocale: "English version",
       otherLocaleHref: "/cv/en",
     },
@@ -224,6 +226,7 @@ export const cvData: Record<CvLocale, CvData> = {
       certifications: "Certifications",
       educationLanguages: "Education & languages",
       print: "Print / PDF",
+      pdfHref: "/abelardo-diaz-cv-en.pdf",
       otherLocale: "Version en espanol",
       otherLocaleHref: "/cv",
     },

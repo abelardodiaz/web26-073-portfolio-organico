@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.25.2] - 2026-07-20
+
+### Changed
+- **Boton del CV ahora abre PDF real**: PDFs sobrios generados del HTML standalone
+  de docs/cv (ES y EN, Playwright de WSL) servidos desde site/public
+  (/abelardo-diaz-cv.pdf y /abelardo-diaz-cv-en.pdf). El boton Imprimir/PDF es un
+  link con icono de impresora que abre el PDF (se elimina window.print y
+  PrintButton). docs/cv actualizado: cv.html al dia + cv-en.html nuevo.
+
 ## [0.25.1] - 2026-07-20
 
 ### Changed

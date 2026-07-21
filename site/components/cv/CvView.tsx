@@ -1,6 +1,24 @@
 import Link from "next/link";
 import { cvData, type CvLocale } from "@/lib/cv-data";
-import { PrintButton } from "@/components/cv/PrintButton";
+
+function PrinterIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <polyline points="6 9 6 2 18 2 18 9" />
+      <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+      <rect x="6" y="14" width="12" height="8" />
+    </svg>
+  );
+}
 
 export function CvView({ locale }: { locale: CvLocale }) {
   const cv = cvData[locale];
@@ -15,7 +33,15 @@ export function CvView({ locale }: { locale: CvLocale }) {
         >
           {cv.labels.otherLocale}
         </Link>
-        <PrintButton label={cv.labels.print} />
+        <a
+          href={cv.labels.pdfHref}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+        >
+          <PrinterIcon className="size-3.5" />
+          {cv.labels.print}
+        </a>
       </div>
 
       {/* Header */}
