@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.27.3] - 2026-07-20
+
+### Changed
+- gmail-mcp-config de regreso a categoria tools (decision final: es micro-repo
+  de herramientas, no case study; vive en /projects y categoria/tools).
+
 ## [0.27.2] - 2026-07-20
 
 ### Changed
