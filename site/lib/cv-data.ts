@@ -99,6 +99,15 @@ export const cvData: Record<CvLocale, CvData> = {
         url: "/projects/automatizaciones-n8n",
       },
       {
+        name: "Integraciones ecommerce: Shopify + WooCommerce",
+        note: "en produccion",
+        dates: "2026",
+        description:
+          "Plugins de WooCommerce a la medida (gateway de pago custom, HPOS, admin UI) y apps/extensiones de Shopify desplegadas con Shopify CLI (Checkout UI Extension en 7 idiomas, metafields via GraphQL). Bridge bidireccional entre plataformas con validacion HMAC y reintentos, gestion de tiendas de clientes via Shopify Partners (OAuth, scopes minimos), pasarelas Stripe y RedSys en produccion, y aprovisionamiento 1-click de tiendas con wp-cli + Cloudflare API sobre flota multi-tenant.",
+        chips: ["Shopify (CLI, Admin API)", "WooCommerce", "PHP 8", "Node.js", "Stripe", "RedSys"],
+        url: "/projects/integraciones-ecommerce",
+      },
+      {
         name: "citas-bot-universal",
         note: "open source, MIT",
         dates: "2026",
@@ -208,7 +217,7 @@ export const cvData: Record<CvLocale, CvData> = {
       {
         category: "Backend",
         keywords:
-          "FastAPI, Django, Flask, Celery, Redis, PostgreSQL, n8n (automatizacion de workflows), WhatsApp Business API, webhooks (HMAC, retry queues), Stripe",
+          "FastAPI, Django, Flask, Celery, Redis, PostgreSQL, n8n (automatizacion de workflows), WhatsApp Business API, webhooks (HMAC, retry queues), Stripe, RedSys, Shopify (Admin API, CLI, Partners), WooCommerce (plugins a la medida, HPOS)",
       },
       { category: "Frontend", keywords: "Next.js, React, Tailwind CSS, Astro" },
       {
@@ -271,6 +280,15 @@ export const cvData: Record<CvLocale, CvData> = {
           "Five full-cycle automations built on n8n: WhatsApp lead capture and qualification, inbound email classifier with polymorphic routing, Airbnb reservation parser, password-protected bank statement (PDF) decryption and filing, and a self-healing WhatsApp-to-Telegram bridge. Shared patterns: idempotency, retries with backoff, stuck-message rescue, and failure alerting.",
         chips: ["n8n", "WhatsApp Business API", "Telegram", "Gmail", "Webhooks"],
         url: "/projects/automatizaciones-n8n",
+      },
+      {
+        name: "Ecommerce integrations: Shopify + WooCommerce",
+        note: "in production",
+        dates: "2026",
+        description:
+          "Custom WooCommerce plugins (custom payment gateway, HPOS, admin UI) and Shopify apps/extensions deployed with Shopify CLI (Checkout UI Extension in 7 languages, metafields via GraphQL). Bidirectional cross-platform bridge with HMAC validation and retries, client store management via Shopify Partners (OAuth, minimal scopes), Stripe and RedSys payment gateways in production, and 1-click store provisioning with wp-cli + Cloudflare API over a multi-tenant fleet.",
+        chips: ["Shopify (CLI, Admin API)", "WooCommerce", "PHP 8", "Node.js", "Stripe", "RedSys"],
+        url: "/projects/integraciones-ecommerce",
       },
       {
         name: "citas-bot-universal",
@@ -382,7 +400,7 @@ export const cvData: Record<CvLocale, CvData> = {
       {
         category: "Backend",
         keywords:
-          "FastAPI, Django, Flask, Celery, Redis, PostgreSQL, n8n (workflow automation), WhatsApp Business API, webhooks (HMAC, retry queues), Stripe",
+          "FastAPI, Django, Flask, Celery, Redis, PostgreSQL, n8n (workflow automation), WhatsApp Business API, webhooks (HMAC, retry queues), Stripe, RedSys, Shopify (Admin API, CLI, Partners), WooCommerce (custom plugins, HPOS)",
       },
       { category: "Frontend", keywords: "Next.js, React, Tailwind CSS, Astro" },
       {

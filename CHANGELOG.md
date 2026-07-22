@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.29.0] - 2026-07-22
+
+### Added
+- Pagina de proyecto: "Integraciones ecommerce: Shopify, WooCommerce y
+  pasarelas de pago" (categoria portfolio, featured, 2 diagramas Mermaid).
+  Bridge Shopify-WC, plugins WooCommerce a la medida, extensiones con Shopify
+  CLI, gestion de clientes via Shopify Partners, Stripe/RedSys (incl. el caso
+  callback RedSys vs proxy Cloudflare) y aprovisionamiento 1-click de flota.
+  Fuente sanitizada: proyecto hermano 602 (sin clientes, dominios ni sector).
+- CV (ES/EN): proyecto "Integraciones ecommerce" en posicion 4 + skills
+  Backend ampliados (RedSys, Shopify Admin API/CLI/Partners, WooCommerce
+  plugins a la medida/HPOS). PDFs regenerados; borradores docs/cv/ sincronizados.
+
 ## [0.28.2] - 2026-07-22
 
 ### Added
