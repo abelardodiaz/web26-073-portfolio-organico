@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.28.2] - 2026-07-22
+
+### Added
+- CV (ES/EN): proyecto "Automatizaciones con n8n" / "n8n automations" con link
+  al case study, y n8n en skills de Backend. PDFs regenerados (ahora 3 paginas).
+  Borradores locales docs/cv/ sincronizados (cv.html, cv-en.html, cv.json).
+
 ## [0.28.1] - 2026-07-22
 
 ### Changed

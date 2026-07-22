@@ -90,6 +90,15 @@ export const cvData: Record<CvLocale, CvData> = {
         url: "/projects/debates-ia-manager",
       },
       {
+        name: "Automatizaciones con n8n",
+        note: "en produccion",
+        dates: "2025-2026",
+        description:
+          "Cinco automatizaciones de ciclo completo sobre n8n: captacion y calificacion de prospectos por WhatsApp, clasificador de correo entrante con ruteo polimorfico, parser de reservas de Airbnb, desencriptado y archivo de estados de cuenta bancarios (PDF) y un puente WhatsApp-Telegram auto-sanador. Patterns compartidos: idempotencia, reintentos con backoff, rescate de mensajes atascados y alertas ante fallo.",
+        chips: ["n8n", "WhatsApp Business API", "Telegram", "Gmail", "Webhooks"],
+        url: "/projects/automatizaciones-n8n",
+      },
+      {
         name: "citas-bot-universal",
         note: "open source, MIT",
         dates: "2026",
@@ -199,7 +208,7 @@ export const cvData: Record<CvLocale, CvData> = {
       {
         category: "Backend",
         keywords:
-          "FastAPI, Django, Flask, Celery, Redis, PostgreSQL, WhatsApp Business API, webhooks (HMAC, retry queues), Stripe",
+          "FastAPI, Django, Flask, Celery, Redis, PostgreSQL, n8n (automatizacion de workflows), WhatsApp Business API, webhooks (HMAC, retry queues), Stripe",
       },
       { category: "Frontend", keywords: "Next.js, React, Tailwind CSS, Astro" },
       {
@@ -253,6 +262,15 @@ export const cvData: Record<CvLocale, CvData> = {
           "Two APIs that govern my operation: (1) a unified gateway over 8 AI providers (OpenAI, Gemini, DeepSeek, Grok, Groq, Qwen, Kimi + web search) with persistent conversations, multi-AI debates with automatic consensus, a knowledge base that intercepts queries, per-project auth with key rotation, and an MCP server consumable from Claude Code; (2) a centralized project manager: fleet-wide catalog and health checks, git progress tracking, Cloudflare management (DNS/SSL/cache) with granular per-key permissions, and RAG on pgvector (hybrid vector + full-text search with RRF fusion).",
         chips: ["Python", "PostgreSQL + pgvector", "MCP", "REST APIs", "Cloudflare API"],
         url: "/projects/debates-ia-manager",
+      },
+      {
+        name: "n8n automations",
+        note: "in production",
+        dates: "2025-2026",
+        description:
+          "Five full-cycle automations built on n8n: WhatsApp lead capture and qualification, inbound email classifier with polymorphic routing, Airbnb reservation parser, password-protected bank statement (PDF) decryption and filing, and a self-healing WhatsApp-to-Telegram bridge. Shared patterns: idempotency, retries with backoff, stuck-message rescue, and failure alerting.",
+        chips: ["n8n", "WhatsApp Business API", "Telegram", "Gmail", "Webhooks"],
+        url: "/projects/automatizaciones-n8n",
       },
       {
         name: "citas-bot-universal",
@@ -364,7 +382,7 @@ export const cvData: Record<CvLocale, CvData> = {
       {
         category: "Backend",
         keywords:
-          "FastAPI, Django, Flask, Celery, Redis, PostgreSQL, WhatsApp Business API, webhooks (HMAC, retry queues), Stripe",
+          "FastAPI, Django, Flask, Celery, Redis, PostgreSQL, n8n (workflow automation), WhatsApp Business API, webhooks (HMAC, retry queues), Stripe",
       },
       { category: "Frontend", keywords: "Next.js, React, Tailwind CSS, Astro" },
       {
