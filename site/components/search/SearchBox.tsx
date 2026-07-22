@@ -3,6 +3,8 @@
 import { useState, useMemo, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { Document } from "flexsearch";
+import { normalizeForSearch } from "@/lib/normalize";
 import type { SearchItem } from "@/lib/search";
 
 type Props = {
@@ -12,15 +14,8 @@ type Props = {
   projects?: string[];
 };
 
-function matchesQuery(item: SearchItem, q: string): boolean {
-  const lower = q.toLowerCase();
-  return (
-    item.title.toLowerCase().includes(lower) ||
-    item.category.toLowerCase().includes(lower) ||
-    item.stack.some((s) => s.toLowerCase().includes(lower)) ||
-    item.excerpt.toLowerCase().includes(lower)
-  );
-}
+// Orden de prioridad: un match en titulo pesa mas que uno en el cuerpo.
+const FIELD_ORDER = ["title", "stackText", "category", "excerpt", "body"] as const;
 
 export function SearchBox({ items, popularStacks = [], categories = [], projects = [] }: Props) {
   const searchParams = useSearchParams();
@@ -31,14 +26,47 @@ export function SearchBox({ items, popularStacks = [], categories = [], projects
     if (q) setQuery(q);
   }, [searchParams]);
 
+  const index = useMemo(() => {
+    const doc = new Document({
+      document: { id: "id", index: [...FIELD_ORDER] },
+      tokenize: "forward",
+    });
+    items.forEach((item, i) => {
+      doc.add({
+        id: i,
+        title: normalizeForSearch(item.title),
+        stackText: normalizeForSearch(item.stack.join(" ")),
+        category: normalizeForSearch(item.category),
+        excerpt: normalizeForSearch(item.excerpt),
+        body: item.body,
+      });
+    });
+    return doc;
+  }, [items]);
+
   const results = useMemo(() => {
-    const q = query.trim();
+    const q = normalizeForSearch(query.trim());
     if (!q) return [];
-    return items.filter((item) => matchesQuery(item, q));
-  }, [query, items]);
+    const raw = index.search(q, { limit: 100 });
+    const seen = new Set<number>();
+    const ordered: SearchItem[] = [];
+    for (const field of FIELD_ORDER) {
+      const fieldResult = raw.find((r) => r.field === field);
+      for (const id of fieldResult?.result ?? []) {
+        const n = id as number;
+        if (!seen.has(n)) {
+          seen.add(n);
+          ordered.push(items[n]);
+        }
+      }
+    }
+    return ordered;
+  }, [query, index, items]);
 
   const projectResults = results.filter((r) => r.type === "project");
   const tilResults = results.filter((r) => r.type === "til");
+  const blogResults = results.filter((r) => r.type === "blog");
+  const pageResults = results.filter((r) => r.type === "page");
   const hasResults = results.length > 0;
   const hasQuery = query.trim().length > 0;
 
@@ -115,35 +143,57 @@ export function SearchBox({ items, popularStacks = [], categories = [], projects
             </>
           )}
 
+          {/* Contador arriba: que se vea sin scrollear */}
+          {hasResults && (
+            <>
+              <p className="hidden editorial:block mb-4 text-xs text-muted-foreground">
+                {results.length} resultado{results.length !== 1 && "s"}
+              </p>
+              <p className="hidden terminal:block mb-4 font-mono text-[11px] text-muted-foreground">
+                -- {results.length} match{results.length !== 1 && "es"} --
+              </p>
+            </>
+          )}
+
+          {/* Pages group (paginas estaticas + CV): primero, son pocas y se perderian */}
+          {pageResults.length > 0 && (
+            <ResultGroup
+              label="Paginas"
+              terminalLabel="pages"
+              items={pageResults}
+            />
+          )}
+
           {/* Projects group */}
           {projectResults.length > 0 && (
             <ResultGroup
               label="Proyectos"
               terminalLabel="projects"
               items={projectResults}
+              className={pageResults.length > 0 ? "mt-6" : undefined}
             />
           )}
 
-          {/* TILs group */}
+          {/* Blog group */}
+          {blogResults.length > 0 && (
+            <ResultGroup
+              label="Blog"
+              terminalLabel="blog"
+              items={blogResults}
+              className={pageResults.length + projectResults.length > 0 ? "mt-6" : undefined}
+            />
+          )}
+
+          {/* TILs group: al final, es la lista mas larga */}
           {tilResults.length > 0 && (
             <ResultGroup
               label="TIL"
               terminalLabel="til"
               items={tilResults}
-              className={projectResults.length > 0 ? "mt-6" : undefined}
+              className={results.length > tilResults.length ? "mt-6" : undefined}
             />
           )}
 
-          {hasResults && (
-            <>
-              <p className="hidden editorial:block mt-4 text-xs text-muted-foreground">
-                {results.length} resultado{results.length !== 1 && "s"}
-              </p>
-              <p className="hidden terminal:block mt-4 font-mono text-[11px] text-muted-foreground">
-                -- {results.length} match{results.length !== 1 && "es"} --
-              </p>
-            </>
-          )}
         </div>
       )}
     </div>

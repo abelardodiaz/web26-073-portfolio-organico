@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.30.0] - 2026-07-22
+
+### Added
+- Buscador nivel 2: FlexSearch full-text en cliente (cuerpo completo sin code
+  fences, prefijos, sin acentos, ranking titulo > stack > categoria > excerpt >
+  body) sobre TODO el sitio: proyectos, TILs, blog, CV (auto desde cv-data,
+  skills/certs primero en el indice) y 10 paginas estaticas (registro nuevo en
+  lib/static-pages.ts). Grupos de resultados: Paginas > Proyectos > Blog > TIL,
+  contador arriba.
+
+### Fixed
+- Los resultados de blog no se mostraban en /search (el filtro los encontraba
+  pero la UI no tenia grupo para renderizarlos).
+
 ## [0.29.2] - 2026-07-22
 
 ### Changed

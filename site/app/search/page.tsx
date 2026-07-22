@@ -5,7 +5,7 @@ import { SearchBox } from "@/components/search/SearchBox";
 
 export const metadata: Metadata = {
   title: "Buscar",
-  description: "Buscar proyectos y TILs por titulo, stack o categoria.",
+  description: "Buscar en todo el sitio: proyectos, TILs, blog, paginas y CV.",
   alternates: { canonical: "https://abelardodiaz.dev/search" },
 };
 
@@ -21,7 +21,7 @@ export default function SearchPage() {
       <div className="hidden editorial:block mb-8">
         <h1 className="mb-2 text-3xl font-bold tracking-tight">Buscar</h1>
         <p className="text-muted-foreground">
-          Buscar en proyectos y TILs por titulo, stack o categoria.
+          Buscar en todo el sitio: proyectos, TILs, blog, paginas y CV.
         </p>
       </div>
 
@@ -34,7 +34,7 @@ export default function SearchPage() {
           <span className="flex-1 h-px bg-border" />
         </div>
         <p className="text-sm text-muted-foreground">
-          Buscar en proyectos y TILs por titulo, stack o categoria.
+          Buscar en todo el sitio: proyectos, TILs, blog, paginas y CV.
         </p>
       </div>
 
