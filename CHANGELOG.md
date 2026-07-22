@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.28.1] - 2026-07-22
+
+### Changed
+- debates-ia-manager: diagrama ASCII de arquitectura convertido a Mermaid
+  (agentes -> Debates IA / Manager con features por caja).
+
 ## [0.28.0] - 2026-07-22
 
 ### Added

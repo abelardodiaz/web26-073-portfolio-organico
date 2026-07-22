@@ -12,19 +12,11 @@ date: "2026-07-20"
 
 Dos APIs internas, en produccion, que uso todos los dias como capa de gobierno de mi propia operacion de desarrollo. No son demos: son la infraestructura con la que construyo todo lo demas del portfolio. Repos privados; los patterns destilados estan publicados en [Multi-AI Provider Patterns](/projects/multi-ai-provider-patterns).
 
-```
-   agentes (Claude Code, skills, scripts)
-        |                    |
-        v                    v
-  +-----------+        +-----------+
-  | DEBATES IA|        |  MANAGER  |
-  | gateway   |        | flota de  |
-  | multi-IA  |        | proyectos |
-  +-----------+        +-----------+
-   8 providers          health checks
-   debates+consenso     progreso git
-   KB interceptora      Cloudflare por key
-   MCP server           RAG pgvector
+```mermaid
+flowchart TD
+    AG([Agentes: Claude Code, skills, scripts])
+    AG --> DEB["<b>DEBATES IA</b><br/>gateway multi-IA<br/><br/>8 providers<br/>debates + consenso<br/>KB interceptora<br/>MCP server"]
+    AG --> MAN["<b>MANAGER</b><br/>flota de proyectos<br/><br/>health checks<br/>progreso git<br/>Cloudflare por key<br/>RAG pgvector"]
 ```
 
 ## Debates IA: el gateway multi-IA
