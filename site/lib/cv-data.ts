@@ -56,7 +56,7 @@ export const cvData: Record<CvLocale, CvData> = {
   es: {
     labels: {
       profile: "Perfil",
-      projects: "Proyectos seleccionados",
+      projects: "Proyectos recientes",
       experience: "Experiencia",
       skills: "Skills",
       certifications: "Certificaciones",
@@ -74,6 +74,7 @@ export const cvData: Record<CvLocale, CvData> = {
     projects: [
       {
         name: "Agente 080",
+        note: "en fase beta",
         dates: "2026",
         description:
           "Agente de IA multicanal (WhatsApp, Telegram, web) que no solo responde: razona, decide y ejecuta acciones reales de negocio -- cobranza, ventas, soporte, agendamiento, inventario inmobiliario -- con multiples agentes especialistas, memoria, RAG y guardrails. Autonomia acotada: cada accion tiene limites definidos y es auditable.",
@@ -128,7 +129,7 @@ export const cvData: Record<CvLocale, CvData> = {
         name: "Domus Rentas: SaaS multi-tenant",
         dates: "2025-2026",
         description:
-          "Evolucion de un sitio de rentas en produccion a un SaaS multi-tenant de 9 microservicios poliglota: Django donde conviene, FastAPI donde el tiempo real importa, frontend Next.js como gateway.",
+          "Evolucion de un sitio catalogo de casas amuebladas en renta, en produccion, a un SaaS multi-tenant de 9 microservicios poliglota: Django donde conviene, FastAPI donde el tiempo real importa, frontend Next.js como gateway.",
         chips: ["Django", "FastAPI", "Next.js", "PostgreSQL", "Redis", "Docker"],
         url: "/projects/domus-saas-microservicios",
       },
@@ -139,15 +140,6 @@ export const cvData: Record<CvLocale, CvData> = {
           "Ecommerce cuyo verdadero motor no es el storefront: sincronizacion automatica de catalogo, precios, inventario y tipo de cambio contra la API del mayorista Syscom.",
         chips: ["Django", "Next.js", "Celery", "PostgreSQL", "Docker"],
         url: "/projects/tienda-django-sync",
-      },
-      {
-        name: "ulfblk - Bloques Reciclables",
-        note: "open source",
-        dates: "2026",
-        description:
-          "Ecosistema de 28 paquetes composables multi-stack (Python + TypeScript): infraestructura reutilizable para construir APIs, SaaS multitenant, bots y dashboards. Monorepo con uv + pnpm + Turborepo, cero dependencias circulares.",
-        chips: ["Python", "TypeScript", "FastAPI", "Next.js", "Turborepo"],
-        url: "/projects/bloques-reciclables",
       },
       {
         name: "Call Blocker",
@@ -223,7 +215,7 @@ export const cvData: Record<CvLocale, CvData> = {
       {
         category: "Infra / DevSecOps",
         keywords:
-          "Linux (VPS propios), Docker, PM2, Cloudflare, Vercel, GitHub Actions, gitleaks + sanitizacion pre-publicacion, redes MikroTik/Cambium",
+          "Linux (VPS propios), Docker, PM2, Cloudflare, Vercel, GitHub Actions, gitleaks + sanitizacion pre-publicacion",
       },
     ],
     certifications: [
@@ -239,7 +231,7 @@ export const cvData: Record<CvLocale, CvData> = {
   en: {
     labels: {
       profile: "Profile",
-      projects: "Selected projects",
+      projects: "Recent projects",
       experience: "Experience",
       skills: "Skills",
       certifications: "Certifications",
@@ -257,6 +249,7 @@ export const cvData: Record<CvLocale, CvData> = {
     projects: [
       {
         name: "Agente 080",
+        note: "in beta",
         dates: "2026",
         description:
           "Multichannel AI agent (WhatsApp, Telegram, web) that goes beyond replying: it reasons, decides, and executes real business actions -- collections, sales, support, scheduling, real-estate inventory -- with multiple specialist agents, memory, RAG, and guardrails. Bounded autonomy: every action has defined limits and is auditable.",
@@ -311,7 +304,7 @@ export const cvData: Record<CvLocale, CvData> = {
         name: "Domus Rentas: multi-tenant SaaS",
         dates: "2025-2026",
         description:
-          "Evolution of a production rental platform into a multi-tenant SaaS built as 9 polyglot microservices: Django where it fits, FastAPI where real time matters, and a Next.js frontend acting as gateway.",
+          "Evolution of a production catalog site for furnished rental homes into a multi-tenant SaaS built as 9 polyglot microservices: Django where it fits, FastAPI where real time matters, and a Next.js frontend acting as gateway.",
         chips: ["Django", "FastAPI", "Next.js", "PostgreSQL", "Redis", "Docker"],
         url: "/projects/domus-saas-microservicios",
       },
@@ -322,15 +315,6 @@ export const cvData: Record<CvLocale, CvData> = {
           "Ecommerce whose real engine is not the storefront: automatic sync of catalog, prices, inventory, and exchange rate against the Syscom wholesaler API.",
         chips: ["Django", "Next.js", "Celery", "PostgreSQL", "Docker"],
         url: "/projects/tienda-django-sync",
-      },
-      {
-        name: "ulfblk - Recyclable Blocks",
-        note: "open source",
-        dates: "2026",
-        description:
-          "Ecosystem of 28 composable multi-stack packages (Python + TypeScript): reusable infrastructure for building APIs, multitenant SaaS, bots, and dashboards. Monorepo with uv + pnpm + Turborepo, zero circular dependencies.",
-        chips: ["Python", "TypeScript", "FastAPI", "Next.js", "Turborepo"],
-        url: "/projects/bloques-reciclables",
       },
       {
         name: "Call Blocker",
@@ -406,7 +390,7 @@ export const cvData: Record<CvLocale, CvData> = {
       {
         category: "Infra / DevSecOps",
         keywords:
-          "Linux (self-hosted VPS), Docker, PM2, Cloudflare, Vercel, GitHub Actions, gitleaks + pre-publication sanitization, MikroTik/Cambium networking",
+          "Linux (self-hosted VPS), Docker, PM2, Cloudflare, Vercel, GitHub Actions, gitleaks + pre-publication sanitization",
       },
     ],
     certifications: [

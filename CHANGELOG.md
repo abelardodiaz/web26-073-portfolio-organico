@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.29.2] - 2026-07-22
+
+### Changed
+- CV (ES/EN): seccion renombrada a "Proyectos recientes" / "Recent projects";
+  Agente 080 con nota "en fase beta"; Domus Rentas descrito como "sitio catalogo
+  de casas amuebladas en renta"; ulfblk/bloques-reciclables retirado del CV
+  (sigue en /projects); skills Infra sin "redes MikroTik/Cambium". PDFs
+  regenerados y borradores docs/cv/ sincronizados.
+
 ## [0.29.1] - 2026-07-22
 
 ### Fixed
