@@ -1,0 +1,116 @@
+---
+title: "Automatizaciones con n8n"
+slug: "automatizaciones-n8n"
+description: "Cinco automatizaciones en produccion construidas sobre n8n: captacion de prospectos por WhatsApp, clasificacion y parsing de correo, desencriptado de estados de cuenta y un puente WhatsApp-Telegram auto-sanador."
+stack: ["n8n", "whatsapp-api", "telegram", "gmail", "webhooks", "rest"]
+category: "portfolio"
+featured: true
+date: "2026-07-22"
+---
+
+## Que es
+
+Cinco automatizaciones construidas sobre **n8n**, cada una resolviendo un ciclo completo de negocio sin intervencion manual. Corren en produccion sobre infraestructura propia; lo que comparten no es el canvas bonito sino los patterns de resiliencia: idempotencia, reintentos con backoff, y alertas cuando algo se muere de verdad.
+
+## 1. Encuesta + captacion de prospectos por WhatsApp
+
+Formulario web que contacta al prospecto por WhatsApp, lo califica con logica condicional y guarda todo en una hoja de calculo (3 modulos encadenados).
+
+```mermaid
+flowchart TD
+    A[Formulario web] -->|webhook| B[Validacion de datos]
+    B --> C[WhatsApp: plantilla de bienvenida]
+    C --> P([Prospecto])
+    P -->|responde| R[Receptor de respuestas]
+    R --> D{Logica condicional}
+    D --> E[(Hoja de calculo: base de prospectos)]
+    E --> F[Notificaciones al negocio en tiempo real]
+    E --> G[Confirmacion por WhatsApp + cierre de ficha]
+```
+
+**Stack:** n8n · WhatsApp Business API · Webhooks · Google Sheets · Notificaciones
+
+## 2. Clasificador de correo entrante
+
+Clasifica todos los correos entrantes y los rutea al parser correcto de forma asincrona, con anti-duplicados y alertas ante fallo.
+
+```mermaid
+flowchart TD
+    A[Bandeja de correo - poll periodico] --> B[Anti-duplicados / idempotencia]
+    B --> C{Clasificador}
+    C --> D[Parser Airbnb]
+    C --> E[Parser Bancos PDF]
+    C --> F[Otros tipos]
+    C -.->|despacho falla| G[Alerta]
+```
+
+**Stack:** n8n · Gmail · Ruteo polimorfico · Despacho asincrono · Alertas
+
+## 3. Parser de correos de Airbnb
+
+Lee correos de Airbnb, extrae datos de reservas y eventos y los postea a una API, con reintentos automaticos por backoff si algo falla.
+
+```mermaid
+flowchart TD
+    A[Correo de Airbnb] --> B[Detecta tipo de evento: reserva, cancelacion...]
+    B --> C[Extrae datos estructurados]
+    C --> D[POST a la API del sistema]
+    D --> E{Exito?}
+    E -->|si| F[Registra estado OK]
+    E -->|no| G[Marca caido]
+    G --> H[Reintento cada 15 min con backoff]
+    H --> I{Mas de 6 horas?}
+    I -->|no| D
+    I -->|si| J[Marca muerto + alerta]
+```
+
+**Stack:** n8n · Gmail · Parsing estructurado · API REST · Reintentos con backoff
+
+## 4. Parser de estados de cuenta bancarios (PDF)
+
+Recibe estados de cuenta bancarios, desencripta los PDFs protegidos con contrasena y los archiva ordenados por banco y fecha.
+
+```mermaid
+flowchart TD
+    A[Correo con estado de cuenta] --> B{PDF protegido con contrasena?}
+    B -->|si| C[Desencripta con qpdf]
+    B -->|no| D[Archiva PDF ordenado por banco y fecha]
+    C --> D
+    D --> E[Registra en log de procesamiento]
+```
+
+**Stack:** n8n · Gmail · qpdf · Almacenamiento en disco · Logging
+
+## 5. Puente WhatsApp a Telegram (auto-sanador)
+
+Reenvia mensajes de WhatsApp a Telegram organizados por cliente; rescata mensajes atascados cada 15 minutos y alerta ante errores duros.
+
+```mermaid
+flowchart TD
+    subgraph SG1["Flujo principal"]
+    A[WhatsApp entrante] -->|webhook| B[(Guarda mensaje en BD durable)]
+    B --> C[Reenvia a Telegram: un tema por cliente]
+    C --> D[Marca reenviado]
+    end
+    subgraph SG2["Barredor cada 15 min"]
+    E[Busca mensajes atascados] --> F[Reenvia pendientes]
+    F --> G{Mas de 6 h sin exito?}
+    G -->|si| H[Marca muerto + alerta]
+    end
+    subgraph SG3["Ante error duro"]
+    I[Workflow de error] --> J[Alerta con nodo fallido, id y mensaje]
+    end
+    D ~~~ E
+    H ~~~ I
+```
+
+**Stack:** n8n · WhatsApp Business API · Telegram · BD durable · Recuperacion automatica
+
+## Patrones tecnicos que comparten
+
+- **Resiliencia:** reintentos con backoff, deduplicacion y recuperacion automatica.
+- **Observabilidad:** alertas en tiempo real ante cualquier fallo.
+- **Integracion:** webhooks, APIs REST y mensajeria (WhatsApp / Telegram).
+- **Persistencia:** cada evento queda registrado con su estado actualizado.
+
+La regla de diseno detras de los cinco: un workflow que no avisa cuando falla no es una automatizacion, es una bomba de tiempo. Todo flujo tiene un camino de error explicito y un mecanismo de rescate para lo que se atora.

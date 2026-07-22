@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.28.0] - 2026-07-22
+
+### Added
+- Pagina de proyecto: "Automatizaciones con n8n" (categoria portfolio,
+  featured). Cinco automatizaciones en produccion con diagramas Mermaid:
+  captacion de prospectos por WhatsApp, clasificador de correo, parser de
+  Airbnb, parser de estados de cuenta bancarios (PDF) y puente
+  WhatsApp-Telegram auto-sanador. Fuente: resumen sanitizado del proyecto
+  058 (server005).
+- Soporte de diagramas Mermaid en MDX: componente cliente Mermaid.tsx
+  (carga dinamica, tema dark/light) + deteccion de bloques ```mermaid en
+  MdxContent.tsx.
+
 ## [0.27.3] - 2026-07-20
 
 ### Changed
