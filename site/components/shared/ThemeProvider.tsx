@@ -48,7 +48,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     const html = document.documentElement;
     html.classList.remove("theme-editorial", "theme-terminal");
     html.classList.add(`theme-${theme}`);
-    html.classList.toggle("dark", mode === "dark");
+    html.classList.toggle("dark", mode === "dark" && !html.dataset.forceLight);
     localStorage.setItem("site-theme", theme);
     localStorage.setItem("site-mode", mode);
   }, [theme, mode]);

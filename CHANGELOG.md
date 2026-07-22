@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.29.1] - 2026-07-22
+
+### Fixed
+- /cv en carga directa quedaba en tema oscuro: el ThemeProvider re-aplicaba
+  "dark" al hidratar (su efecto corre despues del de ForceLightMode). Fix con
+  flag data-force-light en <html> que el ThemeProvider respeta.
+
 ## [0.29.0] - 2026-07-22
 
 ### Added
