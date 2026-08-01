@@ -1,0 +1,123 @@
+---
+title: "Coach de llamadas: IA que sugiere la respuesta mientras el asesor sigue en la llamada"
+slug: "coach-llamadas-ia"
+description: "Sistema de coaching en tiempo real para equipos que venden por telefono. Escucha la llamada mientras ocurre, separa asesor y cliente en dos canales, y pone la respuesta en pantalla antes de que el asesor tome aire. Al colgar deja resumen, objeciones, audio y transcripcion. Python, FastAPI, WebSockets y transcripcion en streaming."
+stack: ["python", "fastapi", "websockets", "llm", "twilio"]
+category: "portfolio"
+featured: false
+date: "2026-08-01"
+thumbnail: "/projects/coach-llamadas-ia/00-thumb.webp"
+links:
+  - label: "Landing: coach94"
+    url: "https://coach94.abelardodiaz.dev"
+---
+
+## Que es
+
+Un sistema que **escucha una llamada de venta mientras ocurre** y le dice al asesor
+que responder, a tiempo de que lo diga. No es un analizador que entrega un reporte
+al dia siguiente: la sugerencia aparece en la pantalla del asesor **durante** la
+conversacion, dentro de la misma pausa en la que el prospecto termina de hablar.
+
+<figure className="my-8">
+<img src="/projects/coach-llamadas-ia/01-hero.webp" alt="Portada de la landing: titular 'Tus asesores nuevos cerrando como los expertos en menos de 2 semanas' sobre una onda de audio de una llamada real de 5 minutos" className="w-full rounded-lg border border-border" loading="lazy" />
+<figcaption className="text-center text-sm text-muted-foreground">La onda no es decorativa: son 140 mediciones de energia de una llamada real, con el asesor hacia arriba y el prospecto hacia abajo.</figcaption>
+</figure>
+
+[**Ver la landing en vivo →**](https://coach94.abelardodiaz.dev/)
+
+## El problema, en un segundo concreto
+
+Lo que vende no es el producto: es **saber que decir en el momento exacto**. Un
+asesor con anos de oficio tiene esa respuesta en la punta de la lengua. El que
+lleva tres semanas se acuerda veinte minutos despues de colgar, cuando ya no
+sirve.
+
+La landing entera esta construida alrededor de un solo segundo -- el minuto 00:47
+de una llamada real, frente a la objecion mas comun del ramo:
+
+<figure className="my-8">
+<img src="/projects/coach-llamadas-ia/02-momento.webp" alt="Reconstruccion del minuto 00:47: el prospecto dice 'Ya tengo un seguro por el trabajo', el sistema lo transcribe en +0.4s, muestra la sugerencia en +1.6s y el asesor responde en 00:49" className="w-full rounded-lg border border-border" loading="lazy" />
+<figcaption className="text-center text-sm text-muted-foreground">La linea de tiempo del segundo que decide la venta: escuchar, entender de quien fue la frase, y sugerir antes de que la pausa se note.</figcaption>
+</figure>
+
+El prospecto dice *"ya tengo un seguro por el trabajo"*. A los **0.4 s** la frase
+ya esta transcrita y atribuida al prospecto (no al asesor). A los **1.6 s** el
+asesor lee en pantalla *"preguntale que pasa con esa cobertura el dia que cambie
+de empleo"*. En 00:49 lo dice con sus palabras. Del otro lado nadie noto nada.
+
+Ese es todo el producto. Lo demas es plomeria para que ese segundo ocurra.
+
+## Que resuelve
+
+<figure className="my-8">
+<img src="/projects/coach-llamadas-ia/03-cambia.webp" alt="Seccion 'Que cambia' con tres tarjetas: los nuevos tambien cierran, sabes por que se cae una venta, el expediente se escribe solo" className="w-full rounded-lg border border-border" loading="lazy" />
+<figcaption className="text-center text-sm text-muted-foreground">Tres efectos, ninguno de los cuales obliga al equipo a cambiar como trabaja.</figcaption>
+</figure>
+
+- **Curva de aprendizaje** -- el asesor nuevo aprende en la llamada, con el caso
+  enfrente, en vez de en una capacitacion donde todas las objeciones suenan
+  faciles.
+- **Diagnostico de perdidas** -- cada llamada queda con su resumen y sus
+  objeciones. Al mes hay un mapa de donde se cae el dinero construido con frases
+  textuales, no con impresiones de sobremesa.
+- **Captura automatica** -- nadie escribe notas al colgar. Resumen, puntos clave,
+  audio y transcripcion ya estan ahi, y se sincronizan al CRM si existe.
+
+## Como esta armado
+
+<figure className="my-8">
+<img src="/projects/coach-llamadas-ia/04-funciona.webp" alt="Seccion 'Como funciona' con cuatro pasos: cargar la forma de vender, marcar desde el navegador, sugerir en el momento justo, expediente listo al colgar" className="w-full rounded-lg border border-border" loading="lazy" />
+<figcaption className="text-center text-sm text-muted-foreground">Cuatro pasos de cara al cliente. Debajo hay un fork del audio en vivo y una cadena de transcripcion en streaming.</figcaption>
+</figure>
+
+El backend es **Python + FastAPI**. El audio de la llamada se **forkea en vivo**
+por WebSocket desde la telefonia y se transcribe en streaming separando los dos
+lados de la conversacion en canales distintos -- distinguir quien dijo que no es
+un detalle: sugerirle al asesor una respuesta a su propia frase seria ruido.
+
+El asesor trabaja **desde el navegador** con diadema: no hay que instalar nada ni
+poner otro telefono en el escritorio. Las sugerencias llegan a esa pantalla por
+WebSocket, y el modelo esta cargado con el guion, los productos y las objeciones
+ya detectadas del cliente, para que hable como el equipo y no en generico.
+
+La decision de diseno mas importante no es tecnica sino de criterio: **el coach
+escucha toda la llamada pero solo habla cuando hay algo que valga la pena**. Un
+sistema que sugiere en cada turno se apaga el primer dia.
+
+## Numeros, y lo que no prometen
+
+<figure className="my-8">
+<img src="/projects/coach-llamadas-ia/05-pruebas.webp" alt="Metricas: 0.4s de que hablan a texto, 0.9s a la sugerencia en pantalla, 2 canales separados; con una nota sobre lo que no se puede prometer" className="w-full rounded-lg border border-border" loading="lazy" />
+<figcaption className="text-center text-sm text-muted-foreground">Tiempos medidos sobre llamadas reales, con el limite dicho en la misma pagina.</figcaption>
+</figure>
+
+Los tiempos estan medidos sobre llamadas reales: **0.4 s** de voz a texto, **0.9 s**
+a la sugerencia en pantalla, **2 canales** analizados por separado.
+
+Lo que la pagina deliberadamente **no** promete es que los asesores vendan mas.
+Eso no lo demuestra ningun demo -- lo demuestran las llamadas del cliente durante
+unas semanas. Decirlo en la propia landing comercial fue una decision consciente:
+en un producto de IA vendido a un equipo de ventas, la credibilidad se gana
+marcando el limite antes de que lo marque el prospecto.
+
+## La landing
+
+<figure className="my-8">
+<img src="/projects/coach-llamadas-ia/06-movil.webp" alt="La misma landing en telefono, con el titular, los tres beneficios y el boton Hablemos" className="max-w-xs mx-auto rounded-lg border border-border" loading="lazy" />
+<figcaption className="text-center text-sm text-muted-foreground">Un solo archivo HTML, escrito movil primero, sin build ni dependencias.</figcaption>
+</figure>
+
+La pagina comercial es **un unico archivo HTML autocontenido**: todo el CSS y el
+JS embebidos, sin bundler, sin dependencias, favicon inline. Se escribio movil
+primero y se ensancha a partir de 900px -- una sola version en vez de dos, porque
+dos archivos se separan solos y un dia se publica el viejo.
+
+Tiene una barra de progreso que trata la pagina como una llamada de 5:58: cada
+seccion es una marca de tiempo. El rotulo superior rota el ramo (autos, gastos
+medicos, vida, danos) con JS embebido que respeta `prefers-reduced-motion`.
+
+---
+
+**Stack:** Python, FastAPI, WebSockets, transcripcion en streaming, LLM con
+contexto del cliente, telefonia con fork de audio en vivo, front vanilla.

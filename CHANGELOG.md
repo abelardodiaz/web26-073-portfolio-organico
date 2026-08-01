@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.31.0] - 2026-08-01
+
+### Added
+- Proyecto "Coach de llamadas": caso de estudio del sistema de coaching en
+  tiempo real sobre llamadas de venta (Python/FastAPI/WebSockets, sugerencia en
+  pantalla durante la llamada). 7 capturas propias tomadas contra el subdominio
+  en vivo. La landing la hospeda 094 en coach94.abelardodiaz.dev; 073 solo la
+  enlaza, sin copiar el HTML ni crear ruta de Next.
+
+### Notes
+- Decision acordada con 094: la landing NO se indexa (mantiene su
+  `Disallow: /`); la pagina de portafolio que la enlaza si es publica.
+
 ## [0.30.0] - 2026-07-22
 
 ### Added
