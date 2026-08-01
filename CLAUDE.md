@@ -73,6 +73,7 @@ web26-073-portfolio-organico/
 | docs/BRIEF-993.md | Estrategia original |
 | docs/PLAN-EJECUCION.md | Plan tactico |
 | docs/08-sistema-recursos.md | Sistema de Recursos: TILs `resource:`, /recursos, backlog, workflow de graduacion a micro-repo |
+| docs/09-integracion-094-coach-landing.md | Landing del coach (094) enlazada, no hospedada: reparto, decision de no indexar, por que no se copia el HTML |
 | docs/chats-index.md | Indice/catalogo de chats de IA (claude.ai, etc.) para recordar y retomar; proceso en skill `revisar-chats-ia` |
 | docs/cv/README.md | Sistema de CV (/cv, /cv/en, PDFs): fuentes, flujo de edicion/regeneracion, decisiones de contenido, contexto reclutador TITAN |
 
