@@ -1,0 +1,94 @@
+---
+title: "Claude Design: que es, como funciona y para quien conviene"
+slug: "claude-design-que-es-como-funciona"
+date: "2026-07-09"
+summary: "Claude Design es el producto de Anthropic Labs que convierte una conversacion en prototipos, slides y one-pagers editables. Como funciona el flujo, que exporta, donde se queda corto y para quien tiene sentido hoy."
+tags: ["diseno", "ai", "claude", "agentes"]
+---
+
+En el [mapa del ecosistema open source de diseno AI-native](/blog/diseno-ai-native-oss)
+mencione Claude Design de pasada, como el producto que detono la oleada. Merece
+su propio articulo: que es exactamente, como se usa y donde se queda corto.
+
+El 17 de abril de 2026 Anthropic lo presento como un producto de
+[Anthropic Labs](https://www.anthropic.com/news/claude-design-anthropic-labs).
+La promesa: colaborar con Claude para crear trabajo visual pulido, como disenos,
+prototipos, slides y one-pagers. Corre sobre Claude Opus 4.7 y salio en **vista previa de investigacion** para
+suscriptores Pro, Max, Team y Enterprise.
+
+## Como funciona
+
+La interfaz son dos paneles: una conversacion a la izquierda y un lienzo en vivo
+a la derecha. Describes lo que quieres, Claude arma una primera version en el
+lienzo y tu la afinas.
+
+**Entradas.** No se limita al texto. Acepta imagenes y capturas como referencia,
+documentos DOCX, PPTX y XLSX, e incluso una captura de una pagina web.
+
+**Design system automatico.** Si lo conectas a tu codigo y tus archivos de
+diseno, lee colores, tipografia y componentes y los aplica a lo que genera. Es la
+parte que separa un prototipo con tu marca de uno generico.
+
+**Cuatro formas de iterar.** Chat, comentarios puestos directo sobre el lienzo,
+edicion directa y controles deslizantes que Claude genera para ajustar cosas
+como espaciado o color sin reescribir el prompt.
+
+## Que sale de ahi
+
+Las exportaciones documentadas son URL internas de la organizacion, carpetas,
+Canva, PDF, PPTX y HTML. Lo distinto esta en el paso final: cuando el diseno esta
+listo, Claude empaqueta un paquete de traspaso que se le pasa a Claude Code con
+una sola instruccion. El anuncio no detalla que contiene ese paquete (codigo,
+tokens de diseno, assets), asi que conviene probarlo antes de darlo por hecho.
+
+| Quiero | Salida |
+|--------|--------|
+| Mostrarlo a mi equipo | URL interna, scope de organizacion |
+| Presentarlo | PPTX o PDF |
+| Seguir en Canva | Exportacion a Canva |
+| Publicarlo tal cual | HTML |
+| Construirlo de verdad | Handoff a Claude Code |
+
+## Donde se queda corto
+
+Anthropic lo plantea como complemento de Figma y Canva, no como reemplazo, y lo
+la prueba de DataCamp lo confirma:
+
+- **No exporta a `.fig`.** Si tu equipo vive en Figma, no hay archivo nativo que
+  importar.
+- **Sin sistema de marca, el resultado es generico.** Funciona, pero se nota. El
+  valor esta en conectarlo a tu design system primero.
+- **Consume tu cuota de suscripcion.** Usa los limites del plan, con opcion de
+  uso extra de pago. Segun una prueba publicada, la cuota semanal es por usuario,
+  no compartida con el equipo.
+- **Controles de empresa limitados por ahora.** En Enterprise viene desactivado
+  por defecto, y la misma prueba reporta que faltan logs de auditoria y reportes
+  de uso para administradores.
+- **Fallos propios de una preview.** Hay reportes de comentarios que a veces
+  desaparecen antes de que Claude los lea (el truco es pegarlos en el chat) y
+  lentitud con repositorios grandes.
+
+## Para quien conviene
+
+Tiene sentido cuando el problema es **pasar de una idea a algo visible rapido**:
+un PM que bosqueja un flujo, alguien que necesita un deck sin invertir un fin de
+semana, un equipo de marketing que quiere probar una landing. Tambien para
+disenadores que quieren explorar varias direcciones antes de abrir Figma.
+
+No sustituye el trabajo con especificaciones exactas ni librerias de componentes
+maduras: ese terreno sigue siendo de las herramientas de diseno de siempre.
+
+## Lo que me quedo
+
+Lo importante de Claude Design no es el lienzo, es el **traspaso**. Un LLM que
+entrega un artefacto visual y lo conecta con el agente que lo convierte en
+codigo cierra un hueco que antes se llenaba a mano. Que el producto sea una
+preview y tenga aristas es normal. Las alternativas abiertas que aparecieron en
+semanas, y que repaso en el [otro articulo](/blog/diseno-ai-native-oss), apuntan
+al mismo hueco.
+
+*Fuentes: el
+[anuncio oficial de Anthropic](https://www.anthropic.com/news/claude-design-anthropic-labs)
+y una [prueba publicada por DataCamp](https://www.datacamp.com/blog/claude-design)
+para los limites. No lo he probado de primera mano; lo descrito sale de esas dos
+fuentes.*
