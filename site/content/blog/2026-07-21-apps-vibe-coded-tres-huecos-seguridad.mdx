@@ -1,0 +1,178 @@
+---
+title: "Tres huecos tipicos en apps hechas con IA y como cerrarlos"
+slug: "apps-vibe-coded-tres-huecos-seguridad"
+date: "2026-07-21"
+summary: "Tablas de Supabase sin RLS, secretos que acaban en el navegador y APIs sin limites ni configuracion de produccion. Que dice la documentacion oficial, como se ve cada hueco y el arreglo minimo en Next.js, Django y SQL."
+tags: ["seguridad", "vibe-coding", "supabase", "nextjs", "django"]
+---
+
+Los problemas de seguridad no rompen nada en una demo: la app funciona igual con
+ellos que sin ellos, y por eso nadie los ve hasta que alguien los usa. Un
+preprint de junio de 2026, [Understanding the (In)Security of Vibe-Coded
+Applications](https://arxiv.org/abs/2606.23130), reporta que las apps generadas
+con agentes repiten patrones de vulnerabilidad propios, distintos de los del
+software escrito a mano.
+
+No voy a citar porcentajes. Las cifras que encontre cambian entre versiones del
+preprint y entre fuentes, y prefiero no repetir un numero que no puedo sostener.
+Lo que si puedo respaldar es la mecanica: tres huecos concretos, cada uno
+descrito en la documentacion oficial de la herramienta que lo causa.
+
+## 1. Tablas sin Row Level Security en Supabase
+
+Supabase expone tu base de datos por una API. Segun su documentacion, una tabla
+de un esquema expuesto sin RLS "is readable and writable by any role with a
+grant on it". Con la clave `anon`, que va en el navegador por diseno, eso
+significa que cualquiera puede leer y escribir esa tabla.
+
+Si una tabla se crea sin RLS, la app funciona justamente porque no hay
+restricciones, asi que nada avisa del problema. El arreglo son dos pasos: activar
+RLS y escribir las politicas que tu app necesita.
+
+```sql
+alter table public.profiles enable row level security;
+
+create policy "Users can view their own profile"
+on profiles for select
+to authenticated
+using ( (select auth.uid()) = user_id );
+
+create policy "Users can insert their own profile"
+on profiles for insert
+to authenticated
+with check ( (select auth.uid()) = user_id );
+```
+
+Con RLS activo y sin politica, nadie puede operar sobre la tabla, asi que cada
+operacion que tu app hace (leer, insertar, actualizar, borrar) necesita su propia
+politica. La documentacion describe una politica como una clausula `WHERE` que se
+agrega a cada consulta. Para encontrar las tablas que todavia estan abiertas:
+
+```sql
+select tablename
+from pg_tables
+where schemaname = 'public' and not rowsecurity;
+```
+
+Para comprobar que una politica funciona, haz la consulta con la clave `anon` y
+sin sesion iniciada: tiene que fallar o devolver vacio.
+
+La clave `service_role` es aparte: salta RLS. Supabase es explicito: "Never use a
+secret key in the browser or expose it to customers". Va solo en el servidor
+(Route Handlers, Server Components, Server Actions o funciones de borde). En este
+post uso los nombres clasicos, `anon` y `service_role`; Supabase tambien ofrece
+claves nuevas, `sb_publishable_` y `sb_secret_`, y la regla es la misma: la
+publicable puede ir en el cliente y la secreta no.
+
+## 2. Secretos que terminan en el navegador
+
+Este hueco se junta con el anterior. En Next.js, las variables de entorno solo
+existen en el servidor, salvo las que empiezan con `NEXT_PUBLIC_`. A esas, Next.js
+las "inlinea" en el JavaScript que manda al navegador al hacer `next build`: el
+valor queda escrito dentro del bundle.
+
+Un escenario plausible, no un caso medido: una consulta falla desde el cliente
+por falta de politica, y la salida rapida es poner la clave `service_role` en una
+variable `NEXT_PUBLIC_`. La app arranca, la consulta funciona, y la clave que se
+salta toda la seguridad de tu base queda publicada en cada visita.
+
+Reglas para revisar:
+
+- Busca `NEXT_PUBLIC_` en tu codigo y en tu `.env`. Solo lo que es publico por
+  naturaleza (un ID de analitica, la URL del proyecto, la clave `anon`) puede
+  llevar ese prefijo.
+- Cualquier cosa con `SECRET`, `KEY` de servicio o `PASSWORD` se queda sin prefijo
+  y se lee solo en Route Handlers o Server Components.
+- Comprueba que `.env` este en `.gitignore`. La plantilla de `create-next-app` ya
+  lo hace, pero un proyecto armado a mano puede no tenerlo.
+- Si una clave llego al navegador o a un repositorio, tratala como comprometida:
+  rotala. Borrar el archivo o quitarla del historial de Git no basta, porque
+  alguien pudo copiarla antes.
+- Para comprobar que no queda nada, busca el valor de la clave en `.next/static`
+  despues de compilar o en las respuestas de red desde las herramientas del
+  navegador.
+
+## 3. Sin limites en la API ni configuracion de produccion
+
+OWASP lo llama [API4:2023, consumo de recursos sin
+restricciones](https://api-security.owasp.org/editions/2023/en/0xa4-unrestricted-resource-consumption):
+una API es vulnerable si falta al menos uno de sus limites. Uno de sus escenarios
+es un flujo de "olvide mi contrasena" que manda un SMS: un script que llama
+decenas de miles de veces a ese endpoint le cuesta al dueno miles de dolares en
+minutos. Nada en la funcionalidad pide ese limite, asi que si nadie lo agrega a
+proposito, no existe.
+
+OWASP recomienda limitar cuantas veces puede llamar un cliente en un periodo,
+fijar un tamano maximo a los datos de entrada, limitar operaciones sensibles como
+validar un codigo o recuperar una contrasena, y poner topes de gasto en los
+proveedores externos.
+
+La configuracion de produccion es el otro lado. En Next.js, las cabeceras de
+seguridad se definen en `next.config.js`:
+
+```js
+const securityHeaders = [
+  { key: 'X-Content-Type-Options', value: 'nosniff' },
+  { key: 'Referrer-Policy', value: 'origin-when-cross-origin' },
+  { key: 'Content-Security-Policy', value: "frame-ancestors 'self'" },
+  {
+    key: 'Strict-Transport-Security',
+    value: 'max-age=3600', // empieza bajo y sube cuando todo funcione
+  },
+]
+
+module.exports = {
+  async headers() {
+    return [{ source: '/:path*', headers: securityHeaders }]
+  },
+}
+```
+
+La documentacion de Next.js aclara que `X-Frame-Options` ya fue reemplazada por la
+directiva `frame-ancestors` de Content-Security-Policy, mejor soportada en
+navegadores modernos, por eso el ejemplo usa esa. Su ejemplo oficial de HSTS es
+de dos anos con `includeSubDomains` y `preload`; yo arranco con una hora, porque
+si algun subdominio no sirve HTTPS bien, un valor largo con `preload` te deja sin
+acceso durante mucho tiempo.
+
+En Django la situacion es mejor de lo que parece. Un proyecto nuevo ya trae
+`SECURE_CONTENT_TYPE_NOSNIFF = True`, `SECURE_REFERRER_POLICY = 'same-origin'` y
+`X_FRAME_OPTIONS = 'DENY'` por defecto. Lo que no viene activado es esto:
+
+```python
+SECURE_HSTS_SECONDS = 3600      # empieza bajo y sube cuando todo funcione
+SECURE_SSL_REDIRECT = True
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+```
+
+`SECURE_HSTS_SECONDS` vale 0 por defecto, y la documentacion de Django advierte
+que configurarlo mal puede romper tu sitio de forma irreversible durante un
+tiempo. Por eso el ejemplo arranca en una hora. Los dos ajustes de cookies
+tambien vienen en `False`. Si tu sitio esta detras de un proxy que termina el
+TLS, activar `SECURE_SSL_REDIRECT` puede causar redirecciones infinitas; la
+documentacion lo resuelve configurando `SECURE_PROXY_SSL_HEADER` con la cabecera
+que tu proxy usa para marcar las peticiones seguras.
+
+## Revision de diez minutos
+
+| Hueco | Como detectarlo | Arreglo minimo |
+|-------|-----------------|----------------|
+| Tabla sin RLS | Panel de Supabase: tablas de `public` sin RLS activado | `enable row level security` y una politica con `auth.uid()` |
+| Secreto en el cliente | `grep NEXT_PUBLIC_` y revisar cada valor | Quitar el prefijo, mover a servidor, rotar la clave expuesta |
+| Sin limite de peticiones | Endpoints de login, OTP y recuperacion sin tope | Rate limit, tamano maximo de entrada, topes de gasto |
+| Cabeceras y cookies | Ver las cabeceras de respuesta de tu sitio | `headers()` en Next.js o los settings de arriba en Django |
+
+Ninguno de los tres es sofisticado, y ninguno hace fallar la app. Conviene
+repasar esta lista antes de publicar y cada vez que cambien el esquema, las
+claves o la configuracion del servidor.
+
+*Fuentes: el preprint de
+[Deng, Fan y Meng](https://arxiv.org/abs/2606.23130) para la observacion general;
+la documentacion de
+[Supabase sobre RLS](https://supabase.com/docs/guides/database/postgres/row-level-security),
+de [Next.js sobre variables de entorno](https://nextjs.org/docs/app/guides/environment-variables)
+y [cabeceras](https://nextjs.org/docs/app/api-reference/config/next-config-js/headers),
+de [Django sobre ajustes](https://docs.djangoproject.com/en/5.2/ref/settings/) y
+[OWASP API4:2023](https://api-security.owasp.org/editions/2023/en/0xa4-unrestricted-resource-consumption).
+No hice una auditoria propia de apps reales.*
