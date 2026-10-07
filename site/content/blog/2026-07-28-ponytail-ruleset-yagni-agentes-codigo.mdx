@@ -1,0 +1,127 @@
+---
+title: "ponytail, un ruleset YAGNI para agentes de codigo: lo probe"
+slug: "ponytail-ruleset-yagni-agentes-codigo"
+date: "2026-07-28"
+summary: "ponytail promete que tu agente escriba menos codigo siguiendo YAGNI. Revise sus hooks, hice una prueba controlada con cuatro tareas y la comparo con lo que dice su propio benchmark: donde ayuda, donde casi no cambia nada y que cuesta."
+tags: ["ia", "agentes", "claude-code", "yagni"]
+---
+
+[ponytail](https://github.com/dietrichgebert/ponytail) es un conjunto de reglas
+para agentes de codigo (Claude Code, Cursor, Codex y varios mas) que les pide
+comportarse como "el desarrollador senior mas perezoso del equipo". La idea es
+YAGNI: antes de escribir nada, el agente sube una escalera y se detiene en el
+primer peldano que sirva.
+
+1. Si hace falta construirlo.
+2. Si ya existe en el codigo.
+3. Si la libreria estandar lo resuelve.
+4. Si una funcion nativa de la plataforma lo cubre.
+5. Si una dependencia ya instalada lo hace.
+6. Si cabe en una linea.
+7. Solo entonces, el minimo codigo que funcione.
+
+Tambien trae limites: no se simplifica la validacion de entradas, el manejo de
+errores que evita perder datos, la seguridad ni la accesibilidad basica. Otra
+regla cambia el recuento de lineas: el codigo no trivial deja una comprobacion
+ejecutable detras, un `assert` o un archivo de prueba pequeno.
+
+## Antes de instalarlo
+
+Se instala como plugin, y el plugin de Claude Code trae hooks en JavaScript que
+se ejecutan al iniciar sesion, al lanzar un subagente y en cada mensaje tuyo.
+Eso significa que afecta a todos tus proyectos. Los lei antes de probar nada: en
+la version que revise no hacen llamadas de red, no lanzan procesos externos ni
+usan `eval`, y solo escriben archivos de estado pequenos en tu carpeta de
+configuracion. Aun asi, no lo instale. Para probarlo, di las mismas reglas a
+agentes nuevos leyendo el archivo de reglas, que tiene el mismo texto que
+inyectan los hooks. Es una aproximacion: no probe el plugin ya instalado, con su
+seguimiento de modo y sus comandos, solo el contenido de las reglas.
+
+## La prueba
+
+Cuatro tareas en Python con especificacion precisa: un decorador de reintentos
+con backoff, una funcion `slugify`, un limitador de peticiones por ventana
+deslizante y un parser de duraciones como `1h30m15s`. Cuatro agentes nuevos sin
+memoria de la conversacion, dos sin reglas y dos con las reglas de ponytail en
+modo `full`. Escribi las pruebas antes de ver ningun resultado y las valide con
+soluciones de referencia, que pasan, y con soluciones rotas a proposito, que
+fallan.
+
+Todas las soluciones, de los dos grupos, pasaron las cuatro pruebas. Las lineas
+de codigo (sin comentarios ni docstrings) de cada una:
+
+| Tarea | Sin reglas | Con ponytail |
+|-------|-----------:|-------------:|
+| retry | 17 y 15 | 15 y 15 |
+| slugify | 8 y 8 | 5 y 6 |
+| ratelimit | 14 y 14 | 15 y 13 |
+| parse_duration | 8 y 8 | 8 y 6 |
+| Total solucion | 47 y 45 | 43 y 40 |
+| Autochequeo en `__main__` | 0 y 0 | 56 y 41 |
+
+La solucion con ponytail es mas corta, pero por poco: unas 41 lineas de media
+contra 46, un 10 por ciento menos. En cambio, la regla de dejar un autochequeo
+agrega entre 41 y 56 lineas por corrida, asi que el total de los cuatro archivos
+casi se duplica (99 y 81 contra 47 y 45). No es un defecto: es lo que la regla
+pide, y el autochequeo es codigo que sirve. Pero quien cuente solo la solucion
+vera menos lineas, y quien cuente todo el archivo vera mas.
+
+Tambien gasto algo mas. Los agentes con reglas usaron unos 62,000 tokens contra
+58,000 de los otros dos, y tardaron unos 35 segundos contra 24 a 29. Parte de esa
+diferencia es leer el archivo de reglas y escribir el autochequeo. El benchmark
+del repo, en cambio, reporta un 22 por ciento menos de tokens y un 27 por ciento
+menos de tiempo, sobre tareas de verdad y con otro modelo; en tareas tan chicas,
+el costo fijo de las reglas pesa mas que el ahorro.
+
+## Por que no sale el 80 por ciento
+
+El README de ponytail llego a presumir un 80 a 94 por ciento menos de codigo, y
+el propio repositorio explica por que ese numero no vale. Fue una
+medicion de una sola pasada contra el modelo sin mas, que en el chat rellena con
+explicaciones y opciones, y el 16 de junio un usuario lo senalo en el
+[issue 126](https://github.com/DietrichGebert/ponytail/issues/126). Dos dias
+despues el autor publico un
+[benchmark mas exigente](https://github.com/DietrichGebert/ponytail/blob/main/benchmarks/results/2026-06-18-agentic.md):
+sesiones reales de Claude Code con Haiku 4.5, contando las lineas que agrega
+`git diff` y comparando contra el mismo agente sin reglas. Ahi el resultado es
+54 por ciento menos de codigo en el agregado.
+
+Lo mas util de ese informe es el desglose. Por tarea, el recorte va desde casi
+cero en el backend que ya es minimo hasta un 94 por ciento donde existe una
+funcion nativa que reemplaza un componente a medida: un selector de fecha pasa de
+404 lineas a 23 si se usa un `<input type="date">`, un selector de color de 287 a
+23. Mis cuatro tareas eran backend con especificacion cerrada, es decir, el caso
+donde el propio informe predice poco recorte. Lo que medi es coherente con eso.
+
+## Lo que esta prueba no dice
+
+Son cuatro tareas y dos corridas por grupo. Los agentes fueron subagentes de
+Claude Code y no se con certeza que modelo uso cada uno; el benchmark del repo
+uso Haiku 4.5. Todas las tareas tenian especificacion precisa, sin la
+ambiguedad donde un agente tiende a construir de mas. No incluyo un grupo con una
+instruccion corta del tipo "sigue YAGNI", asi que no aisla cuanto vale el
+ruleset completo frente a una frase. No mide seguridad ni mantenibilidad, solo que
+las pruebas pasen y cuantas lineas hay. Es una prueba de humo, no un benchmark.
+
+## Cuando probarlo
+
+Mi hipotesis, que viene del desglose del repo y no de mi prueba: ponytail rinde
+cuando el pedido es vago o de interfaz y existe una funcion nativa que sustituye
+una libreria o un componente, porque ahi el agente tiende a construir de mas y la
+escalera lo corta. En codigo de backend con requisitos claros, tanto mi prueba
+como el informe del repo muestran poca diferencia.
+
+Si lo quieres probar, hazlo en un proyecto y no de forma global, y mide con tu
+propio trabajo. Una alternativa es copiar la escalera de siete peldanos a tu
+`CLAUDE.md`, sin instalar nada. No probe esa version recortada. El benchmark del
+repo incluye un grupo con una frase de siete palabras ("Follow YAGNI principles,
+and prefer one-liner solutions") y lo describe como erratico: bueno en el selector
+de color, cerca o por encima del agente sin reglas en otras tareas, y el unico
+grupo que dejo caer una validacion en sus pruebas con entradas hostiles (95 por ciento seguro, 19
+de 20, contra 100 por ciento del ruleset completo). Una frase suelta no sustituye
+la parte de las reglas que protege la validacion.
+
+*Fuentes: el [repositorio de ponytail](https://github.com/dietrichgebert/ponytail),
+su [issue 126](https://github.com/DietrichGebert/ponytail/issues/126) y su
+[benchmark agentico del 18 de junio de 2026](https://github.com/DietrichGebert/ponytail/blob/main/benchmarks/results/2026-06-18-agentic.md).
+La prueba de cuatro tareas es mia y no la he publicado.*
