@@ -1,0 +1,132 @@
+---
+title: "vLLM, Ollama, TGI y SGLang: cual usar para servir LLMs"
+slug: "vllm-vs-ollama-tgi-sglang-servir-llms"
+date: "2026-07-14"
+summary: "Cuatro motores para servir modelos abiertos y cuando conviene cada uno: vLLM como punto de partida, SGLang cuando las peticiones comparten prefijo, Ollama para uso local y TGI solo si ya lo tienes. Con numeros y sus limites."
+tags: ["llm", "inferencia", "vllm", "self-hosting"]
+---
+
+Si vas a servir un modelo abierto para varias personas o varios agentes a la
+vez, hay cuatro nombres que salen siempre: vLLM, SGLang, Ollama y TGI. Mi
+resumen, con datos al 14 de julio de 2026: vLLM es el punto de partida, SGLang
+puede sacar una ventaja moderada cuando muchas peticiones empiezan igual, Ollama
+es para tu maquina y TGI ya no es una opcion para proyectos nuevos.
+
+## Los cuatro motores
+
+### vLLM
+
+Nacio en el Sky Computing Lab de UC Berkeley y hoy lo mantiene una comunidad de
+mas de 2000 colaboradores, con licencia Apache 2.0. Su pieza central es
+PagedAttention, que administra la memoria de la atencion por bloques, junto con
+batching continuo: las peticiones entran y salen del lote sin esperar a que
+termine la mas lenta. Ademas trae prefix caching, decodificacion especulativa y
+cuantizacion (FP8, INT8, INT4, GPTQ, AWQ). Corre en GPUs NVIDIA, AMD e Intel,
+en CPU y, por plugins, en TPU, Gaudi y Ascend. Expone un servidor compatible con
+la API de OpenAI, asi que a un cliente que ya habla con un proveedor cloud
+normalmente le basta con cambiar la URL base. Publica versiones a menudo: la
+0.25.1 salio el mismo dia de este articulo.
+
+### SGLang
+
+Se presenta como un framework de inferencia para cargas de agentes, rollouts de
+aprendizaje por refuerzo y servicio a gran escala. Su idea distintiva es
+RadixAttention: guarda los prefijos ya calculados en un arbol y los reutiliza
+cuando llega otra peticion que empieza igual. Ofrece salidas estructuradas y
+decodificacion especulativa, tiene licencia Apache 2.0 y soporta GPUs NVIDIA y
+AMD, TPU, Intel y Apple Silicon. Ademas expone un servidor
+[compatible con la API de OpenAI](https://docs.sglang.io/basic_usage/openai_api.html)
+(chat completions, completions y embeddings). Al escribir esto va por la 0.5.15.
+
+### Ollama
+
+Esta construido sobre llama.cpp y el formato GGUF, se instala como aplicacion en
+macOS, Windows y Linux (o con Docker) y descarga y ejecuta un modelo con un
+comando. Su licencia es MIT. Esta pensado para correr modelos en tu propia
+maquina, con tus datos, sin montar infraestructura, que es un uso distinto al de
+los otros tres.
+
+### TGI
+
+Text Generation Inference es el servidor que Hugging Face usa para Hugging Chat.
+Su README dice desde el 11 de diciembre de 2025 que esta en modo mantenimiento:
+solo se aceptan correcciones menores y mejoras de documentacion. La ultima
+version es la 3.3.7, del 19 de diciembre de 2025, y la recomendacion oficial para
+proyectos nuevos es usar vLLM o SGLang.
+
+## Que dicen los numeros
+
+Hay muchos benchmarks y casi todos vienen de empresas que venden GPUs o
+servicios. Uso los que traen su metodo y sus limites a la vista, y aviso en cada
+caso quien los publica.
+
+### vLLM contra SGLang
+
+Spheron, un proveedor de GPUs en la nube, midio ambos en una H100 con Llama 3.3
+70B en FP8: 200 prompts de unos 512 tokens de entrada y 256 de salida, con
+vLLM 0.18.0 y SGLang 0.5.9 (versiones ya superadas).
+
+| Peticiones simultaneas | vLLM (tokens/s) | SGLang (tokens/s) |
+|------------------------|-----------------|-------------------|
+| 1 | 120 | 125 |
+| 10 | 650 | 680 |
+| 50 | 1,850 | 1,920 |
+| 100 | 2,400 | 2,460 |
+
+La diferencia es de entre 2 y 5 por ciento. En latencia hasta el primer token
+(mediana) tambien va parejo: con 50 peticiones simultaneas, 380 ms en vLLM y 360
+ms en SGLang. Los propios autores explican por que: todos los prompts eran
+distintos, y la ventaja de RadixAttention aparece solo cuando las peticiones
+comparten prefijo. Particula Tech, que tambien vende servicios, reconoce lo mismo
+y dice que con prompts unicos vLLM puede igualar o superar a SGLang.
+
+Con prefijos compartidos la ventaja existe, pero es moderada. RunPod, otro
+proveedor de GPUs, probo dos H100 con DeepSeek-R1-Distill-Llama-70B y un contexto
+de 7,000 tokens: con la cache activa, SGLang quedo cerca de un 10 por ciento
+por encima de vLLM con su prefix caching automatico. En prompts de una sola vez,
+vLLM fue 1.1 veces mas rapido. RunPod aclara que no compara configuraciones
+equivalentes ni especifica versiones, asi que es un indicio, no una regla.
+
+Esto sugiere que SGLang no es mas rapido en general, y que ni siquiera con
+prefijos compartidos la brecha es enorme frente a un vLLM bien configurado. La
+pregunta util es cuanto de tu trafico empieza igual (el mismo system prompt de un
+agente, el mismo documento en un RAG, los mismos ejemplos de few-shot) y si esa
+ganancia justifica mantener otro motor.
+
+### Ollama a concurrencia
+
+Aqui los datos son de segunda mano. Build with Matija, que no midio nada por su
+cuenta, cita un comparativo de Clore.ai con una RTX 4090 y Llama 3.1 8B: con un
+usuario, Ollama da 65 tokens por segundo y vLLM 140; con diez usuarios, Ollama
+reparte unos 150 en total y vLLM llega a 800. Como no pude revisar el metodo
+original, la leo como orden de magnitud y no como medida exacta. Encaja con el
+diseno de cada uno: Ollama busca que una persona lo tenga funcionando en
+minutos, y vLLM busca aprovechar la GPU cuando llegan muchas peticiones a la
+vez.
+
+## Cual elegir
+
+| Situacion | Motor |
+|-----------|-------|
+| Servidor para un equipo o un producto, sin saber mas | vLLM |
+| Agentes o RAG con el mismo prefijo en casi todas las peticiones | SGLang, probado contra vLLM con tu trafico |
+| Una persona en su laptop, pruebas, privacidad | Ollama |
+| Proyecto nuevo | No TGI |
+| Ya tienes TGI funcionando | Puede seguir, pero ve planeando la salida |
+
+Mi regla de partida es vLLM, y pasar a SGLang solo si mides ganancia con tus
+propias peticiones. Como ambos exponen una API compatible con OpenAI, tu codigo
+cliente casi no cambia; lo que si cambia es la configuracion del servidor y su
+ajuste, asi que conviene probarlo antes. Ollama lo dejo para el trabajo local,
+donde su sencillez pesa mas que el rendimiento con carga.
+
+*Fuentes: los repositorios de
+[vLLM](https://github.com/vllm-project/vllm),
+[SGLang](https://github.com/sgl-project/sglang),
+[Ollama](https://github.com/ollama/ollama) y
+[TGI](https://github.com/huggingface/text-generation-inference); el
+[benchmark de Spheron](https://www.spheron.network/blog/vllm-vs-tensorrt-llm-vs-sglang-benchmarks/),
+el [analisis de Particula Tech](https://particula.tech/blog/sglang-vs-vllm-inference-engine-comparison),
+la [comparacion de RunPod](https://www.runpod.io/blog/sglang-vs-vllm-kv-cache) y
+el [comparativo de Build with Matija](https://www.buildwithmatija.com/blog/vllm-vs-ollama-vs-tgi-choose-llm-inference-engine)
+para las cifras de Ollama. No he medido estos motores en mi propio hardware.*
