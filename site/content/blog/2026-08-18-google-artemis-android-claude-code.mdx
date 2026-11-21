@@ -1,0 +1,221 @@
+---
+title: "Google ARTEMIS: tu Android manejado por IA desde Claude Code"
+slug: "google-artemis-android-claude-code"
+date: "2026-08-18"
+summary: "ARTEMIS es un proyecto abierto de Google que convierte instrucciones en lenguaje natural en acciones sobre un Android real: taps, apps, capturas y logs. Se conecta por MCP a Claude Code. Que hace, como esta armado y la diferencia entre Flash y Pro. Con una actualizacion de noviembre: dos meses usandolo dentro del propio telefono, que funciona, que no y un bug del detector."
+tags: ["ia", "agentes", "android", "mcp", "claude-code"]
+---
+
+[ARTEMIS](https://github.com/google/artemis) salio en GitHub el 13 de agosto
+bajo la cuenta de Google, con licencia Apache 2.0. Le das una instruccion en
+lenguaje normal y la ejecuta sobre un telefono Android de verdad: abre apps,
+toca botones, escribe, lee la pantalla y te devuelve capturas y logs. El demo
+del README lo resume bien: arma rutas en Google Maps, suma la duracion de los
+trayectos y luego abre YouTube para poner una cancion.
+
+El nombre viene de *Autonomous Real-time Testing, Exploration & Mobile
+Interaction System*. Se presenta con dos caras: herramienta de pruebas
+automaticas para apps moviles y asistente que maneja tu telefono por ti. Lo
+que me interesa es la segunda cara, y que se pueda manejar desde Claude Code.
+
+## Como esta armado
+
+El telefono se conecta por ADB, con la depuracion USB activada (tambien sirve
+un emulador). Del lado de la computadora vive todo lo demas. La instalacion es
+clonar el repo y correr un script:
+
+```bash
+git clone https://github.com/google/artemis.git && cd artemis
+./start.sh      # macOS y Linux
+start.bat       # Windows
+```
+
+El script instala ADB, scrcpy, FFmpeg y uv, y abre una consola web en
+`http://localhost:8000`. Desde ahi ves la pantalla del telefono en vivo, le
+mandas instrucciones y revisas grabaciones de lo que hizo. Hay otras tres
+formas de usarlo:
+
+- **CLI:** `artemis run "Abre Ajustes, entra a Bateria y dime el nivel" --profile flash`.
+- **SDK de Python:** para meterlo en pytest o en un pipeline de CI, con
+  resultados tipados.
+- **Servidor MCP:** para que un agente de codigo (Claude Code, Antigravity,
+  Windsurf, Cursor) maneje el telefono desde su propio chat.
+
+Los modelos son configurables: el README menciona Gemini, Claude, GPT-4o y
+Qwen-VL. Pide Python 3.12 o superior.
+
+## Flash y Pro
+
+ARTEMIS tiene dos perfiles y elegir bien es casi todo:
+
+| | Flash | Pro |
+|---|---|---|
+| Velocidad | 3 a 5 segundos por paso | 15 a 30 segundos por turno |
+| Duracion | tareas cortas, hasta unos 35 pasos | horas; tareas de monitoreo continuo |
+| Para que | tareas claras: abrir algo, revisar un dato | flujos entre varias apps, recuperarse de errores |
+| Si algo falla | reintenta el paso | revisa antes de tocar, cierra popups, vuelve a un estado guardado |
+
+La velocidad de Flash sale de separar la ejecucion del razonamiento pesado: el
+agente actua y, en paralelo, otro proceso resume el contexto y comprueba si va
+bien. Si la comprobacion detecta que se desvio, regresa a un estado guardado.
+Pro agrega planeacion por pasos y una revision previa a cada toque (le llaman
+Safety Net) para no tocar a ciegas cuando aparece un dialogo inesperado.
+
+Hay un detalle de diseno que me parecio bien pensado: los controles que
+desaparecen solos, como los del reproductor de video. Un agente normal toca la
+pantalla para que aparezcan los controles, toma captura, piensa varios
+segundos y, cuando por fin va a tocar el boton, ya desaparecio. ARTEMIS
+encadena los dos toques de inmediato cuando reconoce ese caso, y justo antes
+del segundo comprueba que el boton si aparecio.
+
+## Conectarlo a Claude Code
+
+El repo genera la configuracion MCP con un comando:
+
+```bash
+artemis mcp --generate-config all
+```
+
+Eso da el bloque JSON para cada herramienta. Ademas trae un archivo de reglas,
+`mcp_server/rules.md`, que le explica al agente como trabajar con el telefono:
+explorar la pantalla antes de actuar, cuando usar Flash y cuando Pro, y como
+compensar la latencia. Para Claude Code la recomendacion es copiar ese
+contenido al `CLAUDE.md` del proyecto. Vale la pena hacerlo: sin esas reglas el
+agente tiende a suponer como es la pantalla en vez de mirarla.
+
+Con eso ya puedes pedir cosas como "compila los cambios, instala el APK en el
+telefono, entra con la cuenta de prueba y dime si sale algun popup raro
+despues del login". El agente usa ARTEMIS para todo lo que pasa en el
+dispositivo y te regresa capturas y el log de errores (logcat) si algo truena.
+
+## El 99 por ciento
+
+El README dice que ARTEMIS completa mas del 99% de las tareas de
+[AndroidWorld](https://github.com/google-research/android_world), un benchmark
+de Google Research con mas de 100 tareas de varios pasos en mas de 20 apps. Es
+una cifra que reporta el propio proyecto. Sirve como senal de que la
+arquitectura funciona, pero no le daria mas peso hasta ver una evaluacion
+independiente.
+
+## Para que lo quiero
+
+Tengo un telefono que ya uso como herramienta de trabajo y varias tareas que
+hoy hago a mano: revisar que una app abra bien despues de un cambio, sacar
+capturas para documentacion, repetir el mismo flujo en varias pantallas. Todo
+eso entra en el perfil Flash. Para probar apps propias, la combinacion con Claude Code es
+lo atractivo: el mismo agente que cambia el codigo puede instalarlo y
+comprobarlo en el telefono.
+
+Lo que tomaria con cuidado es el uso como asistente personal. Un agente con
+control total del telefono puede ver tus mensajes, tus apps de banco y todo lo
+que este abierto. Para pruebas usaria un telefono o un emulador dedicado, y en
+el telefono personal empezaria por tareas de solo lectura.
+
+En el roadmap aparecen iOS, modelos de vision que corran en el mismo telefono
+sin nube y modo de voz. Ninguno esta listo todavia.
+
+## Actualizacion, noviembre 2026
+
+Tres meses despues, esto es lo que cambio.
+
+**La atribucion a Minitap.** El 11 de septiembre se abrio el
+[issue #40](https://github.com/google/artemis/issues/40): partes del codigo
+venian de [mobile-use](https://github.com/minitap-ai/mobile-use), de Minitap,
+sin darles credito. Minitap, por cierto, reporta el 100% en AndroidWorld con
+ese mismo framework.
+Hubo varios issues mas en el mismo tono. El 12 de septiembre el repo agrego la
+atribucion en el README y restauro los encabezados de copyright en los
+archivos afectados; hoy ese codigo vive en `third_party/mobile_use`. La
+licencia lo permitia desde el principio. Lo que faltaba era el credito.
+
+**El ritmo del proyecto.** A mediados de noviembre el repo tiene cerca de 18
+mil estrellas y 2 mil forks, pero el ultimo cambio es del 1 de octubre y no
+hay versiones publicadas. Los issues siguen llegando. Uno que importa si no
+usas Gemini: el perfil Flash falla con proveedores compatibles con la API de
+OpenAI porque partes internas llaman directo a Gemini
+([#138](https://github.com/google/artemis/issues/138)).
+
+**Lo que cambio en la instalacion.** La version actual instala las reglas en
+Claude Code con `artemis mcp --install claude` (las deja en
+`~/.claude/rules/artemis.md`, ya no hay que copiarlas a mano). En el telefono,
+la primera tarea instala una app de ayuda que lee la pantalla mediante el
+servicio de accesibilidad y deja una notificacion fija mientras corre.
+
+### Como me fue a mi
+
+Lo instale el 19 de septiembre en un Galaxy S26 Ultra (Android 16) y lo monte
+de una forma que el README no contempla: el host corre **dentro del propio
+telefono**, en Termux, sin computadora de por medio. ADB se conecta por
+loopback al mismo aparato, sin root. Claude Code, tambien en el telefono, lo
+tiene registrado como servidor MCP.
+
+**La instalacion fue lo dificil, y no por Android.** `./start.sh` no sirve en
+Termux porque intenta usar apt-get, brew o sudo. El problema real fue Python:
+el pip de Termux no acepta las wheels precompiladas para Linux normal, asi que
+todo lo binario sale de los repositorios de Termux o se compila en el
+telefono. Fueron seis intentos y unos 40 minutos compilando paquetes como
+pydantic-core, uvloop, orjson o tiktoken. OpenCV, que parecia el bloqueo,
+estaba ya compilado en el repositorio `x11` de Termux. Un detalle tonto que
+costo media hora: los comandos `claude mcp` hay que correrlos desde el
+directorio personal, no desde el del repo.
+
+**Los numeros.** De 33 sesiones registradas, 17 terminaron, 12 se cancelaron
+y 4 fallaron. Poco mas de la mitad. El patron es claro:
+
+- **Lectura y tareas cortas: rapidas y fiables.** "Dime que app esta en primer
+  plano" sale en unos 10 segundos, siempre. La primera tarea ("entra a Acerca
+  del telefono y dime el modelo y la version de Android") salio sola en 14
+  pasos, con 15 llamadas al modelo y unos 2 o 3 centavos de dolar.
+- **Probar la interfaz de una app propia: aqui gana.** Abrir una app en su
+  pantalla de login y reportar que botones hay salio en las cuatro corridas,
+  entre 8 y 135 segundos, en un telefono real y sin emulador.
+- **Cambiar cosas en apps de terceros: funciona, pero lento.** Agregar un widget
+  al inicio tardo casi 9 minutos; cambiar un ajuste dentro de una app de VPN,
+  mas de 8.
+- **Navegacion larga en apps comerciales: se atora.** Leer una ficha de
+  producto en una tienda y en Chrome fallo dos veces, una tras mas de 10
+  minutos, entre popups y carruseles. Instalar una app desde Play Store fallo
+  a los 31 segundos.
+
+Casi todo fue en Flash. Empece con DeepSeek, pase por OpenAI y hoy uso Claude
+Sonnet. Para que DeepSeek funcionara tuve que parchar ocho lineas del router
+de modelos, un parche que cualquier `git pull` borraria.
+
+**Lo que hay que saber antes de usarlo en tu telefono:**
+
+- Las apps de banca, carteras y video con proteccion dan captura negra. Es
+  como funciona Android, no un fallo, y de paso protege lo mas delicado.
+- Los permisos, la huella y el PIN los tiene que tocar una persona.
+- **Las capturas se acumulan sin limite.** Cada paso guarda una antes y otra
+  despues. Llevo 870 MB en 72 sesiones y no hay limpieza automatica: hay que
+  programarla aparte.
+- La depuracion inalambrica se apaga al reiniciar el telefono y cambia de
+  puerto. Se resuelve fijando uno con `adb tcpip`.
+- Si no usas Gemini, conviene el perfil Pro para la deteccion de elementos,
+  porque Flash depende del detector de Google.
+
+**Seguridad.** El permiso de accesibilidad que le das a la app de ayuda es
+enorme: ver todo lo que hay en pantalla en cualquier app y tocar por ti. Es el
+mismo permiso que piden los troyanos bancarios. Y cada captura sale del
+telefono hacia el proveedor del modelo, con notificaciones, nombres y lo que
+este abierto atras. Eso no se arregla con configuracion, solo eligiendo bien
+cuando lo usas.
+
+### Un hallazgo: el detector nunca uso el modelo que pide
+
+La configuracion de ARTEMIS dice que el detector de elementos en pantalla debe
+usar un modelo especial de Gemini (Robotics ER), porque los modelos normales
+fallan al dar coordenadas. Pero el codigo busca ese modelo en el lugar
+equivocado, la busqueda lanza un error, un `except` generico se lo traga y la
+deteccion termina corriendo con el mismo modelo que opera el telefono. Esta
+reportado desde el 26 de septiembre en el
+[issue #157](https://github.com/google/artemis/issues/157), con una correccion
+propuesta ([#158](https://github.com/google/artemis/pull/158)) que sigue sin
+integrarse.
+
+La consecuencia interesante: aqui ARTEMIS ha funcionado durante dos meses con
+modelos que no son de Google, incluida esa deteccion que segun la
+documentacion necesita Gemini. La restriccion es mas blanda de lo que parece.
+No soy el unico que va por ese lado: un fork de LunabeeStudio propuso
+[un proveedor que pasa todo por Claude Code](https://github.com/LunabeeStudio/artemis/pull/1),
+y anoto que con Claude las coordenadas son menos precisas.

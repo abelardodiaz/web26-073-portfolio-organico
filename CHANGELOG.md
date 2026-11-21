@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.32.0] - 2026-11-20
+
+### Added
+- Blog: "Google ARTEMIS: tu Android manejado por IA desde Claude Code" (fecha
+  2026-08-18). Cuerpo basado en el README del 18-ago; seccion "Actualizacion,
+  noviembre 2026" con la disputa de atribucion a Minitap, estado del repo,
+  experiencia real (host en Termux dentro del telefono, 33 sesiones) y el bug
+  del object_detector (issue #157).
+
 ## [0.31.0] - 2026-08-01
 
 ### Added
