@@ -9,6 +9,7 @@ export const revalidate = 86400;
 export const metadata: Metadata = {
   title: "Proyectos",
   description: "Micro-repos con patterns de produccion real.",
+  alternates: { canonical: "https://abelardodiaz.dev/projects" },
 };
 
 export default function ProjectsPage() {

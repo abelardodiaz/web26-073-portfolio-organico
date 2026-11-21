@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.32.1] - 2026-11-21
+
+### Fixed
+- SEO: etiqueta canonical en las 7 paginas que no la tenian (portada, about,
+  contact, projects y el detalle de blog, TIL y proyecto).
+- Fuera del codigo: sitemap enviado a Search Console; www.abelardodiaz.dev
+  agregado en Vercel como redireccion 308 a abelardodiaz.dev (antes 307).
+
 ## [0.32.0] - 2026-11-20
 
 ### Added

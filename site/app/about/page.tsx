@@ -5,6 +5,7 @@ import { ButtonLink } from "@/components/shared/ButtonLink";
 export const metadata: Metadata = {
   title: "About",
   description: "Full-Stack Developer & AI Agent Architect basado en Mexico.",
+  alternates: { canonical: "https://abelardodiaz.dev/about" },
 };
 
 const SOFTWARE_START = 2023;

@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Contacto",
   description: "Contacto para proyectos de consultoria y colaboracion.",
+  alternates: { canonical: "https://abelardodiaz.dev/contact" },
 };
 
 function GitHubIcon({ className }: { className?: string }) {

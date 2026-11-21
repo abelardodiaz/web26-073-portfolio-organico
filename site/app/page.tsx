@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { ButtonLink } from "@/components/shared/ButtonLink";
@@ -10,6 +11,10 @@ import { getAllTils, getAllProjects } from "@/lib/content";
 import { whatsappUrl, WHATSAPP_MSG_GENERAL } from "@/lib/whatsapp";
 
 export const revalidate = 86400;
+
+export const metadata: Metadata = {
+  alternates: { canonical: "https://abelardodiaz.dev/" },
+};
 
 export default function Home() {
   const tils = getAllTils().slice(0, 5);
